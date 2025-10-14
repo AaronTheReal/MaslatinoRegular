@@ -1,0 +1,361 @@
+
+.seccion-news {
+  width: 100%;
+  padding: 64px 24px;
+  background-color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+}
+/* 1) Quitar azul/subrayado del link en toda la sección */
+.seccion-news a.tarjeta,
+.seccion-news a.tarjeta:visited,
+.seccion-news a.tarjeta:hover,
+.seccion-news a.tarjeta:active{
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Por si algún reset propaga el subrayado a hijos */
+.seccion-news a.tarjeta * {
+  text-decoration: none;
+}
+.contenedor {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.titulo-seccion {
+  position: relative;
+  display: inline-block;              /* Para que el pseudo-elemento se posicione respecto al texto */
+  padding-left: 67px;                 /* Espacio para el “+” */
+  font-size: 24px;
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 32px;
+  letter-spacing: 0.02em;
+
+    /* 👇 mueve el título a la izquierda, dinámico con clamp */
+  --shiftX: clamp(-72px, -5vw, -16px);
+  margin-left: var(--shiftX);
+}
+
+.titulo-seccion::before {
+  content: "+";
+  position: absolute;
+  left: 0;
+  top: 0%;                           /* Coloca el centro del “+” a mitad de la altura del título */
+  transform: translateY(-50%);        /* Ajuste fino para que inicie justo a mitad de la “F” */
+  font-weight: 800;
+  font-size: 3em;                  /* Escala con el título */
+  line-height: 1;                     /* Evita saltos verticales */
+}
+
+/* Responsivo */
+@media (min-width: 768px) {
+  .titulo-seccion { font-size: 48px; }
+  .titulo-seccion::before { font-size: 1.8em; }
+}
+
+.grid-news {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: 192px 192px 120px;
+  gap: 16px;
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* TARJETAS BASE */
+.tarjeta {
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* TARJETA GRANDE */
+.tarjeta-grande {
+  position: relative;
+  grid-column: 1;
+  grid-row: span 2;
+}
+
+.tarjeta-grande img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Solo afecta la GRANDE */
+.tarjeta-grande .contenido-superpuesto{
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;      /* ↑ arriba */
+  justify-content: flex-start;  /* ← a la izquierda */
+  padding: 16px;
+  color: #fff;
+  /* Gradiente desde arriba hacia abajo para dar contraste al encabezado */
+  background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,.25) 35%, rgba(0,0,0,0) 65%);
+}
+
+/* Bloque de texto con ancho limitado a la MITAD del contenedor grande */
+.tarjeta-grande .overlay-text{
+  max-width: min(50%, 640px);   /* <= mitad; además topa en 640px para pantallas MUY grandes */
+  /* opcional: pequeño respiro interno si lo deseas */
+  /* padding-right: 8px; */
+}
+
+/* Tipografías */
+.tarjeta-grande .overlay-text h3{
+  margin: 20px 0 6px 20px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #fff;
+  /* escala fluida: móvil → desktop */
+  font-size: clamp(18px, 2.2vw, 30px);
+  text-shadow: 0 1px 2px rgba(0,0,0,.25);  /* mejora legibilidad sobre imagen */
+}
+
+.tarjeta-grande .overlay-text .fecha{
+  margin: 0px 0px 0px 20px;
+  opacity: .9;
+  color: #fff;
+  font-size: clamp(12px, 1.1vw, 14px);
+}
+
+/* Móvil: que el bloque de texto use el ancho completo para leer mejor */
+@media (max-width: 640px){
+  .tarjeta-grande .overlay-text{
+    max-width: 100%;
+  }
+  .tarjeta-grande .contenido-superpuesto{
+    padding: 12px;
+    background: linear-gradient(to bottom, rgba(0,0,0,.6), rgba(0,0,0,.3) 45%, transparent 70%);
+  }
+}
+
+
+
+
+
+
+.contenido-superpuesto {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  color: white;
+}
+
+/* TARJETAS PEQUEÑAS */
+.tarjeta-completa {
+  grid-row: span 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.tarjeta-completa img {
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+  display: block;
+  flex-shrink: 0;
+}
+
+
+/* el contenedor de la imagen “recorta” con esquinas redondeadas */
+a.tarjeta.tarjeta-completa .media-curva{
+  flex: 0 0 50%;            /* ocupa la mitad superior como ya hacías */
+  border-radius: 16px;      /* 🔑 redondea también ABAJO */
+  overflow: hidden;         /* 🔑 recorta la imagen con ese radio */
+}
+
+/* la imagen ocupa todo el alto del contenedor */
+a.tarjeta.tarjeta-completa .media-curva img{
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* evita que otras reglas anteriores te aplanen el radio del wrapper */
+a.tarjeta.tarjeta-completa{
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+
+/* 2) Estilos de tipografía en las TARJETAS PEQUEÑAS */
+.tarjeta-completa .bloque-blanco-texto h3{
+  color: #111;              /* negro */
+  font-weight: 800;         /* negritas */
+  font-size: 1.8rem;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+}
+
+.tarjeta-completa .bloque-blanco-texto p{
+  color: #6b7280;           /* gris “leyenda” */
+  font-size: 1.1rem;      /* ~14px */
+  margin: 0;
+  line-height: 1.3;
+}
+.bloque-blanco-texto {
+  flex: 1;
+  background-color: #ffffff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.bloque-blanco-texto h3,
+.bloque-blanco-texto p {
+  margin: 0;
+  line-height: 1.3;
+  word-wrap: break-word;
+}
+
+/* TARJETAS HORIZONTALES */
+.tarjeta-horizontal {
+  position: relative; /* 🔑 necesario para que funcione superposición */
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+
+.tarjeta-horizontal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+
+/* BOTÓN */
+.boton-contenedor {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.boton-news {
+  background-color: #ef4444;
+  color: white;
+  font-weight: bold;
+  padding: 10px 24px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.boton-news:hover {
+  background-color: #dc2626;
+}
+
+
+.tarjetas-horizontales {
+  grid-column: 1 / span 3; /* ocupa todas las columnas de la grilla */
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  height: 250px;
+}
+
+.tarjeta-horizontal {
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.tarjeta-horizontal img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.texto-horizontal {
+  padding: 16px;
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: auto;
+  text-align: left;
+}
+
+.texto-horizontal h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #000;
+}
+
+.texto-horizontal p {
+  font-size: 14px;
+  color: #444;
+  margin: 0;
+}
+
+
+.superpuesto-arriba {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+  color: white;
+  padding: 16px;
+  z-index: 1;
+}
+
+.superpuesto-arriba h3 {
+  font-size: clamp(16px, 2vw, 28px);
+  margin: 20px 0 4px 20px;
+  font-weight: 700;
+}
+
+.superpuesto-arriba p {
+  margin: 0px 0px 0px 20px;
+  font-size: clamp(12px, 1.1vw, 14px);
+  opacity: 0.9;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
