@@ -1,0 +1,80 @@
+<div class="noticia-detalle-container" *ngIf="noticia$ | async as noticia; else loading">
+  <h1>{{ noticia.title || 'Título no disponible' }}</h1>
+
+  <p class="summary">{{ noticia.summary || 'Sin resumen' }}</p>
+
+  <p class="author">Autor: {{ noticia.authorName || 'Anónimo' }}</p>
+
+  <p class="categories">
+    Categorías: {{ getCategoryNames(noticia.categories) }}
+  </p>
+
+  <p class="tags" *ngIf="noticia.tags && noticia.tags.length">
+    Tags: {{ noticia.tags.join(', ') }}
+  </p>
+
+  <img *ngIf="noticia.meta?.image as img" [src]="img" [alt]="noticia.title || ''" class="featured-image" />
+
+  <div class="content">
+    <ng-container *ngFor="let block of noticia.content">
+      <ng-container [ngSwitch]="block.type">
+        <!-- Texto simple -->
+        <p *ngSwitchCase="'text'" [style.fontSize]="block.style?.fontSize" [style.fontWeight]="block.style?.fontWeight"
+           [style.fontFamily]="block.style?.fontFamily" [style.textAlign]="block.style?.textAlign">
+          {{ block.text || 'Sin texto' }}
+        </p>
+
+        <!-- Encabezado -->
+        <ng-container *ngSwitchCase="'header'">
+          <ng-container [ngSwitch]="block.tag">
+            <h2 *ngSwitchCase="'h2'">{{ block.text }}</h2>
+            <h3 *ngSwitchCase="'h3'">{{ block.text }}</h3>
+            <h4 *ngSwitchDefault>{{ block.text }}</h4>
+          </ng-container>
+        </ng-container>
+
+        <!-- Imagen -->
+        <figure *ngSwitchCase="'image'">
+          <img [src]="block.url" [alt]="block.alt || ''" />
+          <figcaption [innerHTML]="block.captionHtml || block.caption"></figcaption>
+        </figure>
+
+        <!-- Enlace -->
+        <a *ngSwitchCase="'link'" [href]="block.href">{{ block.textLink || block.href }}</a>
+
+        <!-- Lista -->
+        <ng-container *ngSwitchCase="'list'">
+          <ul *ngIf="!block.ordered; else orderedList">
+            <li *ngFor="let item of block.items">{{ item }}</li>
+          </ul>
+          <ng-template #orderedList>
+            <ol>
+              <li *ngFor="let item of block.items">{{ item }}</li>
+            </ol>
+          </ng-template>
+        </ng-container>
+
+        <!-- Cita -->
+        <blockquote *ngSwitchCase="'quote'">
+          <p>{{ block.quote }}</p>
+          <cite>{{ block.authorQuote || 'Anónimo' }}</cite>
+        </blockquote>
+
+        <!-- Fallback para tipos desconocidos -->
+        <p *ngSwitchDefault>Sin soporte para este tipo de bloque: {{ block.type }}</p>
+      </ng-container>
+    </ng-container>
+  </div>
+
+  <p class="date">
+    Creado: {{ noticia.createdAt ? (noticia.createdAt | date:'medium') : 'Sin fecha' }}
+  </p>
+
+  <p class="updated">
+    Actualizado: {{ noticia.updatedAt ? (noticia.updatedAt | date:'medium') : 'Sin actualización' }}
+  </p>
+</div>
+
+<ng-template #loading>
+  <p>Cargando noticia...</p>
+</ng-template>

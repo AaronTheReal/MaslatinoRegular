@@ -1,0 +1,46 @@
+.noticia-detalle-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+.summary {
+  font-style: italic;
+  margin-bottom: 20px;
+}
+
+.author, .categories, .tags, .date, .updated {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.featured-image {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+.content {
+  line-height: 1.6;
+}
+
+.content p {
+  margin-bottom: 15px;
+}
+
+.content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.content blockquote {
+  border-left: 4px solid #ccc;
+  padding-left: 10px;
+  margin: 20px 0;
+  font-style: italic;
+}

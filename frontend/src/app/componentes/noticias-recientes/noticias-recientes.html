@@ -1,0 +1,36 @@
+<div class="noticias-container">
+  <h1>Noticias Recientes</h1>
+
+  <div *ngFor="let noticia of noticias$ | async; trackBy: trackById; let i = index" class="noticia-card">
+    <h2>{{ noticia?.title || 'Título no disponible' }}</h2>
+
+    <p>{{ noticia?.summary || 'Sin resumen' }}</p>
+
+    <p>Autor: {{ noticia?.authorName || 'Anónimo' }}</p>
+
+    <!-- Categorías: evita ?.join con ??; usa una comprobación explícita -->
+    <p>
+      Categorías:
+      {{ noticia?.categories?.length ? noticia.categories.join(', ') : 'Sin categorías' }}
+    </p>
+
+    <!-- Contenido: primero verifica longitud -->
+    <div *ngIf="noticia?.content?.length">
+      <p>{{ noticia.content[0]?.text || 'Sin contenido' }}</p>
+    </div>
+
+    <!-- Imagen: solo si existe -->
+    <img *ngIf="noticia?.meta?.image as img" [src]="img" [alt]="noticia?.title || ''" />
+
+    <!-- Fecha: no uses ?? con el pipe; usa ternario antes del pipe -->
+    <p>
+      Creado:
+      {{ noticia?.createdAt ? (noticia.createdAt | date:'medium') : 'Sin fecha' }}
+    </p>
+
+    <!-- Ruta: ajusta a tu path real; muchas veces es /noticia/:slug -->
+    <a [routerLink]="['/noticia', noticia?.slug || '']">Leer más</a>
+
+    <hr>
+  </div>
+</div>
