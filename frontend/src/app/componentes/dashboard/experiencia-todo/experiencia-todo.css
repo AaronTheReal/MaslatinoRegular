@@ -1,0 +1,96 @@
+.dashboard-modulos {
+  padding: 100px 48px; /* más padding general */
+  text-align: center;
+  font-family: 'Poppins', sans-serif;
+}
+
+.modulos-titulo h2 {
+  font-size: 52px; /* antes 40px */
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+  color: #000;
+}
+
+.modulos-titulo p {
+  font-size: 20px; /* antes 16px */
+  color: #222;
+  margin-top: 20px;
+  line-height: 1.6;
+}
+
+.modulos-grid {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 40px; /* antes 32px */
+  margin-top: 64px; /* antes 48px */
+}
+
+.modulo {
+  width: 260px; /* antes 220px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px; /* antes 16px */
+  transition: transform 0.2s ease;
+}
+
+.modulo:hover {
+  transform: scale(1.07); /* más efecto */
+}
+
+.modulo-icono {
+  height: 300px; /* o el tamaño que desees */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.modulo-icono img {
+  height: 100%;     /* ⬅️ Escala completa al alto del contenedor */
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+
+.modulo h3 {
+  font-size: 22px; /* antes 18px */
+  font-weight: 700;
+  color: white;
+  margin: 0;
+}
+
+.modulo-icono.megafono img {
+  padding-top: 8px;
+}
+
+.modulos-boton {
+  margin-top: 64px; /* antes 48px */
+  display: flex;
+  justify-content: center;
+}
+
+.btn-explorar {
+  background-color: #fe3824;
+  color: white;
+  font-family: 'Poppins', sans-serif;
+  font-size: 24px; /* antes 16px */
+  font-weight: 600;
+  padding: 18px 40px; /* antes 14px 32px */
+  border: none;
+  border-radius: 40px; /* más suave */
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-explorar:hover {
+  background-color: #fe3824;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}

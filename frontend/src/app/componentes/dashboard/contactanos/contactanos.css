@@ -1,0 +1,84 @@
+.seccion-contacto {
+  width: 100%;
+  padding: 80px 24px;
+  background-color: white;
+}
+
+.contenedor-contacto {
+  max-width: 1200px; /* equivalente a max-w-4xl */
+  margin: 0 auto;
+  text-align: center;
+}
+
+.titulo-contacto {
+  font-size: 2rem; /* base size for mobile */
+  font-weight: 800;
+  color: #000;
+  margin-bottom: 48px;
+  text-transform: uppercase;
+}
+
+@media (min-width: 768px) {
+  .titulo-contacto {
+    font-size: 2.5rem; /* md:text-4xl */
+  }
+}
+
+.formulario-contacto {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.fila-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .fila-inputs {
+    flex-direction: row;
+  }
+}
+
+.input-contacto {
+  flex: 1;
+  border: 1px solid #000;
+  border-radius: 9999px; /* rounded-full */
+  padding: 16px 24px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.textarea-contacto {
+  width: 100%;
+  border: 1px solid #000;
+  border-radius: 16px;
+  padding: 20px 24px;
+  font-size: 1rem;
+  resize: none;
+  outline: none;
+}
+
+
+.boton-contacto {
+  background-color: #8e4ef6; /* bg-red-500 */
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 700;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  display: inline-block;   /* asegura que solo ocupe el tamaño de su contenido */
+  width: auto;             /* no ocupa todo el ancho */
+  align-self: center;      /* si el contenedor es flex */
+  margin: 0 auto;          /* si el contenedor no es flex, se centra igual */
+}
+
+.boton-contacto:hover {
+  background-color: #dc2626; /* bg-red-600 */
+}

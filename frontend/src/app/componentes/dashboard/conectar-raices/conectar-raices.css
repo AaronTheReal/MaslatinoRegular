@@ -1,0 +1,54 @@
+.dashboard-hero {
+  position: relative;
+  display: flex;
+  padding: 60px 80px;
+  height: 100vh; /* ocupa toda la pantalla */
+  overflow: hidden;
+}
+
+/* Contenedor del texto, alineado a la izquierda pero centrado verticalmente */
+.frase-container {
+  flex: 1;
+  display: flex;
+  justify-content: flex-start;  /* ⬅️ Alineado a la izquierda */
+  align-items: center;          /* ⬆️ Centrado verticalmente */
+}
+
+/* Texto alineado a la izquierda */
+.frase-dashboard {
+  text-align: left;
+}
+
+.frase-dashboard h1 {
+  font-size: 64px;
+  margin: 0;
+  font-weight: 900;
+  font-family: 'Arial', sans-serif;
+  line-height: 1.1;
+}
+
+.negro {
+  color: #000000;
+}
+
+.morado {
+  color: #8f50f8;
+}
+
+/* Imagen a la derecha, pegada */
+.image-right-section {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  z-index: 1;
+}
+
+.image-right {
+  height: 100%;        /* Mantiene la altura completa del contenedor */
+  width: auto;         /* Permite que el ancho se escale según el alto */
+  max-width: none;     /* Evita que lo limite el contenedor */
+  object-fit: contain;
+}
