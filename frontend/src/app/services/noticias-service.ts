@@ -1,3 +1,4 @@
+
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
 import { Observable, of, tap, map } from 'rxjs';
@@ -21,11 +22,9 @@ export class NoticiasService {
   }
 
   getNoticiasRecientes(limit = 200): Observable<Noticia[]> {
-    console.log('Iniciando fetch de noticias recientes con limit:', limit);
     const key = makeStateKey<Noticia[]>('noticias-recientes-' + limit);
 
     if (this.ts.hasKey(key)) {
-      console.log('Usando data de TransferState');
       const data = this.ts.get<Noticia[]>(key, []);
       this.ts.remove(key);
       return of(data);
@@ -34,13 +33,25 @@ export class NoticiasService {
     const observable = this.http.get<Noticia[]>(`${this.baseUrl}/noticias/recientes?limit=${limit}`);
 
     if (isPlatformServer(this.platformId)) {
-      console.log('En server/prerender: Fetching data');
-      return observable.pipe(
-        tap(data => {
-          console.log('Data fetched en server:', data);
-          this.ts.set(key, data);
-        })
-      );
+      return observable.pipe(tap(data => this.ts.set(key, data)));
+    }
+
+    return observable;
+  }
+
+  getNoticiasRecomendadas(limit = 3): Observable<Noticia[]> {
+    const key = makeStateKey<Noticia[]>('noticias-recomendadas-' + limit);
+
+    if (this.ts.hasKey(key)) {
+      const data = this.ts.get<Noticia[]>(key, []);
+      this.ts.remove(key);
+      return of(data);
+    }
+
+    const observable = this.http.get<Noticia[]>(`${this.baseUrl}/noticias/recomendadas?limit=${limit}`);
+
+    if (isPlatformServer(this.platformId)) {
+      return observable.pipe(tap(data => this.ts.set(key, data)));
     }
 
     return observable;
@@ -49,18 +60,15 @@ export class NoticiasService {
   getNoticiaById(id: string): Observable<Noticia> {
     console.log('Fetching noticia with id:', id);
     const key = makeStateKey<Noticia>('noticia-' + id);
-
     if (this.ts.hasKey(key)) {
       console.log('Using TransferState data');
       const data = this.ts.get<Noticia>(key, null as unknown as Noticia);
       this.ts.remove(key);
       return of(data);
     }
-
     const observable = this.http.get<{ noticia: Noticia }>(`${this.baseUrl}/noticia/${id}`).pipe(
-      map(response => response.noticia || null) // Extract `noticia` or return null if not present
+      map(response => response.noticia || null)
     );
-
     if (isPlatformServer(this.platformId)) {
       console.log('Server-side fetch for id:', id);
       return observable.pipe(
@@ -70,8 +78,8 @@ export class NoticiasService {
         })
       );
     }
-
     console.log('Client-side fetch for id:', id);
     return observable;
   }
+  
 }

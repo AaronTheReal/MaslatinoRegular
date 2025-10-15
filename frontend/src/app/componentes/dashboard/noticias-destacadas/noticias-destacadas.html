@@ -1,58 +1,48 @@
 <section class="seccion-news">
   <div class="contenedor">
     <h2 class="titulo-seccion">FEATURED NEWS</h2>
-<!--
-    <div class="grid-news" *ngIf="noticias.length >= 0">
--->
-      <!-- TARJETA GRANDE (primera noticia) 
-        <a class="tarjeta tarjeta-grande" [routerLink]="['/noticia', noticias[0].slug]">
-          <img [src]="noticias[0].meta?.image" [alt]="noticias[0].title" />
-          <div class="contenido-superpuesto">
-            <div class="overlay-text">
-              <h3>{{ noticias[0].title }}</h3>
-              <p class="fecha">{{ noticias[0].createdAt | date: 'longDate' }}</p>
-            </div>
-          </div>
-        </a>
 
--->
-      <!-- TARJETAS PEQUEÑAS (noticias 2 y 3) 
-        <a
-          class="tarjeta tarjeta-completa"
-          *ngFor="let noticia of noticias.slice(1, 3)"
-          [routerLink]="['/noticia', noticia.slug]"
-        >
-        
-          <div class="media-curva">
-            <img [src]="noticia.meta?.image" [alt]="noticia.title" />
+    <div class="grid-news" *ngIf="noticias$ | async as noticias">
+      <!-- TARJETA GRANDE (primera noticia) -->
+      <a class="tarjeta tarjeta-grande" [routerLink]="['/noticia', (noticias[0]?._id || noticias[0]?.slug || '')]">
+        <img [src]="noticias[0]?.meta?.image" [alt]="noticias[0]?.title || ''" />
+        <div class="contenido-superpuesto">
+          <div class="overlay-text">
+            <h3>{{ noticias[0]?.title }}</h3>
+            <p class="fecha">{{ noticias[0]?.createdAt | date: 'longDate' }}</p>
           </div>
-          <div class="bloque-blanco-texto">
-            <h3>{{ noticia.title }}</h3>
-            <p>{{ noticia.createdAt | date: 'longDate' }}</p>
-          </div>
-        </a>
--->
+        </div>
+      </a>
 
-      <!-- TARJETAS HORIZONTALES (noticias 4 y 5) 
+      <!-- TARJETAS PEQUEÑAS (noticias 2 y 3) -->
+      <a
+        class="tarjeta tarjeta-completa"
+        *ngFor="let noticia of noticias.slice(1, 3)"
+        [routerLink]="['/noticia', (noticia?._id || noticia?.slug || '')]"
+      >
+        <div class="media-curva">
+          <img [src]="noticia?.meta?.image" [alt]="noticia?.title || ''" />
+        </div>
+        <div class="bloque-blanco-texto">
+          <h3>{{ noticia?.title }}</h3>
+          <p>{{ noticia?.createdAt | date: 'longDate' }}</p>
+        </div>
+      </a>
+
+      <!-- TARJETAS HORIZONTALES (noticias 4 y 5) -->
       <div class="tarjetas-horizontales">
         <a
           class="tarjeta tarjeta-horizontal"
           *ngFor="let noticia of noticias.slice(3, 5)"
-          [routerLink]="['/noticia', noticia.slug]"
+          [routerLink]="['/noticia', (noticia?._id || noticia?.slug || '')]"
         >
-          <img [src]="noticia.meta?.image || 'assets/default-news.jpg'" [alt]="noticia.title" />
+          <img [src]="noticia?.meta?.image || 'assets/default-news.jpg'" [alt]="noticia?.title || ''" />
           <div class="superpuesto-arriba">
-            <h3>{{ noticia.title }}</h3>
-            <p>{{ noticia.createdAt | date: 'longDate' }}</p>
+            <h3>{{ noticia?.title }}</h3>
+            <p>{{ noticia?.createdAt | date: 'longDate' }}</p>
           </div>
         </a>
       </div>
-      
-
     </div>
-    -->
   </div>
-
-
-
 </section>

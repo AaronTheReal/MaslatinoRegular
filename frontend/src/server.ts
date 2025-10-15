@@ -13,19 +13,7 @@ const app = express();
 const angularApp = new AngularNodeAppEngine();
 
 /**
- * Example Express Rest API endpoints can be defined here.
- * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
- */
-
-/**
- * Serve static files from /browser
+ * Archivos estáticos de /browser
  */
 app.use(
   express.static(browserDistFolder, {
@@ -36,7 +24,24 @@ app.use(
 );
 
 /**
- * Handle all other requests by rendering the Angular application.
+ * Micro-caché para la portada (SSR):
+ *  - Cache CDN/proxy 5 minutos
+ *  - stale-while-revalidate 60 minutos
+ * Nota: La invalidación “real” la haces purgando "/" en tu CDN al publicar.
+ */
+app.use((req, res, next) => {
+  // Solo GET a la home exacta
+  if (req.method === 'GET' && (req.path === '/' || req.path === '')) {
+    // Para CDNs/proxies (s-maxage) y SWR
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    // Buena práctica: indicar que el HTML puede variar por compresión/cookies si las usas
+    res.setHeader('Vary', 'Accept-Encoding, Cookie');
+  }
+  next();
+});
+
+/**
+ * SSR para el resto de las rutas
  */
 app.use((req, res, next) => {
   angularApp
@@ -48,8 +53,7 @@ app.use((req, res, next) => {
 });
 
 /**
- * Start the server if this module is the main entry point.
- * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
+ * Arranque del servidor si es el entry principal.
  */
 if (isMainModule(import.meta.url)) {
   const port = process.env['PORT'] || 4000;
@@ -57,12 +61,11 @@ if (isMainModule(import.meta.url)) {
     if (error) {
       throw error;
     }
-
     console.log(`Node Express server listening on http://localhost:${port}`);
   });
 }
 
 /**
- * Request handler used by the Angular CLI (for dev-server and during build) or Firebase Cloud Functions.
+ * Handler para Angular CLI / funciones (cuando aplica)
  */
 export const reqHandler = createNodeRequestHandler(app);

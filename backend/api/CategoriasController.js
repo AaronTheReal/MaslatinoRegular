@@ -62,7 +62,23 @@ class CategoriasController {
       return res.status(500).json({ error: 'Error interno al buscar categoría' });
     }
   }
-
+  
+async obtenerCategoriasPorIds(req, res) {
+    try {
+      const { ids } = req.body; // Expecting an array of IDs in the request body
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Se requiere un array de IDs válido' });
+      }
+      const categorias = await Category.find({ _id: { $in: ids } });
+      if (!categorias || categorias.length === 0) {
+        return res.status(404).json({ error: 'Ninguna categoría encontrada para los IDs proporcionados' });
+      }
+      return res.status(200).json(categorias);
+    } catch (error) {
+      console.error('Error al obtener categorías por IDs:', error);
+      return res.status(500).json({ error: 'Error interno al buscar categorías' });
+    }
+  }
   // 4. Actualizar una categoría
   async actualizarCategoria(req, res) {
     try {
