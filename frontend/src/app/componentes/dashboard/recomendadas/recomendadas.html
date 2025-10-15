@@ -1,20 +1,17 @@
-<section class="seccion-noticias" >
-
-  <!-- Título centrado -->
+<section class="seccion-noticias">
   <h2 class="titulo-seccion">RECOMMENDED FOR YOU</h2>
 
-  <!-- Contenedor de tarjetas -->
-  <div class="contenedor-tarjetas">
-    <!--
-    *ngIf="noticias.length >= 8"
-    <div class="tarjeta" *ngFor="let noticia of noticias.slice(5, 8)">
-      <img [src]="noticia.meta?.image || 'assets/default-news.jpg'" [alt]="noticia.title" class="imagen-tarjeta" />
+  <div class="contenedor-tarjetas" *ngIf="noticias$ | async as noticias">
+    <div class="tarjeta" *ngFor="let noticia of noticias">
+      <img
+        [src]="noticia?.meta?.image || 'assets/default-news.jpg'"
+        [alt]="noticia?.title || ''"
+        class="imagen-tarjeta"
+      />
       <div class="contenido-tarjeta">
-        <h3 class="titulo-noticia">{{ noticia.title }}</h3>
-        <p class="fecha-noticia">{{ noticia.createdAt | date: 'longDate' }}</p>
+        <h3 class="titulo-noticia">{{ noticia?.title }}</h3>
+        <p class="fecha-noticia">{{ noticia?.createdAt | date: 'longDate' }}</p>
       </div>
     </div>
-  -->
-
   </div>
 </section>

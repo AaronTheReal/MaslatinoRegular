@@ -106,12 +106,16 @@ export default class MainRoute {
     router.route('/getNoticias').get(NoticiasController.getAllNoticias);
     router.route('/getNoticiasInicio').post(NoticiasController.getNoticiaCategorias);
     router.route('/noticias/recientes').get(NoticiasController.getNoticiasRecientes);
+    router.route('/noticias/recomendadas').get(NoticiasController.getNoticiasRecomendadas);
+
+    
     router.route('/por-categorias-relevantes/:userId').get(NoticiasController.getNoticiasUsuario);
 
 
     router.route('/getNoticiaDespliegue').post(NoticiasController.getNoticiaDespliegue);
     router.route('/noticia/:id').get(NoticiasController.getNoticiaById);
 
+    
     router.route('/registrarUsuario').post(UsuariosController.postNuevoUsuario);
     router.route('/IdiomaUsuarioInicio').put(UsuariosController.postIdiomaUsuario);
     router.route('/enviar-codigo').post(UsuariosController.enviarCodigo);
@@ -310,6 +314,7 @@ router.post('/google-login', async (req, res) => {
 
     
     router.get('/categorias/:id', CategoriasController.obtenerCategoriaPorId);
+    router.post('/categorias/by-ids', CategoriasController.obtenerCategoriasPorIds); // Add this
     router.put('/categorias/:id', CategoriasController.actualizarCategoria);
     router.delete('/categorias/:id', CategoriasController.eliminarCategoria);
     router.get('/categoriasUsuario/:id',CategoriasController.obtenerCategoriasUsuario);
