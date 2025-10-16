@@ -1,0 +1,321 @@
+:root {
+  --spacing-unit: 1rem;
+  --primary-color: #007bff;
+  --secondary-color: #f8fafc;
+  --border-color: #e2e8f0;
+  --text-color: #1a202c;
+  --focus-color: #90cdf4;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.container {
+  padding: calc(var(--spacing-unit) * 1.5);
+  max-width: 800px;
+  margin: 2rem auto;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: calc(var(--spacing-unit) * 1.5);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tabs button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.tabs button.active {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.tabs button:hover {
+  background: var(--secondary-color);
+}
+
+.content h2 {
+  margin: 0 0 calc(var(--spacing-unit) * 1.5);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: calc(var(--spacing-unit) * 1.25);
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group {
+  padding: 0.75rem;              /* Espaciado interno */
+  border: 1px solid #cbd5e0;     /* Borde por defecto (gris claro) */
+  border-radius: 6px;            /* Bordes redondeados */
+  font-size: 1rem;              /* Tamaño de fuente */
+  width: 100%;                  /* Ancho completo */
+  box-sizing: border-box;       /* Incluye el borde en el tamaño total */
+  background: #fff;             /* Fondo blanco */
+  transition: all 0.2s ease;    /* Transición suave para cambios */
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--focus-color);
+  box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.2);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+fieldset {
+  border: 1px solid var(--border-color);
+  padding: 1rem;
+  margin-bottom: calc(var(--spacing-unit) * 1.25);
+  border-radius: 6px;
+}
+
+.fieldset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+legend {
+  padding: 0 0.75rem;
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.btn-center {
+  text-align: center;
+  margin-top: calc(var(--spacing-unit) * 1.5);
+}
+
+button[type="submit"] {
+  padding: 0.875rem 2rem;
+  background: #8391f8f5;
+  color: #000000f5;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+button[type="submit"]:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+button[type="submit"]:disabled {
+  background: #3046eaf5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.image-preview {
+  margin-top: 0.75rem;
+}
+
+.image-preview img {
+  max-width: 200px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  display: block;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: calc(var(--spacing-unit) * 1.5);
+  background: var(--secondary-color);
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.filters .form-group {
+  flex: 1 1 220px;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: calc(var(--spacing-unit) * 1.5);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+table thead th {
+  background: var(--secondary-color);
+  text-align: left;
+  padding: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+table tbody td {
+  border-top: 1px solid var(--border-color);
+  padding: 1rem;
+  font-size: 0.95rem;
+}
+
+.actions button {
+  padding: 0.5rem 1rem;
+  margin-right: 0.5rem;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.actions button:hover {
+  background: var(--secondary-color);
+  transform: translateY(-1px);
+}
+
+.actions button:disabled {
+  background: #edf2f7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 12px;
+}
+
+.badge-yes {
+  background: #38a169;
+  color: #fff;
+}
+
+.badge-no {
+  background: #e2e8f0;
+  color: var(--text-color);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  align-items: center;
+  margin-top: calc(var(--spacing-unit) * 1.5);
+}
+
+.pagination button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  background: #fff;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.pagination button:hover {
+  background: var(--secondary-color);
+}
+
+.pagination button:disabled {
+  background: #edf2f7;
+  cursor: not-allowed;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+ul li {
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .container {
+    margin: 1rem;
+    padding: var(--spacing-unit);
+  }
+
+  .form-grid,
+  .fieldset-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filters .form-group {
+    flex: 1 1 100%;
+  }
+
+  .tabs {
+    flex-direction: column;
+  }
+
+  .tabs button {
+    width: 100%;
+    text-align: left;
+  }
+}
+input, select, textarea {
+  padding: 0.75rem;              /* Espaciado interno */
+  border: 1px solid #cbd5e0;     /* Borde por defecto (gris claro) */
+  border-radius: 6px;            /* Bordes redondeados */
+  font-size: 1rem;              /* Tamaño de fuente */
+  width: 100%;                  /* Ancho completo */
+  box-sizing: border-box;       /* Incluye el borde en el tamaño total */
+  background: #fff;             /* Fondo blanco */
+  transition: all 0.2s ease;    /* Transición suave para cambios */
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;                /* Elimina el contorno predeterminado */
+  border-color: #000000;        /* Color del borde al enfocar (azul claro) */
+  box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.2); /* Sombra sutil al enfocar */
+}

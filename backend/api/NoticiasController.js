@@ -63,7 +63,6 @@ async getNoticiaById(req, res) {
       .populate('categories', 'name slug color')
       .lean();
 
-      console.log("noticia",noticia)
     if (!noticia) {
       return res.status(404).json({ error: 'Noticia no encontrada' });
     }
@@ -75,6 +74,23 @@ async getNoticiaById(req, res) {
     return res.status(500).json({ error: 'Error al obtener noticia por ID' });
   }
 }
+async getNoticiaBySlug(req, res) {
+  try {
+    const { slug } = req.params;
+    if (!slug) return res.status(400).json({ error: 'Slug no proporcionado' });
+
+    const noticia = await Noticia.findOne({ slug })
+      .populate('categories', 'name slug color')
+      .lean();
+
+    if (!noticia) return res.status(404).json({ error: 'Noticia no encontrada' });
+    return res.status(200).json({ noticia });
+  } catch (e) {
+    console.error('Error en getNoticiaBySlug:', e);
+    return res.status(500).json({ error: 'Error al obtener noticia por slug' });
+  }
+}
+
 
 
  async obtenerNoticiasPorCategoriaId(req, res) {
@@ -102,7 +118,6 @@ async getNoticiasRecientes(req, res, next) {
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
-      console.log("noticias:",noticias)
 
     res.status(200).json(noticias);
   } catch (e) {
@@ -121,7 +136,6 @@ async getNoticiasRecomendadas(req, res, next) {
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();
-      console.log("noticias:",noticias)
 
     res.status(200).json(noticias);
   } catch (e) {
@@ -158,7 +172,6 @@ async getNoticiasRecomendadas(req, res, next) {
   try {
     const nombresCategorias = req.body.categorias || [];
 
-    console.log('Nombres recibidos:', nombresCategorias);
 
     if (!Array.isArray(nombresCategorias) || nombresCategorias.length === 0) {
       return res.status(400).json({ error: 'Debes proporcionar al menos una categoría.' });
@@ -216,7 +229,6 @@ async getAllNoticias(req, res, next) {
         publishAt, // si usas publicación programada más adelante
       } = req.body;
 
-      console.log("noticias", req.body);
       // Validación mínima
       if (!title) {
         return res.status(400).json({ message: 'El campo title es obligatorio.' });

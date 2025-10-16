@@ -28,7 +28,7 @@ export class Recomendadas {
           'itemListElement': noticias.slice(0, 3).map((n, idx) => ({
             '@type': 'ListItem',
             'position': idx + 1,
-            'url': `https://maslatino.com/noticia/${n._id || n.slug || ''}`,
+            'url': `https://maslatino.com/noticia/${n.slug || ''}`,
             'name': n.title || ''
           }))
         };

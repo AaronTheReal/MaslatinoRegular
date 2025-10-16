@@ -1,7 +1,7 @@
 // Componente: podcast.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PodcastPCService, PodcastDesktopPayload } from '../../../services/podcast-service';
+import { PodcastPCService, PodcastDesktopPayload } from './../../../services/podcast-servicePC';
 
 @Component({
   selector: 'app-podcasts',

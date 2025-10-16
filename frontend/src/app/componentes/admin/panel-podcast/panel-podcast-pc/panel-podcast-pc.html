@@ -1,0 +1,267 @@
+<div class="container">
+  PC
+  <div class="tabs">
+    <button (click)="selectTab('agregar-podcast-pc')" [class.active]="selectedTab === 'agregar-podcast-pc'">
+      Agregar Podcast PC
+    </button>
+
+    <button (click)="selectTab('administrar-podcasts-pc')" [class.active]="selectedTab === 'administrar-podcasts-pc'">
+      Administrar Podcasts PC
+    </button>
+  </div>
+
+  <!-- AGREGAR / EDITAR PODCAST -->
+  <div *ngIf="selectedTab === 'agregar-podcast-pc'" class="form-section">
+    <h2>{{ editingPodcast ? 'Editar Podcast (PC)' : 'Agregar Podcast (PC)' }}</h2>
+
+    <form [formGroup]="podcastForm" (ngSubmit)="onSubmitPodcast()">
+      <div class="form-grid">
+        <!-- Básicos -->
+        <div>
+          <label for="title">Título:</label>
+          <input id="title" formControlName="title" type="text" required />
+        </div>
+
+        <div>
+          <label for="subtitle">Subtítulo:</label>
+          <input id="subtitle" formControlName="subtitle" type="text" />
+        </div>
+
+        <div>
+          <label for="authorName">Autor:</label>
+          <input id="authorName" formControlName="authorName" type="text" />
+        </div>
+
+        <div>
+          <label for="language">Idioma:</label>
+          <select id="language" formControlName="language">
+            <option value="es">Español</option>
+            <option value="en-US">Inglés (EEUU)</option>
+            <option value="en-GB">Inglés (UK)</option>
+            <option value="pt-BR">Portugués (BR)</option>
+            <option value="fr">Francés</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="coverImage">Imagen de Portada (URL):</label>
+          <input id="coverImage" formControlName="coverImage" type="text" />
+        </div>
+
+        <div>
+          <label for="bannerImage">Imagen Banner (URL):</label>
+          <input id="bannerImage" formControlName="bannerImage" type="text" />
+        </div>
+
+        <div>
+          <label for="order">Orden (home):</label>
+          <input id="order" formControlName="order" type="number" />
+        </div>
+
+        <div>
+          <label for="featured">Destacado en Home:</label>
+          <input id="featured" formControlName="featured" type="checkbox" />
+        </div>
+
+        <div class="form-control">
+          <mat-form-field appearance="fill">
+            <mat-label>Categorías</mat-label>
+            <mat-select formControlName="categories" multiple>
+              <mat-option *ngFor="let cat of categorias" [value]="cat._id">
+                {{ cat.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div>
+          <label for="tags">Tags:</label>
+          <input id="tags" formControlName="tags" type="text" placeholder="Ej: audio, entrevistas, salud" />
+        </div>
+
+        <div>
+          <label for="relatedLinks">Links relacionados (CSV):</label>
+          <input id="relatedLinks" formControlName="relatedLinks" type="text" placeholder="https://..., https://..." />
+        </div>
+
+        <div>
+          <label for="layout">Layout:</label>
+          <select id="layout" formControlName="layout">
+            <option value="classic">Classic</option>
+            <option value="grid">Grid</option>
+            <option value="carousel">Carousel</option>
+          </select>
+        </div>
+
+        <div style="grid-column: span 2;">
+          <label for="description">Descripción larga del Podcast:</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="4"
+            placeholder="Describe de qué trata el podcast..."
+          ></textarea>
+        </div>
+      </div>
+
+      <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #ddd;" />
+
+      <!-- Meta SEO -->
+      <div class="form-grid">
+        <div>
+          <label for="metaDescription">Descripción SEO:</label>
+          <input id="metaDescription" formControlName="metaDescription" type="text" placeholder="Texto breve para buscadores" />
+        </div>
+
+        <div>
+          <label for="metaImage">Imagen SEO (URL):</label>
+          <input id="metaImage" formControlName="metaImage" type="text" placeholder="https://tusitio.com/seo.jpg" />
+        </div>
+
+        <div style="grid-column: span 2;">
+          <label for="metaKeywords">Keywords SEO (CSV):</label>
+          <input id="metaKeywords" formControlName="metaKeywords" type="text" placeholder="podcast, entrevistas, política" />
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2rem;">
+        <button type="submit" [disabled]="podcastForm.invalid">
+          {{ editingPodcast ? 'Actualizar Podcast' : 'Guardar Podcast' }}
+        </button>
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+      <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+    </form>
+  </div>
+
+  <!-- ADMINISTRAR -->
+  <div *ngIf="selectedTab === 'administrar-podcasts-pc'" class="manage-section">
+    <h2>Administrar Podcasts PC</h2>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Orden</th>
+          <th>Destacado</th>
+          <th>Título</th>
+          <th>Autor</th>
+          <th>Categorías</th>
+          <th>Etiquetas</th>
+          <th>Episodios</th>
+          <th>Layout</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let podcast of podcasts">
+          <td>{{ podcast.order ?? 0 }}</td>
+          <td>{{ podcast.featured ? 'Sí' : 'No' }}</td>
+          <td>{{ podcast.title }}</td>
+          <td>{{ podcast.authorName || 'N/A' }}</td>
+          <td>
+            <ul>
+              <li *ngFor="let catId of podcast.categories">
+                {{ getCategoryNameById(catId) }}
+              </li>
+            </ul>
+          </td>
+          <td>
+            <ul>
+              <li *ngFor="let tag of podcast.tags">{{ tag }}</li>
+            </ul>
+          </td>
+          <td>{{ podcast.episodes?.length || 0 }}</td>
+          <td>{{ podcast.layout || 'classic' }}</td>
+          <td class="actions">
+            <button (click)="editarPodcast(podcast)">Editar</button>
+            <button (click)="eliminarPodcast(podcast._id!)">Eliminar</button>
+            <button (click)="gestionarEpisodios(podcast)">Episodios</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Mensajes -->
+    <div *ngIf="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded mt-4">
+      {{ successMessage }}
+    </div>
+    <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mt-4">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Gestión de Episodios -->
+    <div *ngIf="selectedPodcast" class="episodes-section">
+      <h3>Episodios de {{ selectedPodcast.title }}</h3>
+      <button (click)="mostrarFormularioEpisodio()">Agregar Episodio</button>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Duración</th>
+            <th>Lanzamiento</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let episode of selectedPodcast.episodes">
+            <td>{{ episode.title }}</td>
+            <td>{{ episode.duration || 'N/A' }}</td>
+            <td>{{ episode.releaseDate ? (episode.releaseDate | date:'yyyy-MM-dd') : 'N/A' }}</td>
+            <td>
+              <button (click)="editarEpisodio(episode)">Editar</button>
+              <button (click)="eliminarEpisodio(selectedPodcast._id!, episode._id!)">Eliminar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Formulario Episodio -->
+      <div *ngIf="showingEpisodeForm" class="form-section">
+        <h4>{{ editingEpisode ? 'Editar Episodio' : 'Agregar Episodio' }}</h4>
+
+        <form [formGroup]="episodeForm" (ngSubmit)="onSubmitEpisodio()">
+          <div class="form-grid">
+          <div>
+            <label for="episodeTitle">Título:</label>
+            <input id="episodeTitle" formControlName="title" type="text" required />
+          </div>
+
+          <div>
+            <label for="episodeDescription">Descripción:</label>
+            <textarea id="episodeDescription" formControlName="description"></textarea>
+          </div>
+
+          <div>
+            <label for="audioUrl">URL del Audio:</label>
+            <input id="audioUrl" formControlName="audioUrl" type="text" required />
+          </div>
+
+          <div>
+            <label for="episodeImage">Imagen (URL):</label>
+            <input id="episodeImage" formControlName="image" type="text" />
+          </div>
+
+          <div>
+            <label for="duration">Duración (segundos):</label>
+            <input id="duration" formControlName="duration" type="number" />
+          </div>
+
+          <div>
+            <label for="releaseDate">Fecha de Lanzamiento:</label>
+            <input id="releaseDate" formControlName="releaseDate" type="date" />
+          </div>
+          </div>
+
+          <button type="submit" [disabled]="episodeForm.invalid">
+            {{ editingEpisode ? 'Actualizar Episodio' : 'Guardar Episodio' }}
+          </button>
+          <button type="button" (click)="cancelarEpisodio()">Cancelar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -4,7 +4,7 @@
 
     <div class="grid-news" *ngIf="noticias$ | async as noticias">
       <!-- TARJETA GRANDE (primera noticia) -->
-      <a class="tarjeta tarjeta-grande" [routerLink]="['/noticia', (noticias[0]?._id || noticias[0]?.slug || '')]">
+      <a class="tarjeta tarjeta-grande" [routerLink]="['/noticia', (noticias[0]?.slug || '')]">
         <img [src]="noticias[0]?.meta?.image" [alt]="noticias[0]?.title || ''" />
         <div class="contenido-superpuesto">
           <div class="overlay-text">
@@ -18,7 +18,7 @@
       <a
         class="tarjeta tarjeta-completa"
         *ngFor="let noticia of noticias.slice(1, 3)"
-        [routerLink]="['/noticia', (noticia?._id || noticia?.slug || '')]"
+        [routerLink]="['/noticia', (noticia?.slug || '')]"
       >
         <div class="media-curva">
           <img [src]="noticia?.meta?.image" [alt]="noticia?.title || ''" />
@@ -34,7 +34,7 @@
         <a
           class="tarjeta tarjeta-horizontal"
           *ngFor="let noticia of noticias.slice(3, 5)"
-          [routerLink]="['/noticia', (noticia?._id || noticia?.slug || '')]"
+          [routerLink]="['/noticia', (noticia?.slug || '')]"
         >
           <img [src]="noticia?.meta?.image || 'assets/default-news.jpg'" [alt]="noticia?.title || ''" />
           <div class="superpuesto-arriba">

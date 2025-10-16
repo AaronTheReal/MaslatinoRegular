@@ -1,0 +1,187 @@
+<div class="container">
+  <div class="tabs">
+    <button (click)="selectTab('agregar')" [class.active]="selectedTab === 'agregar'">Agregar Categoria</button>
+    <button (click)="selectTab('administrar')" [class.active]="selectedTab === 'administrar'">Administrar Categoria</button>
+  </div>
+  <div class="content">
+    <div *ngIf="selectedTab === 'agregar'">
+      <h2>Agregar Categoria</h2>
+   <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="form-grid">
+  <!-- Primera fila: Nombre y Slug -->
+  <div>
+    <label for="name">Nombre:</label>
+    <input id="name" formControlName="name" type="text" placeholder="Ej: Arte" />
+  </div>
+
+  <div>
+    <label for="slug">Slug (URL):</label>
+    <input id="slug" formControlName="slug" type="text" placeholder="Ej: arte" />
+  </div>
+
+  <!-- Segunda fila: Color y Imagen -->
+  <div>
+    <label for="color">Color de la categoría:</label>
+    <input id="color" formControlName="color" type="color" />
+  </div>
+
+  <div>
+    <label for="image">Imagen destacada (URL externa):</label>
+    <input id="image" formControlName="image" type="text" placeholder="https://...imagen.jpg" />
+    <div *ngIf="categoryForm.value.image" class="image-preview">
+      <img [src]="categoryForm.value.image" alt="Preview de imagen" />
+    </div>
+  </div>
+
+  <!-- Descripción (fila completa) -->
+  <div class="full-width">
+    <label for="description">Descripción:</label>
+    <textarea
+      id="description"
+      formControlName="description"
+      rows="3"
+      placeholder="Describe brevemente la categoría..."
+    ></textarea>
+  </div>
+
+  <!-- Botón (fila completa, centrado) -->
+  <div class="full-width" style="text-align: center;">
+    <button type="submit" [disabled]="categoryForm.invalid">
+      {{ editing ? 'Actualizar categoría' : 'Guardar categoría' }}
+    </button>
+  </div>
+</form>
+
+
+
+    </div>
+    <div *ngIf="selectedTab === 'administrar'">
+      <h2>Administrar Categoria</h2>
+          <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cat of categorias">
+            <td>{{ cat.name }}</td>
+            <td>{{ cat.description }}</td>
+            <td>
+              <button (click)="editarCategoria(cat)">Editar</button>
+              <button (click)="eliminarCategoria(cat._id!)">Eliminar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+</div>
+
+
+<!--
+
+<div class="min-h-screen bg-gray-100 py-10 px-4">
+  <div class="max-w-md mx-auto bg-white shadow-lg rounded-lg overflow-hidden border">
+    <div class="grid grid-cols-1 gap-4 border-b bg-gray-50 px-6 pt-4 justify-items-center">
+      <button
+        [ngClass]="{
+          'bg-white border-t border-l border-r rounded-t px-5 py-2 text-blue-600 font-semibold shadow-sm': activeTab === 'add',
+          'bg-gray-100 text-gray-600 px-5 py-2': activeTab !== 'add'
+        }"
+        (click)="activeTab = 'add'"
+        class="tab-button w-64 text-center mx-auto px-4"
+      >
+        ➕ Agregar categoría
+      </button>
+      <button
+        [ngClass]="{
+          'bg-white border-t border-l border-r rounded-t px-5 py-2 text-blue-600 font-semibold shadow-sm': activeTab === 'manage',
+          'bg-gray-100 text-gray-600 px-5 py-2': activeTab !== 'manage'
+        }"
+        (click)="activeTab = 'manage'"
+        class="tab-button w-64 text-center mx-auto px-4"
+      >
+        📂 Administrar categorías
+      </button>
+    </div>
+
+    <div class="p-6">
+      <ng-container *ngIf="activeTab === 'add'">
+        <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="col-span-1">
+            <label class="block mb-1 font-medium text-sm">Nombre</label>
+            <input formControlName="name" type="text" placeholder="Ej: Tecnología" class="w-full" />
+          </div>
+
+          <div class="col-span-1">
+            <label class="block mb-1 font-medium text-sm">Slug (URL)</label>
+            <input formControlName="slug" type="text" placeholder="Ej: tecnologia" class="w-full" />
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block mb-1 font-medium text-sm">Descripción</label>
+            <textarea formControlName="description" rows="3" class="w-full" placeholder="Descripción breve de la categoría"></textarea>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="block mb-1 font-medium text-sm">Imagen destacada</label>
+            <input type="file" (change)="onImageUpload($event)" class="w-full" />
+            <div *ngIf="previewUrl" class="mt-2">
+              <img [src]="previewUrl" alt="Vista previa" class="w-40 rounded shadow-md border" />
+            </div>
+          </div>
+
+          <div class="col-span-1">
+            <label class="block mb-1 font-medium text-sm">Orden (prioridad)</label>
+            <input formControlName="order" type="number" class="w-24" placeholder="1" />
+          </div>
+
+          <div class="md:col-span-2 mt-2">
+            <button
+              type="submit"
+              [disabled]="categoryForm.invalid"
+              class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Guardar categoría
+            </button>
+          </div>
+        </form>
+      </ng-container>
+
+      <ng-container *ngIf="activeTab === 'manage'">
+        <div *ngIf="categorias.length === 0" class="text-gray-500 italic">No hay categorías registradas aún.</div>
+
+        <div *ngIf="categorias.length > 0" class="overflow-auto mt-4 rounded-lg border border-gray-200">
+          <table class="min-w-full text-sm text-left border-collapse">
+            <thead class="bg-gray-100 text-gray-700">
+              <tr>
+                <th class="px-4 py-2 border">Nombre</th>
+                <th class="px-4 py-2 border">Slug</th>
+                <th class="px-4 py-2 border text-center">Orden</th>
+                <th class="px-4 py-2 border text-center">Imagen</th>
+                <th class="px-4 py-2 border text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let cat of categorias; let i = index" class="hover:bg-gray-50">
+                <td class="px-4 py-2 border font-medium">{{ cat.name }}</td>
+                <td class="px-4 py-2 border text-gray-600">{{ cat.slug }}</td>
+                <td class="px-4 py-2 border text-center">{{ cat.order }}</td>
+                <td class="px-4 py-2 border text-center">
+                  <img *ngIf="cat.preview" [src]="cat.preview" class="w-14 h-14 object-cover rounded shadow" />
+                </td>
+                <td class="px-4 py-2 border text-center">
+                  <button (click)="onDelete(i)" class="delete-button">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+-->

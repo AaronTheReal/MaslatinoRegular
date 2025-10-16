@@ -1,0 +1,133 @@
+<div class="container mx-auto px-6 py-10">
+     <div class="space-x-2">
+      <a routerLink="/calendario-panel" routerLinkActive="text-blue-600 font-bold" class="hover:underline">
+        Móvil
+      </a>
+      |
+      <a routerLink="/calendario-panel-pc" routerLinkActive="text-blue-600 font-bold" class="hover:underline">
+        PC
+      </a>
+    </div>
+  <!-- Tabs -->
+  <div class="flex justify-center space-x-4 mb-6">
+    <button class="btn-tab" [class.active]="selectedTab === 'agregar'" (click)="selectTab('agregar')">Agregar</button>
+    <button class="btn-tab" [class.active]="selectedTab === 'administrar'" (click)="selectTab('administrar')">Administrar</button>
+    <button class="btn-tab" [class.active]="selectedTab === 'stats'" (click)="selectTab('stats')">Stats</button>
+  </div>
+
+  <div *ngIf="selectedTab === 'agregar'">
+    <h2 class="text-2xl font-bold mb-6">{{ editing ? 'Editar evento/anuncio' : 'Agregar evento/anuncio' }}</h2>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Tipo, Estado y Destacado -->
+      <div>
+        <label class="form-label">Tipo:</label>
+        <select class="form-input" formControlName="kind">
+          <option value="evento">Evento</option>
+          <option value="anuncio">Anuncio</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="form-label">Estado:</label>
+        <select class="form-input" formControlName="status">
+          <option value="draft">Borrador</option>
+          <option value="published">Publicado</option>
+          <option value="archived">Archivado</option>
+        </select>
+      </div>
+
+      <div class="flex items-center">
+        <input type="checkbox" formControlName="featured" class="mr-2" />
+        <label>Destacado</label>
+      </div>
+
+      <!-- Título y Slug -->
+      <input class="form-input col-span-full" type="text" formControlName="title" placeholder="Título del evento" />
+      <input class="form-input col-span-full" type="text" formControlName="slug" placeholder="Slug del evento" />
+
+      <!-- Excerpt y Body -->
+      <textarea class="form-textarea col-span-full" formControlName="excerpt" placeholder="Resumen breve..."></textarea>
+      <textarea class="form-textarea col-span-full" formControlName="body" placeholder="Contenido largo..."></textarea>
+
+      <!-- Imagen -->
+      <div class="col-span-full">
+        <input class="form-input" type="text" formControlName="image" placeholder="URL de la imagen" />
+        <img *ngIf="form.value.image" [src]="form.value.image" class="mt-2 h-40 object-contain" />
+      </div>
+
+      <!-- Fechas -->
+      <div>
+        <label class="form-label">Todo el día</label>
+        <input type="checkbox" formControlName="allDay" />
+      </div>
+      <input class="form-input" type="text" formControlName="timezone" placeholder="Zona horaria" />
+      <input class="form-input" type="datetime-local" formControlName="startAt" />
+      <input class="form-input" type="datetime-local" formControlName="endAt" />
+
+      <!-- Ubicación -->
+      <fieldset class="col-span-full border p-4 rounded">
+        <legend class="text-lg font-semibold">Ubicación</legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input class="form-input" type="text" formControlName="name" [formGroup]="locationGroup" placeholder="Nombre" />
+          <input class="form-input" type="text" formControlName="address" [formGroup]="locationGroup" placeholder="Dirección" />
+          <input class="form-input" type="number" step="any" formControlName="lat" [formGroup]="locationGroup" placeholder="Latitud" />
+          <input class="form-input" type="number" step="any" formControlName="lng" [formGroup]="locationGroup" placeholder="Longitud" />
+        </div>
+      </fieldset>
+
+      <!-- Enlace -->
+      <fieldset class="col-span-full border p-4 rounded">
+        <legend class="text-lg font-semibold">Enlace</legend>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input class="form-input" type="text" formControlName="label" [formGroup]="linkGroup" placeholder="Label" />
+          <input class="form-input" type="text" formControlName="url" [formGroup]="linkGroup" placeholder="URL" />
+          <label class="flex items-center">
+            <input type="checkbox" formControlName="external" [formGroup]="linkGroup" class="mr-2" /> Externo
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- Categorías -->
+      <mat-form-field appearance="fill">
+        <mat-label>Categorías</mat-label>
+        <mat-select formControlName="categories" multiple>
+          <mat-option *ngFor="let cat of categorias" [value]="cat._id">
+            {{ cat.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Tags -->
+      <input class="form-input col-span-full" type="text" formControlName="tags" placeholder="marketing, diseño..." />
+
+      <!-- Botón Submit -->
+      <div class="col-span-full flex justify-center">
+        <button type="submit" class="btn-primary" [disabled]="form.invalid || loadingSubmit">
+          {{ editing ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ADMINISTRAR TAB -->
+  <div *ngIf="selectedTab === 'administrar'" class="mt-8">
+    <!-- Aquí vendrá la tabla con filtros y acciones -->
+    <p class="text-gray-600">(Por implementar: tabla con administración de eventos)</p>
+  </div>
+
+  <!-- STATS TAB -->
+  <div *ngIf="selectedTab === 'stats'" class="mt-8">
+    <ng-container *ngIf="statsData(); else noStats">
+      <ul class="list-disc pl-5">
+        <li><strong>Total:</strong> {{ statsData()?.total }}</li>
+        <li><strong>Publicados:</strong> {{ statsData()?.published }}</li>
+        <li><strong>Próximos:</strong> {{ statsData()?.upcoming }}</li>
+        <li><strong>Pasados:</strong> {{ statsData()?.past }}</li>
+      </ul>
+    </ng-container>
+    <ng-template #noStats>
+      <p class="text-gray-500">Sin datos de stats todavía.</p>
+    </ng-template>
+  </div>
+</div>

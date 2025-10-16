@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NoticiasService } from '../../services/noticias-service';
 import { CategoriaService, CategoriaPayload } from '../../services/categorias-service';
-import { Noticia, Category, Block } from '../../../models/noticia.model';
+import { Noticia, Category } from '../../../models/noticia.model';
 import { Meta, Title } from '@angular/platform-browser';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
@@ -38,27 +38,30 @@ export class NoticiasIndividuales {
 
   readonly noticia$: Observable<Noticia | null> = this.route.paramMap.pipe(
     switchMap(params => {
-      const id = params.get('id');
-      if (!id) {
-        console.log('No ID provided');
+      const slug = params.get('slug');
+      if (!slug) {
+        console.log('No slug provided');
         return of(null);
       }
-      return this.noticiasService.getNoticiaById(id).pipe(
+      return this.noticiasService.getNoticiaBySlug(slug).pipe(
         switchMap(noticia => {
-          if (!noticia) {
-            return of(null);
-          }
-          const categoryIds = noticia.categories
+          if (!noticia) return of(null);
+
+          const categoryIds = (noticia.categories ?? [])
             .map(cat => (typeof cat === 'string' ? cat : cat._id))
             .filter((id): id is string => !!id);
+
           if (categoryIds.length === 0) {
             noticia.categories = [];
             return of(noticia);
           }
+
           return this.categoriasService.getCategoriasByIds(categoryIds).pipe(
-            catchError(() => of(categoryIds.map(id => ({ _id: id, name: 'Sin categoría', slug: '', color: '' })))),
+            catchError(() =>
+              of(categoryIds.map(id => ({ _id: id, name: 'Sin categoría', slug: '', color: '' })))
+            ),
             tap(categories => {
-              noticia.categories = categories; // Assign CategoriaPayload[] to categories
+              noticia.categories = categories as unknown as Category[];
             }),
             switchMap(() => of(noticia))
           );
@@ -68,7 +71,7 @@ export class NoticiasIndividuales {
             const title = noticia.title || 'Noticia';
             const description = noticia.meta?.description || noticia.summary || 'Descripción no disponible';
             const image = noticia.meta?.image || '/assets/og.jpg';
-            const url = noticia.originalUrl || `https://maslatino.com/noticia/${encodeURIComponent(noticia._id)}`;
+            const url = noticia.originalUrl || `https://maslatino.com/noticia/${encodeURIComponent(noticia.slug ?? '')}`;
 
             this.title.setTitle(`${title} | Mas Latino`);
             this.meta.updateTag({ name: 'description', content: description });
@@ -121,7 +124,7 @@ export class NoticiasIndividuales {
           }
         }),
         catchError(error => {
-          console.error('Error fetching noticia:', error);
+          console.error('Error fetching noticia (slug):', error);
           this.title.setTitle('Error | Mas Latino');
           this.meta.updateTag({ name: 'description', content: 'Error al cargar la noticia.' });
           return of(null);
@@ -144,10 +147,10 @@ export class NoticiasIndividuales {
       .filter(Boolean);
     return names.length ? names.join(', ') : 'Sin categorías';
   }
+
   buscarNoticia() {
     if (this.busqueda.trim()) {
       console.log('Buscando:', this.busqueda);
-      // Implement navigation or search logic here
     }
   }
 
@@ -193,155 +196,8 @@ export class NoticiasIndividuales {
     }
     this.archivos = tmp.reverse();
   }
-    private isCategory(x: unknown): x is Category {
+
+  private isCategory(x: unknown): x is Category {
     return !!x && typeof x === 'object' && 'name' in (x as any);
   }
 }
-
-
-
-/*
-import { Component, ChangeDetectionStrategy, inject, Renderer2 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { NoticiasService } from '../../services/noticias-service';
-import { Noticia, Category } from '../../../models/noticia.model';
-import { Meta, Title } from '@angular/platform-browser';
-import { switchMap, tap, catchError } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
-
-@Component({
-  selector: 'app-noticias-individuales',
-  standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
-  templateUrl: './noticias-individuales.html',
-  styleUrls: ['./noticias-individuales.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-export class NoticiasIndividuales {
-  private readonly route = inject(ActivatedRoute);
-  private readonly noticiasService = inject(NoticiasService);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
-  private readonly renderer = inject(Renderer2);
-
-  readonly noticia$: Observable<Noticia | null> = this.route.paramMap.pipe(
-    switchMap(params => {
-      const id = params.get('id');
-      console.log('si llega', id);
-      if (!id) {
-        console.log('No ID provided');
-        return of(null);
-      }
-      return this.noticiasService.getNoticiaById(id).pipe(
-        tap(noticia => {
-          console.log('que llega?', noticia);
-          if (noticia) {
-            // SEO: Set title and meta tags
-            this.title.setTitle(noticia.title || 'Noticia');
-            this.meta.updateTag({ name: 'description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:title', content: noticia.title || 'Noticia' });
-            this.meta.updateTag({ property: 'og:description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:image', content: noticia.meta?.image || '' });
-
-            // Add schema.org Article structured data
-            const schema = {
-              '@context': 'https://schema.org',
-              '@type': 'Article',
-              headline: noticia.title || 'Noticia',
-              description: noticia.meta?.description || noticia.summary || 'Descripción no disponible',
-              image: noticia.meta?.image || '',
-              author: { '@type': 'Person', name: noticia.authorName || 'Anónimo' },
-              datePublished: noticia.createdAt || '',
-              dateModified: noticia.updatedAt || '',
-              publisher: {
-                '@type': 'Organization',
-                name: 'Mas Latino',
-                logo: {
-                  '@type': 'ImageObject',
-                  url: 'https://maslatino.com/logo.png' // Replace with your site’s logo URL
-                }
-              },
-              mainEntityOfPage: {
-                '@type': 'WebPage',
-                '@id': `https://maslatino.com/noticia/${noticia._id}` // Replace with your production URL
-              }
-            };
-            const script = this.renderer.createElement('script');
-            this.renderer.setAttribute(script, 'type', 'application/ld+json');
-            this.renderer.setProperty(script, 'textContent', JSON.stringify(schema));
-            this.renderer.appendChild(document.head, script);
-          }
-        }),
-        catchError(error => {
-          console.error('Error fetching noticia:', error);
-          return of(null);
-        })
-      );
-    })
-  );
-
-  getCategoryNames(categories: Category[] | undefined): string {
-    return categories?.map(cat => cat.name).join(', ') || 'Sin categorías';
-  }
-}
-*/
-
-
-
-
-
-/*
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { NoticiasService } from '../../services/noticias-service';
-import { Noticia, Category } from '../../../models/noticia.model';
-import { Meta, Title } from '@angular/platform-browser';
-import { switchMap, tap } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
-
-@Component({
-  selector: 'app-noticias-individuales',
-  standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
-  templateUrl: './noticias-individuales.html',
-  styleUrls: ['./noticias-individuales.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-export class NoticiasIndividuales {
-  private readonly route = inject(ActivatedRoute);
-  private readonly noticiasService = inject(NoticiasService);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
-
-  readonly noticia$: Observable<Noticia | null> = this.route.paramMap.pipe(
-    switchMap(params => {
-      const id = params.get('id');
-      console.log("si llega");
-      if (!id) {
-        return of(null);
-      }
-      return this.noticiasService.getNoticiaById(id).pipe(
-        tap(noticia => {
-                  console.log("que llega?",noticia);
-
-          if (noticia) {
-            // SEO: Set title and meta tags
-            this.title.setTitle(noticia.title || 'Noticia');
-            this.meta.updateTag({ name: 'description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:title', content: noticia.title || 'Noticia' });
-            this.meta.updateTag({ property: 'og:description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:image', content: noticia.meta?.image || '' });
-          }
-        })
-      );
-    })
-  );
-
-  getCategoryNames(categories: Category[] | undefined): string {
-    return categories?.map(cat => cat.name).join(', ') || 'Sin categorías';
-  }
-}
-
-*/
