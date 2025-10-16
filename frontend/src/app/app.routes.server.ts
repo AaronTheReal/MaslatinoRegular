@@ -16,6 +16,16 @@ export const serverRoutes: ServerRoute[] = [
     path: 'noticia/*',
     renderMode: RenderMode.Server
   },
+  // Admin: solo cliente (sin SSR/SEO)
+  { path: 'admin-panel', renderMode: RenderMode.Client },
+  { path: 'usuarios-panel', renderMode: RenderMode.Client },
+  { path: 'calendario-panel', renderMode: RenderMode.Client },
+  { path: 'calendario-panel-pc', renderMode: RenderMode.Client },
+  { path: 'multimedia-panel', renderMode: RenderMode.Client },
+  { path: 'noticias-panel', renderMode: RenderMode.Client },
+  { path: 'podcast-panel', renderMode: RenderMode.Client },
+  { path: 'radio-panel', renderMode: RenderMode.Client },
+  { path: 'categorias-panel', renderMode: RenderMode.Client },
 
   
 ];

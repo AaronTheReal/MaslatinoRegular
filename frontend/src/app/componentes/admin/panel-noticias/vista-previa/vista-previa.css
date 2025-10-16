@@ -1,0 +1,14 @@
+/* src/app/components/admin/panel-noticias/vista-previa/vista-previa.css */
+.blockquote {
+  font-family: Georgia, 'Times New Roman', serif;  /* fuente con aire profesional */
+  font-style: italic;                              /* cursiva suave */
+  font-size: 1.1rem;                               /* un pelín más grande que el texto normal */
+  line-height: 1.4;                                /* para mejor lectura */
+  color: #444;                                     /* gris oscuro, menos severo que el negro puro */
+  margin: 1.5em 0;                                 /* separación arriba/abajo */
+}
+.blockquote-footer {
+  font-size: 0.9rem;
+  color: #666;
+}
+

@@ -1,0 +1,53 @@
+<div class="form-container">
+  <h2>📻 Agregar Estación de Radio</h2>
+
+  <form [formGroup]="radioForm" (ngSubmit)="onSubmit()" novalidate>
+    <label>Título *</label>
+    <input type="text" formControlName="title" placeholder="Nombre de la estación" />
+
+    <label>Descripción</label>
+    <textarea formControlName="description" rows="3" placeholder="Descripción breve..."></textarea>
+
+    <label>Imagen (URL) *</label>
+    <input type="text" formControlName="image" placeholder="https://..." />
+
+    <label>Script Embed *</label>
+    <textarea formControlName="scriptEmbed" rows="3" placeholder='<script src="..."></script>'></textarea>
+
+    <label>Categorías *</label>
+    <select formControlName="categories">
+      <option value="Mundo">Mundo</option>
+      <option value="Arte">Arte</option>
+      <option value="Política">Política</option>
+      <option value="Finanzas">Finanzas</option>
+      <option value="Familia">Familia</option>
+      <option value="Deportes">Deportes</option>
+      <option value="Salud">Salud</option>
+    </select>
+
+    <label>Etiquetas (separadas por coma)</label>
+    <input type="text" formControlName="tags" placeholder="ej: noticias, música, vivo" />
+
+    <label>Idioma</label>
+    <select formControlName="language">
+      <option value="es">Español</option>
+      <option value="es-MX">Español (México)</option>
+      <option value="en-US">Inglés (EEUU)</option>
+      <option value="pt-BR">Portugués (Brasil)</option>
+    </select>
+
+    <button type="submit" [disabled]="radioForm.invalid">Guardar Estación</button>
+  </form>
+
+  <div class="msg success" *ngIf="successMessage">{{ successMessage }}</div>
+  <div class="msg error" *ngIf="errorMessage">{{ errorMessage }}</div>
+</div>
+
+
+
+
+<!--
+<div >
+  <div #playerContainer></div>
+</div>
+-->

@@ -1,0 +1,41 @@
+
+.required {
+  color: #d9534f; /* rojo tipo Bootstrap danger */
+}
+
+/* Ajustes para .content-blocks-preview si deseas fondo distinto */
+.content-blocks-preview {
+  background: #f8f9fa; /* gris claro */
+  padding: 0.75rem;
+  border-radius: 0.25rem;
+}
+
+/* Mejorar contraste en inputs en modo oscuro/claro si no usas Bootstrap */
+
+/* Si quieres limitar aún más el ancho interno de inputs en pantallas muy grandes: */
+.form-control {
+  max-width: 100%;
+}
+
+/* Si deseas que el <h2> se vea con cierta clase: */
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Sombra personalizada si no usas Bootstrap */
+.shadow-sm {
+  box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075)!important;
+}
+/* panel-noticias.css */
+.content-blocks-preview div[formGroup] {
+  background: #fff;
+}
+.content-blocks-preview label {
+  font-weight: 500;
+}
+
+
+
+
+

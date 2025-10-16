@@ -2,7 +2,7 @@ import { Component, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, OnInit, Inject, PLATF
 import { CommonModule } from '@angular/common';
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
-import { CalendarPCService, CalendarItemPC } from '../../../services/calendario-service';
+import { CalendarPCService, CalendarItemPC } from './../../../services/calendario-servicePC';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
 import { isPlatformBrowser } from '@angular/common';
 

@@ -1,0 +1,100 @@
+/* panel-admin.css */
+
+/* Título central */
+h2 {
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+/* Tarjeta admin general */
+.admin-card {
+  /* Altura mínima coherente */
+  min-height: 200px;
+  /* Padding interno */
+  padding: 1rem;
+  /* Flexbox para centrar icono y texto verticalmente */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Borde redondeado */
+  border-radius: 0.75rem;
+  /* Sombra sutil */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  /* Transición para hover */
+  transition: transform 0.2s, box-shadow 0.2s;
+  /* Texto centrado */
+  text-align: center;
+  position: relative; /* útil si agregas badges en esquina */
+  cursor: pointer;
+}
+
+/* Hover efecto */
+.admin-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Icono dentro de la tarjeta */
+.admin-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Etiqueta (texto) */
+.admin-label {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 500;
+  /* en caso de texto largo, permitir ruptura de línea */
+  word-break: break-word;
+}
+
+/* Responsive: en pantallas muy pequeñas, reducir algo de padding y tamaño de icono/texto */
+@media (max-width: 575.98px) {
+  .admin-card {
+    min-height: 100px;
+    padding: 0.75rem;
+  }
+  .admin-icon {
+    font-size: 2rem;
+  }
+  .admin-label {
+    font-size: 1rem;
+  }
+}
+
+/* Opcional: si deseas centrar la última fila cuando no está completa, puedes usar:
+   <div class="row g-4 justify-content-center"> ... </div>
+   pero con 6 tarjetas y 3 por fila esto no es necesario. */
+
+/* Ejemplo de badges: */
+/* 
+.admin-card .badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+*/
+
+/* Mantén tu container padding */
+.container.py-4 {
+  /* padding vertical ya aplicado por Bootstrap */
+}
+
+/* Si quisieras un ligero degradado en lugar de color plano, puedes anular usando selectores más específicos:
+   .admin-card.bg-primary { background: linear-gradient(135deg, rgba(13,110,253,0.9), rgba(13,110,253,0.7)); }
+   etc.
+*/
+
+/* Ajustes de color: 
+   - Noticias: bg-primary text-white
+   - Podcasts: bg-success text-white
+   - Calendario: bg-warning text-dark
+   - Radio: bg-info text-white
+   - Usuarios: bg-danger text-white
+   - Multimedia: bg-secondary text-white (o el que prefieras)
+*/
+
+/* Si en algún breakpoint prefieres mostrar 2 por fila en vez de 3, podrías cambiar col classes, 
+   pero la sugerencia actual es 3 en desktop. */

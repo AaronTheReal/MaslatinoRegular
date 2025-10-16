@@ -1,93 +1,240 @@
-// src/app/services/calendar-pc.service.ts
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-export interface Location {
+/** ====== Tipos / Interfaces ====== */
+
+export type CalendarKind = 'anuncio' | 'evento';
+export type CalendarStatus = 'draft' | 'published' | 'archived';
+
+export interface CalendarLocation {
   name?: string;
   address?: string;
   lat?: number;
   lng?: number;
-  mapEmbedUrl?: string;
 }
 
-export interface Link {
+export interface CalendarLink {
   label?: string;
   url?: string;
   external?: boolean;
 }
 
-export interface MetaData {
-  title?: string;
-  description?: string;
-  image?: string;
-}
-
-export interface CalendarItemPC {
+export interface CalendarItem {
   _id?: string;
-  kind: 'anuncio' | 'evento';
+  kind: CalendarKind;
   title: string;
   slug?: string;
   excerpt?: string;
   body?: string;
   image?: string;
-  gallery?: string[];
 
-  startAt: string;
+  startAt: string;   // ISO string
   endAt?: string;
-  allDay?: boolean;
-  timezone?: string;
+  allDay: boolean;
+  timezone: string;
 
-  location?: Location;
-  links?: Link[];
+  location?: CalendarLocation;
+  link?: CalendarLink;
 
   categories: string[];
   tags?: string[];
 
-  status?: 'draft' | 'published' | 'archived';
-  featured?: boolean;
-  highlightColor?: string;
-
-  meta?: MetaData;
+  status: CalendarStatus;
+  featured: boolean;
 
   createdAt?: string;
   updatedAt?: string;
   publishedAt?: string;
 }
 
+export interface PaginatedMeta {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+export interface PaginatedResponse<T> {
+  ok: boolean;
+  data: T[];
+  meta: PaginatedMeta & Record<string, any>;
+}
+
+export interface SingleResponse<T> {
+  ok: boolean;
+  data: T;
+  message?: string;
+}
+
+export interface StatsResponse {
+  ok: boolean;
+  data: {
+    total: number;
+    published: number;
+    upcoming: number;
+    past: number;
+  };
+}
+
+export interface CalendarListParams {
+  status?: CalendarStatus;
+  from?: string;      // ISO date (YYYY-MM-DD) o ISO datetime
+  to?: string;        // "
+  q?: string;
+  category?: string;  // ObjectId
+  tag?: string;
+  kind?: CalendarKind;
+  featured?: boolean;
+  page?: number;
+  limit?: number;
+  sort?: string;      // "startAt:asc" | "startAt:desc" | "-createdAt" ...
+}
+
+/** ====== Util ====== */
+function buildParams(params: Record<string, any>): HttpParams {
+  let httpParams = new HttpParams();
+  Object.entries(params).forEach(([key, val]) => {
+    if (val === undefined || val === null || val === '') return;
+    // Booleanos a string
+    if (typeof val === 'boolean') {
+      httpParams = httpParams.set(key, String(val));
+    } else {
+      httpParams = httpParams.set(key, val);
+    }
+  });
+  return httpParams;
+}
+
+/** ====== Service ====== */
+
 @Injectable({ providedIn: 'root' })
-export class CalendarPCService {
-  private API_URL = 'http://localhost:3000/aaron/maslatino/calendar-pc';
-  // private API_URL = 'https://maslatino.onrender.com/aaron/maslatino/calendar-pc'; // producción
+export class CalendarioService {
+  // Ajusta a tu prefijo real
+  private baseUrl = 'http://localhost:3000/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 
-  crearItem(data: CalendarItemPC): Observable<CalendarItemPC> {
-    return this.http.post<CalendarItemPC>(this.API_URL, data);
-  }
-
-  obtenerItems(): Observable<CalendarItemPC[]> {
-    return this.http.get<CalendarItemPC[]>(this.API_URL);
-  }
-
-  obtenerItemPorId(id: string): Observable<CalendarItemPC> {
-    return this.http.get<CalendarItemPC>(`${this.API_URL}/${id}`);
-  }
-
-  obtenerDestacadosHome(): Observable<CalendarItemPC[]> {
-    return this.http.get<CalendarItemPC[]>(`${this.API_URL}/home`);
-  }
-
-  obtenerPorCategoria(name: string): Observable<{ categoria: any; resultados: CalendarItemPC[] }> {
-    return this.http.get<{ categoria: any; resultados: CalendarItemPC[] }>(
-      `${this.API_URL}/by-category-name/${name}`
+  /** Crear */
+  createItem(payload: Partial<CalendarItem>): Observable<SingleResponse<CalendarItem>> {
+    return this.http.post<SingleResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar`,
+      payload
     );
   }
 
-    actualizarItem(id: string, data: Partial<CalendarItemPC>): Observable<any> {
-      return this.http.put(`${this.API_URL}/${id}`, data);
-    }
-  eliminarItem(id: string): Observable<{ mensaje: string }> {
-    return this.http.delete<{ mensaje: string }>(`${this.API_URL}/${id}`);
+  /** Listar con filtros + paginación */
+  list(params: CalendarListParams = {}): Observable<PaginatedResponse<CalendarItem>> {
+    const httpParams = buildParams(params as any);
+    return this.http.get<PaginatedResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar`,
+      { params: httpParams }
+    );
   }
+
+  /** Próximos (upcoming) */
+  listUpcoming(params: Omit<CalendarListParams, 'status'> = {}): Observable<PaginatedResponse<CalendarItem>> {
+    const httpParams = buildParams(params as any);
+    return this.http.get<PaginatedResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/upcoming`,
+      { params: httpParams }
+    );
+  }
+
+  /** Pasados (past) */
+  listPast(params: Omit<CalendarListParams, 'status'> = {}): Observable<PaginatedResponse<CalendarItem>> {
+    const httpParams = buildParams(params as any);
+    return this.http.get<PaginatedResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/past`,
+      { params: httpParams }
+    );
+  }
+
+  /** Obtener por ID */
+  getById(id: string): Observable<SingleResponse<CalendarItem>> {
+    return this.http.get<SingleResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/${id}`
+    );
+  }
+
+  /** Obtener por slug */
+  getBySlug(slug: string): Observable<SingleResponse<CalendarItem>> {
+    return this.http.get<SingleResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/slug/${slug}`
+    );
+  }
+
+  /** Obtener por nombre de categoría (como en podcasts) */
+  getByCategoryName(name: string, params: Omit<CalendarListParams, 'category'> = {}): Observable<PaginatedResponse<CalendarItem>> {
+    const httpParams = buildParams(params as any);
+    return this.http.get<PaginatedResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/by-category-name/${encodeURIComponent(name)}`,
+      { params: httpParams }
+    );
+  }
+
+  /** Actualizar */
+  update(id: string, payload: Partial<CalendarItem>): Observable<SingleResponse<CalendarItem>> {
+    return this.http.put<SingleResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/${id}`,
+      payload
+    );
+  }
+
+  /** Publicar */
+  publish(id: string): Observable<SingleResponse<CalendarItem>> {
+    return this.http.patch<SingleResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/${id}/publish`,
+      {}
+    );
+  }
+
+  /** Archivar */
+  archive(id: string): Observable<SingleResponse<CalendarItem>> {
+    return this.http.patch<SingleResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/${id}/archive`,
+      {}
+    );
+  }
+
+  /** Toggle destacado */
+  toggleFeatured(id: string, featured: boolean): Observable<SingleResponse<CalendarItem>> {
+    return this.http.patch<SingleResponse<CalendarItem>>(
+      `${this.baseUrl}/calendar/${id}/featured`,
+      { featured }
+    );
+  }
+
+  /** Eliminar */
+  delete(id: string): Observable<SingleResponse<null>> {
+    return this.http.delete<SingleResponse<null>>(
+      `${this.baseUrl}/calendar/${id}`
+    );
+  }
+
+  /** Stats */
+  stats(): Observable<StatsResponse> {
+    return this.http.get<StatsResponse>(`${this.baseUrl}/calendar/stats`);
+  }
+
+  /** Bulk publish */
+  bulkPublish(ids: string[]): Observable<SingleResponse<any>> {
+    return this.http.patch<SingleResponse<any>>(
+      `${this.baseUrl}/calendar/bulk/publish`,
+      { ids }
+    );
+  }
+
+  /** Bulk delete */
+  bulkDelete(ids: string[]): Observable<SingleResponse<any>> {
+    return this.http.request<SingleResponse<any>>(
+      'delete',
+      `${this.baseUrl}/calendar/bulk`,
+      { body: { ids } }
+    );
+  }
+
+    obtenerItems(): Observable<CalendarItem[]> {
+      return this.http.get<CalendarItem[]>(this.baseUrl);
+    }
 }

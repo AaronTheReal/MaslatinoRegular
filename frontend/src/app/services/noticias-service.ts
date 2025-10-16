@@ -81,5 +81,23 @@ export class NoticiasService {
     console.log('Client-side fetch for id:', id);
     return observable;
   }
+
+  getNoticiaBySlug(slug: string): Observable<Noticia> {
+    const key = makeStateKey<Noticia>('noticia-slug-' + slug);
+    if (this.ts.hasKey(key)) {
+      const data = this.ts.get<Noticia>(key, null as unknown as Noticia);
+      this.ts.remove(key);
+      return of(data);
+    }
+    const observable = this.http
+      .get<{ noticia: Noticia }>(`${this.baseUrl}/noticia/slug/${encodeURIComponent(slug)}`)
+      .pipe(map(r => r.noticia || null));
+
+    if (isPlatformServer(this.platformId)) {
+      return observable.pipe(tap(data => this.ts.set(key, data)));
+    }
+    return observable;
+  }
+
   
 }

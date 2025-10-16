@@ -1,0 +1,287 @@
+<div class="container">
+    <!-- Botones para cambiar entre versiones -->
+    <div class="space-x-2">
+      <a routerLink="/calendario-panel" routerLinkActive="text-blue-600 font-bold" class="hover:underline">
+        Móvil
+      </a>
+      |
+      <a routerLink="/calendario-panel-pc" routerLinkActive="text-blue-600 font-bold" class="hover:underline">
+        PC
+      </a>
+    </div>
+      <!-- Tabs -->
+  <div class="tabs">
+    <button (click)="selectTab('agregar')" [class.active]="selectedTab === 'agregar'">Agregar</button>
+    <button (click)="selectTab('administrar')" [class.active]="selectedTab === 'administrar'">Administrar</button>
+    <button (click)="selectTab('stats')" [class.active]="selectedTab === 'stats'">Stats</button>
+  </div>
+
+  <div class="content">
+    <!-- AGREGAR / EDITAR -->
+    <div *ngIf="selectedTab === 'agregar'">
+      <h2>{{ editing ? 'Editar evento/anuncio' : 'Agregar evento/anuncio' }}</h2>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-grid">
+        <!-- Tipo -->
+        <div class="form-group">
+          <label for="kind">Tipo:</label>
+          <select id="kind" formControlName="kind">
+            <option value="evento">Evento</option>
+            <option value="anuncio">Anuncio</option>
+          </select>
+        </div>
+
+        <!-- Estado -->
+        <div class="form-group">
+          <label for="status">Estado:</label>
+          <select id="status" formControlName="status">
+            <option value="draft">Borrador</option>
+            <option value="published">Publicado</option>
+            <option value="archived">Archivado</option>
+          </select>
+        </div>
+
+        <!-- Destacado -->
+        <div class="form-group">
+          <label for="featured">Destacado:</label>
+          <input type="checkbox" id="featured" formControlName="featured" />
+        </div>
+
+        <!-- Título -->
+        <div class="full-width form-group">
+          <label for="title">Título:</label>
+          <input type="text" id="title" formControlName="title" placeholder="Título del evento/anuncio" />
+        </div>
+
+        <!-- Slug -->
+        <div class="full-width form-group">
+          <label for="slug">Slug:</label>
+          <input type="text" id="slug" formControlName="slug" placeholder="slug-del-evento" />
+        </div>
+
+        <!-- Excerpt -->
+        <div class="full-width form-group">
+          <label for="excerpt">Excerpt / resumen:</label>
+          <textarea id="excerpt" formControlName="excerpt" rows="2" placeholder="Texto breve..."></textarea>
+        </div>
+
+        <!-- Contenido -->
+        <div class="full-width form-group">
+          <label for="body">Contenido (opcional):</label>
+          <textarea id="body" formControlName="body" rows="4" placeholder="Contenido largo (markdown/HTML)..."></textarea>
+        </div>
+
+        <!-- Imagen -->
+        <div class="full-width form-group">
+          <label for="image">Imagen (URL):</label>
+          <input type="text" id="image" formControlName="image" placeholder="https://..." />
+          <div class="image-preview" *ngIf="form.value.image">
+            <img [src]="form.value.image" alt="preview" />
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="form-group">
+          <label for="allDay">Todo el día:</label>
+          <input type="checkbox" id="allDay" formControlName="allDay" />
+        </div>
+
+        <div class="form-group">
+          <label for="timezone">Timezone:</label>
+          <input type="text" id="timezone" formControlName="timezone" />
+        </div>
+
+        <div class="form-group">
+          <label for="startAt">Inicio:</label>
+          <input type="datetime-local" id="startAt" formControlName="startAt" />
+        </div>
+
+        <div class="form-group">
+          <label for="endAt">Fin:</label>
+          <input type="datetime-local" id="endAt" formControlName="endAt" />
+        </div>
+
+        <!-- Ubicación -->
+        <fieldset class="full-width" [formGroup]="locationGroup">
+          <legend>Ubicación (opcional)</legend>
+          <div class="fieldset-grid">
+            <div class="form-group">
+              <label for="locationName">Nombre:</label>
+              <input type="text" id="locationName" formControlName="name" />
+            </div>
+            <div class="form-group">
+              <label for="address">Dirección:</label>
+              <input type="text" id="address" formControlName="address" />
+            </div>
+            <div class="form-group">
+              <label for="lat">Lat:</label>
+              <input type="number" id="lat" step="any" formControlName="lat" />
+            </div>
+            <div class="form-group">
+              <label for="lng">Lng:</label>
+              <input type="number" id="lng" step="any" formControlName="lng" />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Enlace -->
+        <fieldset class="full-width" [formGroup]="linkGroup">
+          <legend>Enlace (opcional)</legend>
+          <div class="fieldset-grid">
+            <div class="form-group">
+              <label for="linkLabel">Label:</label>
+              <input type="text" id="linkLabel" formControlName="label" />
+            </div>
+            <div class="form-group">
+              <label for="url">URL:</label>
+              <input type="text" id="url" formControlName="url" placeholder="https://..." />
+            </div>
+            <div class="form-group">
+              <label for="external">Externo:</label>
+              <input type="checkbox" id="external" formControlName="external" />
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Categorías -->
+        <div class="full-width form-group">
+          <!--
+          <label for="categories">Categorías:</label>
+          <select id="categories" formControlName="categories" multiple>
+            <option *ngFor="let c of categorias" [value]="c._id">{{ c.name }}</option>
+          </select>
+        -->
+      <mat-form-field appearance="fill">
+        <mat-label>Categorías</mat-label>
+        <mat-select formControlName="categories" multiple>
+          <mat-option *ngFor="let cat of categorias" [value]="cat._id">
+            {{ cat.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+          
+        </div>
+
+        <!-- Tags -->
+        <div class="full-width form-group">
+          <label for="tags">Tags (separadas por coma):</label>
+          <input type="text" id="tags" formControlName="tags" placeholder="marketing, diseño, UX" />
+        </div>
+
+        <!-- Submit -->
+        <div class="full-width btn-center">
+          <button type="submit" [disabled]="form.invalid || loadingSubmit">
+            {{ editing ? 'Actualizar' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ADMINISTRAR -->
+    <div *ngIf="selectedTab === 'administrar'">
+      <h2>Administrar calendario</h2>
+
+      <div class="filters">
+        <div class="form-group">
+          <label for="tableStatus">Status:</label>
+          <select id="tableStatus" [(ngModel)]="tableStatus" (change)="onFilter()">
+            <option value="">(todos)</option>
+            <option value="draft">Borrador</option>
+            <option value="published">Publicado</option>
+            <option value="archived">Archivado</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tableKind">Tipo:</label>
+          <select id="tableKind" [(ngModel)]="tableKind" (change)="onFilter()">
+            <option value="">(todos)</option>
+            <option value="evento">Evento</option>
+            <option value="anuncio">Anuncio</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tableSort">Sort:</label>
+          <select id="tableSort" [(ngModel)]="tableSort" (change)="onChangeSort(tableSort)">
+            <option value="startAt:asc">startAt asc</option>
+            <option value="startAt:desc">startAt desc</option>
+            <option value="-createdAt">createdAt desc</option>
+            <option value="createdAt:asc">createdAt asc</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tableLimit">Por página:</label>
+          <select id="tableLimit" [(ngModel)]="tableLimit" (change)="onChangeLimit(tableLimit)">
+            <option [ngValue]="5">5</option>
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="20">20</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="loadingList">Cargando...</div>
+
+      <div class="table-container">
+        <table *ngIf="!loadingList">
+          <thead>
+            <tr>
+              <th>Título</th>
+              <th>Tipo</th>
+              <th>Inicio</th>
+              <th>Status</th>
+              <th>Destacado</th>
+              <th style="width: 250px;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let it of items">
+              <td>{{ it.title }}</td>
+              <td>{{ it.kind }}</td>
+              <td>{{ it.startAt | date:'short' }}</td>
+              <td>{{ it.status }}</td>
+              <td>
+                <span [class.badge]="true" [class.badge-yes]="it.featured" [class.badge-no]="!it.featured">
+                  {{ it.featured ? 'Sí' : 'No' }}
+                </span>
+              </td>
+              <td class="actions">
+                <button (click)="editarItem(it)">Editar</button>
+                <button (click)="toggleFeatured(it)">{{ it.featured ? 'Quitar destacado' : 'Destacar' }}</button>
+                <button (click)="publishItem(it._id!)" [disabled]="it.status === 'published'">Publicar</button>
+                <button (click)="archiveItem(it._id!)" [disabled]="it.status === 'archived'">Archivar</button>
+                <button (click)="eliminarItem(it._id!)">Eliminar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" *ngIf="meta">
+        <button (click)="onChangePage(tablePage - 1)" [disabled]="tablePage <= 1">« Prev</button>
+        <span>Página {{ tablePage }} / {{ meta.pages }}</span>
+        <button (click)="onChangePage(tablePage + 1)" [disabled]="tablePage >= meta.pages">Next »</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div *ngIf="selectedTab === 'stats'">
+      <h2>Estadísticas</h2>
+
+      <ng-container *ngIf="statsData(); else noStats">
+        <ul>
+          <li><strong>Total:</strong> {{ statsData()?.total }}</li>
+          <li><strong>Publicados:</strong> {{ statsData()?.published }}</li>
+          <li><strong>Próximos:</strong> {{ statsData()?.upcoming }}</li>
+          <li><strong>Pasados:</strong> {{ statsData()?.past }}</li>
+        </ul>
+      </ng-container>
+
+      <ng-template #noStats>
+        <p>Sin datos de stats todavía.</p>
+      </ng-template>
+    </div>
+  </div>
+</div>

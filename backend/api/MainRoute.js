@@ -114,6 +114,8 @@ export default class MainRoute {
 
     router.route('/getNoticiaDespliegue').post(NoticiasController.getNoticiaDespliegue);
     router.route('/noticia/:id').get(NoticiasController.getNoticiaById);
+    router.get('/noticia/slug/:slug', NoticiasController.getNoticiaBySlug);
+
 
     
     router.route('/registrarUsuario').post(UsuariosController.postNuevoUsuario);
