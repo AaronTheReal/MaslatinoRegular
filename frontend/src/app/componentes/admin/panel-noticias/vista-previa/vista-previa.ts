@@ -13,19 +13,25 @@ import { DatePipe } from '@angular/common';
 })
 export class VistaPrevia {
   @Input() data!: {
-    title: string; // Required, validated in form
-    slug: string; // Required, validated in form
-    summary: string; // Optional, but validated for length
-    tags: string[]; // Required, validated as array
-    meta: {
-      description: string; // Required, validated in form
-      image: string; // Required, validated in form
-    };
+    title: string;
+    slug: string;
+    summary: string;
+    tags: string[];
+    categories: string[];
     location: { city: string; region: string; country: string };
+    meta: {
+      description: string;
+      image: string;
+      canonical: string;
+      ogTitle: string;
+      ogDescription: string;
+      imageAltGlobal: string;
+    };
+    state: string;
     publishAt: string | null;
     content: Array<{
       type: string;
-      html?: string;
+      html?: SafeHtml; // Already sanitized in panel-noticias
       style?: {
         fontSize?: string;
         fontWeight?: string;
@@ -33,25 +39,27 @@ export class VistaPrevia {
         textAlign?: 'left' | 'center' | 'right';
       };
       text?: string;
+      tag?: string;
       url?: string;
       alt?: string;
       caption?: string;
-      captionHtml?: string;
+      captionHtml?: SafeHtml; // Already sanitized
       quote?: string;
       authorQuote?: string;
       ordered?: boolean;
-      items?: string[]; // Ensure items is defined for lists
-      itemsHtml?: string[];
+      items?: string[];
+      itemsHtml?: SafeHtml[]; // Already sanitized
       href?: string;
       textLink?: string;
-      tag?: string;
+      creditText?: string;
     }>;
   };
 
   constructor(private sanitizer: DomSanitizer) {}
 
   /**
-   * Sanitizes HTML and adds target/rel attributes to links.
+   * Sanitizes raw HTML strings and adds target/rel attributes to links.
+   * Only used for unsanitized string inputs.
    */
   formatHtml(rawHtml: string = ''): SafeHtml {
     const withTargets = rawHtml.replace(
@@ -62,17 +70,17 @@ export class VistaPrevia {
   }
 
   /**
-   * Check if there is more than one H1 in content blocks.
+   * Check if there is any H1 in content blocks (prohibited per maxOneH1Validator).
    */
   hasMultipleH1(): boolean {
-    return this.data.content.filter(block => block.tag === 'h1').length > 1;
+    return this.data.content.some(block => block.tag === 'h1');
   }
 
   /**
    * Get character count for a field.
    */
   getCharCount(field: string): number {
-    return field.length;
+    return field ? field.length : 0;
   }
 
   /**
@@ -83,5 +91,20 @@ export class VistaPrevia {
     if (length < min) return 'text-warning';
     if (length > max) return 'text-danger';
     return 'text-dark';
+  }
+
+  /**
+   * Check if link text is generic.
+   */
+  isGenericAnchor(text: string): boolean {
+    const generics = ['clic aquí', 'aquí', 'leer más', 'click here', 'here', 'read more'];
+    return generics.some(g => text.toLowerCase().includes(g));
+  }
+
+  /**
+   * Handle image load errors.
+   */
+  handleImageError(): void {
+    console.warn('Error loading image in preview');
   }
 }
