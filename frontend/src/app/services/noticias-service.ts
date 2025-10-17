@@ -1,7 +1,6 @@
-
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
-import { Observable, of, tap, map } from 'rxjs';
+import { Observable, of, tap, map, catchError } from 'rxjs';
 import { Noticia } from '../../models/noticia.model';
 import { isPlatformServer } from '@angular/common';
 
@@ -14,7 +13,13 @@ export class NoticiasService {
   private baseUrl = 'http://localhost:3000/aaron/maslatino';
 
   createNoticia(data: Noticia): Observable<Noticia> {
-    return this.http.post<Noticia>(`${this.baseUrl}/noticiasPost`, data);
+    console.log('Sending to backend:', data);
+    return this.http.post<Noticia>(`${this.baseUrl}/noticiasPost`, data).pipe(
+      catchError(error => {
+        console.error('Create Noticia Error:', error);
+        throw error;
+      })
+    );
   }
 
   getNoticias(): Observable<Noticia[]> {
@@ -98,6 +103,4 @@ export class NoticiasService {
     }
     return observable;
   }
-
-  
 }

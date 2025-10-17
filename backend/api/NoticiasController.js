@@ -216,86 +216,100 @@ async getAllNoticias(req, res, next) {
 }
 
 
- async createNoticia(req, res, next) {
-    try {
-      // Extraer datos del body
-      const {
-        title,
-        summary,
-        categories,
-        tags,
-        location,
-        content,
-        publishAt, // si usas publicación programada más adelante
-      } = req.body;
+ async  createNoticia(req, res, next) {
+  try {
+    // Extraer datos del body
+    const {
+      title,
+      summary,
+      categories,
+      tags,
+      location,
+      content,
+      publishAt,
+      meta // Add meta to destructured properties
+    } = req.body;
 
-      // Validación mínima
-      if (!title) {
-        return res.status(400).json({ message: 'El campo title es obligatorio.' });
-      }
-
-      if (!Array.isArray(content)) {
-        return res.status(400).json({ message: 'El campo content debe ser un array de bloques.' });
-      }
-
-      // Obtener author
-      let authorId;
-      if (req.user && req.user.id) {
-        authorId = req.user.id;
-      } else if (req.body.author) {
-        authorId = req.body.author; // Temporal
-      } else {
-        return res.status(400).json({ message: 'No se proporcionó author.' });
-      }
-
-      function generarSlug(texto) {
-        return texto
-          .toString()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9]+/g, '-')
-          .replace(/^-+|-+$/g, '');
-      }
-      // Construir objeto de noticia
-      const nuevaNoticia = new Noticia({
-        title,
-        slug: generarSlug(title), // ✅ slug generado aquí
-        summary,
-        author: authorId,
-        categories: Array.isArray(categories)
-          ? categories
-          : typeof categories === 'string'
-          ? categories.split(',').map((s) => s.trim())
-          : [],
-        tags: Array.isArray(tags)
-          ? tags
-          : typeof tags === 'string'
-          ? tags.split(',').map((s) => s.trim())
-          : [],
-        location: location || {},
-        content,
-      });
-
-      // Guardar en base de datos
-      const saved = await nuevaNoticia.save();
-
-      // ⚡️ Notificar a Prerender.io que recachee la URL
-      await recacheNoticia(saved.slug);
-
-      // Respuesta al cliente
-      return res.status(201).json(saved);
-    } catch (error) {
-      console.error('Error en createNoticia:', error);
-
-      if (error.name === 'ValidationError') {
-        return res.status(400).json({ message: error.message });
-      }
-
-      next(error);
+    // Validación mínima
+    if (!title) {
+      return res.status(400).json({ message: 'El campo title es obligatorio.' });
     }
+
+    if (!Array.isArray(content)) {
+      return res.status(400).json({ message: 'El campo content debe ser un array de bloques.' });
+    }
+
+    if (!meta || !meta.description || !meta.image) {
+      return res.status(400).json({ 
+        message: 'Los campos meta.description y meta.image son obligatorios.' 
+      });
+    }
+
+    // Obtener author
+    let authorId;
+    if (req.user && req.user.id) {
+      authorId = req.user.id;
+    } else if (req.body.author) {
+      authorId = req.body.author; // Temporal
+    } else {
+      return res.status(400).json({ message: 'No se proporcionó author.' });
+    }
+
+    function generarSlug(texto) {
+      return texto
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    // Construir objeto de noticia
+    const nuevaNoticia = new Noticia({
+      title,
+      slug: generarSlug(title),
+      summary,
+      author: authorId,
+      categories: Array.isArray(categories)
+        ? categories
+        : typeof categories === 'string'
+        ? categories.split(',').map((s) => s.trim())
+        : [],
+      tags: Array.isArray(tags)
+        ? tags
+        : typeof tags === 'string'
+        ? tags.split(',').map((s) => s.trim())
+        : [],
+      location: location || {},
+      content,
+      meta: {
+        description: meta.description,
+        image: meta.image
+      },
+      publishAt
+    });
+
+    // Debug log
+    console.log('Saving noticia:', JSON.stringify(nuevaNoticia.toObject(), null, 2));
+
+    // Guardar en base de datos
+    const saved = await nuevaNoticia.save();
+
+    // ⚡️ Notificar a Prerender.io que recachee la URL
+    await recacheNoticia(saved.slug);
+
+    // Respuesta al cliente
+    return res.status(201).json(saved);
+  } catch (error) {
+    console.error('Error en createNoticia:', error);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    next(error);
   }
+}
 }
 
 const NoticiasController = new noticiasController();

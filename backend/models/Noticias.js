@@ -1,3 +1,4 @@
+// Modified Mongoose Schema (Backend Model)
 import mongoose from 'mongoose';
 import { marked } from 'marked';
 import createDOMPurify from 'dompurify';
@@ -11,46 +12,28 @@ const DOMPurify = createDOMPurify(window);
 
 // 1. Sub-esquema de bloque de contenido:
 const BlockSchema = new Schema({
-  type: {
-    type: String,
-    required: true,
-    enum: ['text', 'image', 'quote', 'link', 'list']
-  },
-
+  type: { type: String, required: true, enum: ['text', 'image', 'quote', 'link', 'list'] },
   // Markdown puro y HTML sanitizado
   text: { type: String },
   html: { type: String },
-
-  tag: {
-    type: String,
-    enum: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span'],
-    default: 'p'
-  },
+  tag: { type: String, enum: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span'], default: 'p' },
   style: {
     fontSize: String,
     fontWeight: String,
     fontFamily: String,
-    textAlign: {
-      type: String,
-      enum: ['left', 'center', 'right'],
-      default: 'left'
-    }
+    textAlign: { type: String, enum: ['left', 'center', 'right'], default: 'left' }
   },
-
   // Imagen
   url: { type: String },
   alt: { type: String },
   caption: { type: String },
   captionHtml: { type: String },
-
   // Enlace
   href: { type: String },
   textLink: { type: String },
-
   // Lista
   items: [{ type: String }],
   ordered: { type: Boolean },
-
   // Cita
   quote: { type: String },
   authorQuote: { type: String }
@@ -64,13 +47,13 @@ BlockSchema.pre('validate', function (next) {
       break;
     case 'image':
       if (!this.url) return next(new Error('Bloque image requiere campo url.'));
+      if (!this.alt) return next(new Error('Bloque image requiere alt text para SEO.'));
       break;
     case 'link':
       if (!this.href || !this.textLink) return next(new Error('Bloque link requiere href y textLink.'));
       break;
     case 'list':
-      if (!Array.isArray(this.items) || this.items.length === 0)
-        return next(new Error('Bloque list requiere items no vacío.'));
+      if (!Array.isArray(this.items) || this.items.length === 0) return next(new Error('Bloque list requiere items no vacío.'));
       break;
     case 'quote':
       if (!this.quote) return next(new Error('Bloque quote requiere quote.'));
@@ -106,32 +89,22 @@ const NoticiaSchema = new Schema({
   title: { type: String, required: true, trim: true },
   slug: { type: String, required: true, trim: true, unique: true },
   summary: { type: String, trim: true },
+  tags: [{ type: String, trim: true }], // Added for SEO keywords
   originalUrl: { type: String, trim: true },
-
   // Permite usar autor por ID (en plataforma) o por nombre si viene de WordPress
   author: { type: Types.ObjectId, ref: 'User' },
   authorName: { type: String, trim: true },
-
-  categories: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Category',
-    required: true
-  }],
-
-
+  categories: [{ type: Schema.Types.ObjectId, ref: 'Category', required: true }],
   location: {
     country: { type: String, trim: true },
     region: { type: String, trim: true },
     city: { type: String, trim: true }
   },
-
   content: { type: [BlockSchema], default: [] },
-
   meta: {
-    description: { type: String },
-    image: { type: String }
+    description: { type: String, required: true }, // Required for SEO
+    image: { type: String, required: true } // Featured image for OG/SEO
   },
-
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -143,8 +116,6 @@ NoticiaSchema.pre('save', function (next) {
 });
 
 export default model('Noticia', NoticiaSchema);
-
-
 
 //  enum: ['Mundo','Arte','Política','Finanzas','Familia','Deportes','Salud'],
 

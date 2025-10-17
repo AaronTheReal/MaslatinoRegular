@@ -1,14 +1,193 @@
 /* src/app/components/admin/panel-noticias/vista-previa/vista-previa.css */
-.blockquote {
-  font-family: Georgia, 'Times New Roman', serif;  /* fuente con aire profesional */
-  font-style: italic;                              /* cursiva suave */
-  font-size: 1.1rem;                               /* un pelín más grande que el texto normal */
-  line-height: 1.4;                                /* para mejor lectura */
-  color: #444;                                     /* gris oscuro, menos severo que el negro puro */
-  margin: 1.5em 0;                                 /* separación arriba/abajo */
-}
-.blockquote-footer {
-  font-size: 0.9rem;
-  color: #666;
+
+/* Base container styling */
+.preview-container {
+  font-family: 'Arial', 'Helvetica', sans-serif; /* Clean, professional sans-serif */
+  max-width: 800px; /* Constrain width for readability */
+  margin: 0 auto; /* Center the preview */
+  padding: 1.5rem; /* Comfortable padding */
+  background-color: #f8f9fa; /* Light gray background for contrast */
 }
 
+/* Card styling for SEO and content sections */
+.card {
+  border: 1px solid #e0e0e0; /* Subtle border */
+  border-radius: 8px; /* Rounded corners for modern look */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Light shadow for depth */
+  background-color: #fff; /* White background for cards */
+  margin-bottom: 1.5rem; /* Space between cards */
+}
+
+/* Card body padding */
+.card-body {
+  padding: 1.5rem; /* Consistent internal spacing */
+}
+
+/* Card title (SEO Preview, Contenido) */
+.card-title {
+  font-size: 1.5rem; /* Prominent but not overwhelming */
+  font-weight: 600; /* Semi-bold for emphasis */
+  color: #2c3e50; /* Dark blue-gray for professionalism */
+  margin-bottom: 1rem; /* Space below title */
+}
+
+/* Labels for SEO fields */
+.fw-bold {
+  font-size: 1rem; /* Slightly larger for clarity */
+  color: #34495e; /* Darker shade for labels */
+  margin-bottom: 0.5rem; /* Space below labels */
+}
+
+/* Title styling */
+.preview-title {
+  font-size: 2rem; /* Matches typical h1 size */
+  font-weight: 700; /* Bold for prominence */
+  color: #2c3e50; /* Dark blue-gray for readability */
+  margin-bottom: 0.5rem; /* Tight spacing for compact layout */
+}
+
+/* Summary and meta description */
+.preview-summary, p {
+  font-size: 1rem; /* Standard text size */
+  line-height: 1.6; /* Comfortable line height */
+  color: #555; /* Medium gray for secondary text */
+  margin-bottom: 0.75rem; /* Space below paragraphs */
+}
+
+/* SEO feedback colors */
+.text-success {
+  color: #28a745 !important; /* Green for optimal SEO */
+}
+
+.text-warning {
+  color: #ffc107 !important; /* Yellow for suboptimal SEO */
+}
+
+.text-danger {
+  color: #dc3545 !important; /* Red for SEO errors */
+}
+
+/* Small text for character counts and hints */
+.text-muted {
+  font-size: 0.85rem; /* Smaller for secondary info */
+  color: #6c757d; /* Muted gray */
+}
+
+/* Image styling */
+.img-fluid {
+  max-width: 100%; /* Responsive images */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 4px; /* Subtle rounding */
+  margin-bottom: 0.5rem; /* Space below images */
+}
+
+/* Figure caption */
+figcaption.text-muted {
+  font-size: 0.9rem; /* Slightly smaller for captions */
+  color: #6c757d; /* Muted gray */
+  text-align: center; /* Centered for images */
+}
+
+/* Blockquote styling (retained from your code) */
+.blockquote {
+  font-family: Georgia, 'Times New Roman', serif; /* Professional, serif font */
+  font-style: italic; /* Elegant cursive style */
+  font-size: 1.1rem; /* Slightly larger than body text */
+  line-height: 1.4; /* Improved readability */
+  color: #444; /* Dark gray for contrast */
+  margin: 1.5em 0; /* Vertical spacing */
+  border-left: 4px solid #007bff; /* Blue accent for quotes */
+  padding-left: 1rem; /* Space from border */
+}
+
+/* Blockquote footer (retained from your code) */
+.blockquote-footer {
+  font-size: 0.9rem; /* Smaller for attribution */
+  color: #666; /* Lighter gray for secondary text */
+  margin-top: 0.5rem; /* Space above footer */
+}
+
+/* List styling */
+ol, ul {
+  margin: 1rem 0; /* Vertical spacing */
+  padding-left: 2rem; /* Indentation for bullets/numbers */
+}
+
+ol li, ul li {
+  font-size: 1rem; /* Standard text size */
+  line-height: 1.6; /* Readable line height */
+  color: #333; /* Dark text for clarity */
+  margin-bottom: 0.5rem; /* Space between items */
+}
+
+/* Link styling */
+a {
+  color: #007bff; /* Blue for links */
+  text-decoration: none; /* No underline by default */
+  transition: color 0.2s ease; /* Smooth hover transition */
+}
+
+a:hover {
+  color: #0056b3; /* Darker blue on hover */
+  text-decoration: underline; /* Underline on hover */
+}
+
+/* Unknown block type (pre) */
+pre.bg-light {
+  background-color: #f8f9fa; /* Light gray background */
+  padding: 1rem; /* Internal padding */
+  border-radius: 4px; /* Rounded corners */
+  font-size: 0.9rem; /* Slightly smaller */
+  color: #333; /* Dark text */
+  overflow-x: auto; /* Handle long JSON content */
+}
+
+/* Headings for content blocks */
+h1, h2, h3, h4, h5, h6 {
+  color: #2c3e50; /* Dark blue-gray for consistency */
+  margin-bottom: 0.75rem; /* Space below headings */
+}
+
+h1 { font-size: 2rem; font-weight: 700; }
+h2 { font-size: 1.75rem; font-weight: 600; }
+h3 { font-size: 1.5rem; font-weight: 600; }
+h4 { font-size: 1.25rem; font-weight: 500; }
+h5 { font-size: 1.1rem; font-weight: 500; }
+h6 { font-size: 1rem; font-weight: 500; }
+
+/* HR separator */
+hr {
+  border: 0;
+  border-top: 1px solid #e0e0e0; /* Light gray separator */
+  margin: 1.5rem 0; /* Vertical spacing */
+}
+
+/* No data message */
+.text-center.text-muted {
+  font-size: 1rem;
+  color: #6c757d; /* Muted gray */
+  padding: 2rem; /* Extra padding for emphasis */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .preview-container {
+    padding: 1rem; /* Reduced padding on smaller screens */
+  }
+
+  .card-body {
+    padding: 1rem; /* Reduced padding */
+  }
+
+  .preview-title {
+    font-size: 1.75rem; /* Slightly smaller h1 */
+  }
+
+  .card-title {
+    font-size: 1.25rem; /* Smaller section titles */
+  }
+
+  .img-fluid {
+    max-height: 150px; /* Smaller images on mobile */
+  }
+}
