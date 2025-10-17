@@ -214,9 +214,8 @@ async getAllNoticias(req, res, next) {
     res.status(500).json({ error: 'Error al obtener noticias' });
   }
 }
-
-
- async  createNoticia(req, res, next) {
+// Controller: createNoticia
+async createNoticia(req, res, next) {
   try {
     // Extraer datos del body
     const {
@@ -227,7 +226,7 @@ async getAllNoticias(req, res, next) {
       location,
       content,
       publishAt,
-      meta // Add meta to destructured properties
+      meta
     } = req.body;
 
     // Validación mínima

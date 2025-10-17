@@ -26,6 +26,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'podcast-panel', renderMode: RenderMode.Client },
   { path: 'radio-panel', renderMode: RenderMode.Client },
   { path: 'categorias-panel', renderMode: RenderMode.Client },
+  { path: 'admin-noticias', renderMode: RenderMode.Client },
 
   
 ];
