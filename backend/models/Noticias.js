@@ -1,4 +1,3 @@
-// Modified Mongoose Schema (Backend Model)
 import mongoose from 'mongoose';
 import { marked } from 'marked';
 import createDOMPurify from 'dompurify';
@@ -24,8 +23,8 @@ const BlockSchema = new Schema({
     textAlign: { type: String, enum: ['left', 'center', 'right'], default: 'left' }
   },
   // Imagen
-  url: { type: String },
-  alt: { type: String },
+  url: { type: String }, // Optional
+  alt: { type: String }, // Optional
   caption: { type: String },
   captionHtml: { type: String },
   // Enlace
@@ -46,8 +45,7 @@ BlockSchema.pre('validate', function (next) {
       if (!this.text) return next(new Error('Bloque text requiere campo text.'));
       break;
     case 'image':
-      if (!this.url) return next(new Error('Bloque image requiere campo url.'));
-      if (!this.alt) return next(new Error('Bloque image requiere alt text para SEO.'));
+      // No validation for url or alt, as they are now optional
       break;
     case 'link':
       if (!this.href || !this.textLink) return next(new Error('Bloque link requiere href y textLink.'));
@@ -89,9 +87,8 @@ const NoticiaSchema = new Schema({
   title: { type: String, required: true, trim: true },
   slug: { type: String, required: true, trim: true, unique: true },
   summary: { type: String, trim: true },
-  tags: [{ type: String, trim: true }], // Added for SEO keywords
+  tags: [{ type: String, trim: true }],
   originalUrl: { type: String, trim: true },
-  // Permite usar autor por ID (en plataforma) o por nombre si viene de WordPress
   author: { type: Types.ObjectId, ref: 'User' },
   authorName: { type: String, trim: true },
   categories: [{ type: Schema.Types.ObjectId, ref: 'Category', required: true }],
@@ -102,8 +99,8 @@ const NoticiaSchema = new Schema({
   },
   content: { type: [BlockSchema], default: [] },
   meta: {
-    description: { type: String, required: true }, // Required for SEO
-    image: { type: String, required: true } // Featured image for OG/SEO
+    description: { type: String, required: true },
+    image: { type: String, required: true }
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

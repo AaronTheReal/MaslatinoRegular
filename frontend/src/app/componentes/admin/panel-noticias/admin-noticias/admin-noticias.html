@@ -1,0 +1,156 @@
+<div class="container-fluid py-3">
+  <!-- TOP BAR -->
+  <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
+    <a class="btn btn-primary" [routerLink]="['/noticias-panel']">
+      + Nueva Noticia
+    </a>
+
+    <div class="ms-auto"></div>
+
+    <!-- Búsqueda -->
+    <div class="form-floating">
+      <input type="text" class="form-control" id="q" placeholder="Buscar..." [formControl]="form.controls.q">
+      <label for="q">Buscar (título, slug, autor)</label>
+    </div>
+
+    <!-- Estado (visual por ahora) -->
+    <div>
+      <label class="form-label d-block small mb-1">Estado</label>
+      <select class="form-select" style="min-width:140px" [formControl]="form.controls.state">
+        <option value="all">Todos</option>
+        <option value="published">Publicado</option>
+        <option value="pending">Pendiente</option>
+        <option value="draft">Borrador</option>
+      </select>
+    </div>
+
+    <!-- Categorías -->
+    <div>
+      <label class="form-label d-block small mb-1">Categorías</label>
+      <select multiple class="form-select" style="min-width:200px;height:38px"
+              [ngModel]="form.value.categoryIds" (ngModelChange)="form.controls.categoryIds.setValue($event)">
+        <option *ngFor="let c of categorias()" [value]="c._id">{{c.name}}</option>
+      </select>
+    </div>
+
+    <!-- Rango fechas -->
+    <div>
+      <label class="form-label d-block small mb-1">Desde</label>
+      <input type="date" class="form-control" [formControl]="form.controls.from">
+    </div>
+    <div>
+      <label class="form-label d-block small mb-1">Hasta</label>
+      <input type="date" class="form-control" [formControl]="form.controls.to">
+    </div>
+
+    <!-- Orden -->
+    <div>
+      <label class="form-label d-block small mb-1">Ordenar</label>
+      <select class="form-select" [formControl]="form.controls.sort">
+        <option value="-publishAt">Más recientes</option>
+        <option value="publishAt">Más antiguos</option>
+        <option value="title">Título A–Z</option>
+        <option value="-title">Título Z–A</option>
+        <option value="-createdAt">Creación reciente</option>
+        <option value="createdAt">Creación antigua</option>
+      </select>
+    </div>
+
+    <!-- Page size -->
+    <div>
+      <label class="form-label d-block small mb-1">Por página</label>
+      <select class="form-select" style="width:110px" [formControl]="form.controls.pageSize">
+        <option [value]="10">10</option>
+        <option [value]="20">20</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- CARD -->
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <!-- Loader -->
+      <div *ngIf="loading()" class="p-3">
+        <div class="placeholder-glow">
+          <div class="placeholder col-12" style="height:44px"></div>
+          <div class="placeholder col-12" style="height:44px"></div>
+          <div class="placeholder col-12" style="height:44px"></div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="!loading() && errorMsg()" class="p-4 text-danger">
+        {{ errorMsg() }}
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!loading() && !errorMsg() && pageItems().length===0" class="p-5 text-center text-muted">
+        <p class="mb-1">No hay noticias que coincidan con tu búsqueda.</p>
+        <small>Prueba limpiar filtros o crea una nueva noticia.</small>
+      </div>
+
+      <!-- Tabla -->
+      <div class="table-responsive" *ngIf="!loading() && pageItems().length">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light position-sticky top-0">
+            <tr>
+              <th style="width:64px"></th>
+              <th>Título / Slug</th>
+              <th style="width:210px">Categorías</th>
+              <th style="width:120px">Estado</th>
+              <th style="width:150px">Fecha</th>
+              <th style="width:150px">Autor</th>
+              <th style="width:160px" class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of pageItems(); trackBy: trackById">
+              <td>
+                <img *ngIf="thumb(r)" [src]="thumb(r)!" width="56" height="36" class="rounded object-fit-cover" alt="Thumb">
+              </td>
+              <td>
+                <div class="fw-semibold text-truncate" style="max-width:420px">{{ r.title }}</div>
+                <div class="text-muted small">/{{ r.slug }}</div>
+              </td>
+              <td>
+                <span *ngFor="let id of catIds(r)" class="badge me-1"
+                  [ngStyle]="{'background-color': catColorById(id) || '#eef', 'color':'#222'}">
+                  {{ catNameById(id) }}
+                </span>
+              </td>
+              <td>
+                <!-- Por ahora tu Noticia no tiene state/approved -->
+                <span class="badge text-bg-secondary">—</span>
+              </td>
+              <td>
+                <div *ngIf="dateFor(r) as d; else noDate">
+                  {{ d | date:'yyyy-MM-dd HH:mm' }}
+                </div>
+                <ng-template #noDate><span class="text-muted">—</span></ng-template>
+              </td>
+              <td>{{ author(r) }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/admin/noticias', r._id, 'editar']">Editar</a>
+                <button class="btn btn-sm btn-outline-danger me-1" (click)="onDelete(r)">Eliminar</button>
+                <button class="btn btn-sm btn-success" (click)="onApprove(r)">Autorizar</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer / Paginación -->
+      <div *ngIf="!loading() && pageItems().length" class="d-flex align-items-center justify-content-between p-3 border-top">
+        <div class="text-muted small">
+          Página {{ page() }} de {{ totalPages() }} • {{ total() }} resultados
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary" (click)="prevPage()" [disabled]="page()===1">Anterior</button>
+          <button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="page()>=totalPages()">Siguiente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
