@@ -103,7 +103,8 @@ const NoticiaSchema = new Schema({
     image: { type: String, required: true }
   },
   createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
+  autorizada:{type: Boolean}
 });
 
 // Actualiza updatedAt automáticamente

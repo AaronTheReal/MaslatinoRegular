@@ -1,75 +1,102 @@
-<div class="container-fluid py-3">
+
+<div class="admin-wrap container-xl py-4" role="main">
   <!-- TOP BAR -->
-  <div class="d-flex flex-wrap gap-2 align-items-end mb-3">
-    <a class="btn btn-primary" [routerLink]="['/noticias-panel']">
-      + Nueva Noticia
-    </a>
+  <div class="toolbar card shadow-sm mb-3" role="toolbar" aria-label="Filtros de noticias">
+    <div class="card-body d-flex flex-wrap gap-2 align-items-end">
+      <a class="btn btn-primary" [routerLink]="['/noticias-panel']" aria-label="Crear nueva noticia">
+        + Nueva Noticia
+      </a>
 
-    <div class="ms-auto"></div>
+      <div class="ms-auto"></div>
 
-    <!-- Búsqueda -->
-    <div class="form-floating">
-      <input type="text" class="form-control" id="q" placeholder="Buscar..." [formControl]="form.controls.q">
-      <label for="q">Buscar (título, slug, autor)</label>
-    </div>
+      <!-- Búsqueda -->
+      <div class="form-floating">
+        <input type="text" class="form-control" id="q" placeholder="Buscar..." [formControl]="form.controls.q" aria-label="Buscar por título, slug o autor">
+        <label for="q">Buscar (título, slug, autor)</label>
+      </div>
 
-    <!-- Estado (visual por ahora) -->
-    <div>
-      <label class="form-label d-block small mb-1">Estado</label>
-      <select class="form-select" style="min-width:140px" [formControl]="form.controls.state">
-        <option value="all">Todos</option>
-        <option value="published">Publicado</option>
-        <option value="pending">Pendiente</option>
-        <option value="draft">Borrador</option>
-      </select>
-    </div>
+      <!-- Estado -->
+      <div>
+        <label class="form-label d-block small mb-1" for="state">Estado</label>
+        <select class="form-select" id="state" style="min-width:140px" [formControl]="form.controls.state" aria-label="Filtrar por estado">
+          <option value="all">Todos</option>
+          <option value="published">Publicado</option>
+          <option value="pending">Pendiente</option>
+          <option value="draft">Borrador</option>
+        </select>
+      </div>
 
-    <!-- Categorías -->
-    <div>
-      <label class="form-label d-block small mb-1">Categorías</label>
-      <select multiple class="form-select" style="min-width:200px;height:38px"
-              [ngModel]="form.value.categoryIds" (ngModelChange)="form.controls.categoryIds.setValue($event)">
-        <option *ngFor="let c of categorias()" [value]="c._id">{{c.name}}</option>
-      </select>
-    </div>
+      <!-- Categorías (Custom Multiselect) -->
+      <div class="position-relative">
+        <label class="form-label d-block small mb-1" for="category-select">Categorías</label>
+        <div class="form-control d-flex align-items-center flex-wrap gap-1" style="min-width:240px; min-height:38px; cursor:pointer" 
+             (click)="toggleCatDropdown($event)" 
+             [class.border-primary]="catOpen()"
+             [attr.aria-expanded]="catOpen()"
+             aria-label="Seleccionar categorías"
+             role="button"
+             id="category-select">
+          <span *ngIf="!selectedCats().length" class="text-muted small">Seleccionar categorías...</span>
+          <span *ngFor="let cat of selectedCats()" class="badge bg-light text-dark border me-1">
+            {{ cat.name }}
+            <button type="button" class="btn-close btn-close-sm ms-1" (click)="removeCat(cat._id); $event.stopPropagation()" 
+                    aria-label="Eliminar categoría {{cat.name}}"></button>
+          </span>
+          <span class="chev ms-auto" [class.up]="catOpen()"></span>
+        </div>
+        <div *ngIf="catOpen()" class="dropdown-menu show w-100 p-2" style="max-height:200px; overflow-y:auto">
+          <div *ngFor="let c of categorias()" class="form-check">
+            <input class="form-check-input" type="checkbox" 
+                   [id]="'cat-' + c._id" 
+                   [checked]="isCatSelected(c._id)" 
+                   (change)="toggleCat(c._id, $event.target.checked)"
+                   (click)="$event.stopPropagation()"
+                   [attr.aria-label]="c.name">
+            <label class="form-check-label" [for]="'cat-' + c._id">{{ c.name }}</label>
+          </div>
+          <div *ngIf="!categorias().length" class="text-muted small p-2">No hay categorías disponibles</div>
+        </div>
+        <small class="text-muted">Selecciona una o más categorías</small>
+      </div>
 
-    <!-- Rango fechas -->
-    <div>
-      <label class="form-label d-block small mb-1">Desde</label>
-      <input type="date" class="form-control" [formControl]="form.controls.from">
-    </div>
-    <div>
-      <label class="form-label d-block small mb-1">Hasta</label>
-      <input type="date" class="form-control" [formControl]="form.controls.to">
-    </div>
+      <!-- Rango fechas -->
+      <div>
+        <label class="form-label d-block small mb-1" for="from">Desde</label>
+        <input type="date" class="form-control" id="from" [formControl]="form.controls.from" aria-label="Fecha de inicio">
+      </div>
+      <div>
+        <label class="form-label d-block small mb-1" for="to">Hasta</label>
+        <input type="date" class="form-control" id="to" [formControl]="form.controls.to" aria-label="Fecha de fin">
+      </div>
 
-    <!-- Orden -->
-    <div>
-      <label class="form-label d-block small mb-1">Ordenar</label>
-      <select class="form-select" [formControl]="form.controls.sort">
-        <option value="-publishAt">Más recientes</option>
-        <option value="publishAt">Más antiguos</option>
-        <option value="title">Título A–Z</option>
-        <option value="-title">Título Z–A</option>
-        <option value="-createdAt">Creación reciente</option>
-        <option value="createdAt">Creación antigua</option>
-      </select>
-    </div>
+      <!-- Orden -->
+      <div>
+        <label class="form-label d-block small mb-1" for="sort">Ordenar</label>
+        <select class="form-select" id="sort" [formControl]="form.controls.sort" aria-label="Ordenar resultados">
+          <option value="-publishAt">Más recientes</option>
+          <option value="publishAt">Más antiguos</option>
+          <option value="title">Título A–Z</option>
+          <option value="-title">Título Z–A</option>
+          <option value="-createdAt">Creación reciente</option>
+          <option value="createdAt">Creación antigua</option>
+        </select>
+      </div>
 
-    <!-- Page size -->
-    <div>
-      <label class="form-label d-block small mb-1">Por página</label>
-      <select class="form-select" style="width:110px" [formControl]="form.controls.pageSize">
-        <option [value]="10">10</option>
-        <option [value]="20">20</option>
-        <option [value]="50">50</option>
-        <option [value]="100">100</option>
-      </select>
+      <!-- Page size -->
+      <div>
+        <label class="form-label d-block small mb-1" for="pageSize">Por página</label>
+        <select class="form-select" id="pageSize" style="width:110px" [formControl]="form.controls.pageSize" aria-label="Resultados por página">
+          <option [value]="10">10</option>
+          <option [value]="20">20</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+        </select>
+      </div>
     </div>
   </div>
 
-  <!-- CARD -->
-  <div class="card shadow-sm">
+  <!-- CARD DE TABLA -->
+  <div class="card shadow-sm rounded-3 overflow-hidden table-card">
     <div class="card-body p-0">
       <!-- Loader -->
       <div *ngIf="loading()" class="p-3">
@@ -81,34 +108,34 @@
       </div>
 
       <!-- Error -->
-      <div *ngIf="!loading() && errorMsg()" class="p-4 text-danger">
+      <div *ngIf="!loading() && errorMsg()" class="p-4 text-danger" role="alert">
         {{ errorMsg() }}
       </div>
 
       <!-- Empty -->
-      <div *ngIf="!loading() && !errorMsg() && pageItems().length===0" class="p-5 text-center text-muted">
+      <div *ngIf="!loading() && !errorMsg() && pageItems().length===0" class="p-5 text-center text-muted" role="alert">
         <p class="mb-1">No hay noticias que coincidan con tu búsqueda.</p>
         <small>Prueba limpiar filtros o crea una nueva noticia.</small>
       </div>
 
       <!-- Tabla -->
-      <div class="table-responsive" *ngIf="!loading() && pageItems().length">
+      <div class="table-responsive" *ngIf="!loading() && pageItems().length" role="grid">
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light position-sticky top-0">
             <tr>
-              <th style="width:64px"></th>
-              <th>Título / Slug</th>
-              <th style="width:210px">Categorías</th>
-              <th style="width:120px">Estado</th>
-              <th style="width:150px">Fecha</th>
-              <th style="width:150px">Autor</th>
-              <th style="width:160px" class="text-end">Acciones</th>
+              <th scope="col" style="width:64px" aria-label="Miniatura"></th>
+              <th scope="col">Título / Slug</th>
+              <th scope="col" style="width:210px">Categorías</th>
+              <th scope="col" style="width:120px">Estado</th>
+              <th scope="col" style="width:150px">Fecha</th>
+              <th scope="col" style="width:150px">Autor</th>
+              <th scope="col" style="width:160px" class="text-end">Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let r of pageItems(); trackBy: trackById">
               <td>
-                <img *ngIf="thumb(r)" [src]="thumb(r)!" width="56" height="36" class="rounded object-fit-cover" alt="Thumb">
+                <img *ngIf="thumb(r)" [src]="thumb(r)!" width="56" height="36" class="rounded object-fit-cover" alt="Miniatura de {{r.title}}" loading="lazy">
               </td>
               <td>
                 <div class="fw-semibold text-truncate" style="max-width:420px">{{ r.title }}</div>
@@ -116,14 +143,16 @@
               </td>
               <td>
                 <span *ngFor="let id of catIds(r)" class="badge me-1"
-                  [ngStyle]="{'background-color': catColorById(id) || '#eef', 'color':'#222'}">
+                      [ngStyle]="{'background-color': catColorById(id) || '#eef', 'color':'#222'}">
                   {{ catNameById(id) }}
                 </span>
               </td>
               <td>
-                <!-- Por ahora tu Noticia no tiene state/approved -->
-                <span class="badge text-bg-secondary">—</span>
-              </td>
+            <td>
+              <span class="badge" [ngClass]="{'text-bg-success': r.autorizada, 'text-bg-secondary': !r.autorizada}">
+                {{ r.autorizada ? 'Autorizada' : 'No autorizada' }}
+              </span>
+            </td>            
               <td>
                 <div *ngIf="dateFor(r) as d; else noDate">
                   {{ d | date:'yyyy-MM-dd HH:mm' }}
@@ -132,9 +161,14 @@
               </td>
               <td>{{ author(r) }}</td>
               <td class="text-end">
-                <a class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/admin/noticias', r._id, 'editar']">Editar</a>
-                <button class="btn btn-sm btn-outline-danger me-1" (click)="onDelete(r)">Eliminar</button>
-                <button class="btn btn-sm btn-success" (click)="onApprove(r)">Autorizar</button>
+                <a class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/admin/noticiaseditar', r._id]" aria-label="Editar {{r.title}}">Editar</a>
+                <button class="btn btn-sm btn-outline-danger me-1" (click)="onDelete(r)" aria-label="Eliminar {{r.title}}">Eliminar</button>
+                <button class="btn btn-sm" 
+                        [ngClass]="{'btn-success': !r.autorizada, 'btn-warning': r.autorizada}"
+                        (click)="onApprove(r)" 
+                        [attr.aria-label]="r.autorizada ? 'Desautorizar ' + r.title : 'Autorizar ' + r.title">
+                  {{ r.autorizada ? 'Desautorizar' : 'Autorizar' }}
+                </button>
               </td>
             </tr>
           </tbody>
@@ -142,13 +176,13 @@
       </div>
 
       <!-- Footer / Paginación -->
-      <div *ngIf="!loading() && pageItems().length" class="d-flex align-items-center justify-content-between p-3 border-top">
+      <div *ngIf="!loading() && pageItems().length" class="d-flex align-items-center justify-content-between p-3 border-top bg-light-subtle" role="navigation">
         <div class="text-muted small">
           Página {{ page() }} de {{ totalPages() }} • {{ total() }} resultados
         </div>
         <div class="btn-group">
-          <button class="btn btn-outline-secondary" (click)="prevPage()" [disabled]="page()===1">Anterior</button>
-          <button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="page()>=totalPages()">Siguiente</button>
+          <button class="btn btn-outline-secondary" (click)="prevPage()" [disabled]="page()===1" aria-label="Página anterior">Anterior</button>
+          <button class="btn btn-outline-secondary" (click)="nextPage()" [disabled]="page()>=totalPages()" aria-label="Página siguiente">Siguiente</button>
         </div>
       </div>
     </div>

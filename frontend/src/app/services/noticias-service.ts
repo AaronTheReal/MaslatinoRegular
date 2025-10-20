@@ -1,3 +1,4 @@
+
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
 import { Observable, of, tap, map, catchError } from 'rxjs';
@@ -103,4 +104,61 @@ export class NoticiasService {
     }
     return observable;
   }
+
+  updateNoticia(id: string, data: Noticia): Observable<Noticia> {
+    console.log('Updating noticia with id:', id, 'Data:', data);
+    const key = makeStateKey<Noticia>('noticia-' + id);
+    const observable = this.http.put<Noticia>(`${this.baseUrl}/noticia/${id}`, data).pipe(
+      catchError(error => {
+        console.error('Update Noticia Error:', error);
+        throw error;
+      })
+    );
+
+    if (isPlatformServer(this.platformId)) {
+      console.log('Server-side update for id:', id);
+      return observable.pipe(
+        tap(updatedData => {
+          console.log('Server updated data:', updatedData);
+          this.ts.set(key, updatedData);
+        })
+      );
+    }
+
+    console.log('Client-side update for id:', id);
+    return observable;
+  }
+  deleteNoticia(id: string): Observable<void> {
+    console.log('Deleting noticia with id:', id);
+    const key = makeStateKey<Noticia>('noticia-' + id);
+    const observable = this.http.delete<void>(`${this.baseUrl}/noticia/${id}`).pipe(
+      catchError(error => {
+        console.error('Delete Noticia Error:', error);
+        throw error;
+      })
+    );
+
+    if (isPlatformServer(this.platformId)) {
+      console.log('Server-side delete for id:', id);
+      return observable.pipe(
+        tap(() => {
+          console.log('Server deleted noticia:', id);
+          this.ts.remove(key); // Remove from TransferState on deletion
+        })
+      );
+    }
+
+    console.log('Client-side delete for id:', id);
+    return observable;
+  }
+
+  toggleAutorizarNoticia(id: string, autorizada: boolean): Observable<Noticia> {
+  console.log(`Toggling autorización for noticia with id: ${id}, autorizada: ${autorizada}`);
+  return this.http.patch<Noticia>(`${this.baseUrl}/noticia/${id}/autorizar`, { autorizada }).pipe(
+    catchError(error => {
+      console.error('Toggle Autorizar Noticia Error:', error);
+      throw error;
+    })
+  );
+}
 }
