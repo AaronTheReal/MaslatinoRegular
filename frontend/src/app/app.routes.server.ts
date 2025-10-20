@@ -29,6 +29,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'admin-noticias', renderMode: RenderMode.Client },
   { path: 'admin/noticiaseditar/*', renderMode: RenderMode.Client },
 
-
+  { path: 'archivo/:anio/*',  renderMode: RenderMode.Server },
+  { path: 'categoria/*',  renderMode:  RenderMode.Server },
   
 ];

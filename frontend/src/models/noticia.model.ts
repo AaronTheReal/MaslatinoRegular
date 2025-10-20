@@ -1,8 +1,7 @@
-
 export interface Category {
-  _id?: string;
+  _id: string;
   name: string;
-  slug?: string;
+  slug: string;
   description?: string;
   image?: string;
   color?: string;
@@ -38,7 +37,7 @@ export interface Noticia {
   title: string;
   summary?: string;
   content: Block[];
-  categories: (string | Category)[];
+  categories: Category[]; // Changed from (string | Category)[] to Category[]
   tags?: string[];
   meta?: {
     description?: string;
@@ -49,5 +48,5 @@ export interface Noticia {
   createdAt?: string;
   updatedAt?: string;
   slug?: string;
-  autorizada?: boolean; // Asegúrate de que esté aquí
+  autorizada?: boolean;
 }
