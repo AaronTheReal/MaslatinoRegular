@@ -1,18 +1,30 @@
-import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
+
+import { Component, ChangeDetectionStrategy, inject, signal, computed, HostListener, ElementRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { NoticiasService } from '../../../../services/noticias-service';
 import { CategoriaService, CategoriaPayload } from '../../../../services/categorias-service';
 import { Noticia, Category } from '../../../../../models/noticia.model';
+import { CategorySearchPipe } from '../../../pipe/category-search.pipe';
 
-type StateOpt = 'all'|'draft'|'published'|'pending';
-type SortOpt = '-publishAt'|'publishAt'|'title'|'-title'|'createdAt'|'-createdAt';
+type StateOpt = 'all' | 'draft' | 'published' | 'pending';
+type SortOpt = '-publishAt' | 'publishAt' | 'title' | '-title' | 'createdAt' | '-createdAt';
+
+type Filters = {
+  q: string;
+  state: StateOpt;
+  categoryIds: string[];
+  from: string;
+  to: string;
+  sort: SortOpt;
+  pageSize: number;
+};
 
 @Component({
   selector: 'app-admin-noticias',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, DatePipe],
+  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, DatePipe, CategorySearchPipe],
   templateUrl: './admin-noticias.html',
   styleUrls: ['./admin-noticias.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -21,44 +33,84 @@ export class AdminNoticias {
   private fb = inject(FormBuilder);
   private noticiasSvc = inject(NoticiasService);
   private categoriasSvc = inject(CategoriaService);
+  private elRef = inject(ElementRef);
 
   readonly form = this.fb.nonNullable.group({
     q: [''],
-    state: ['all' as StateOpt],      // por ahora, visual; no usamos r.state
+    state: ['all' as StateOpt],
     categoryIds: [[] as string[]],
-    from: [''], // yyyy-MM-dd
-    to: [''],   // yyyy-MM-dd
-    sort: ['-publishAt' as SortOpt], // publishAt cae a createdAt si no existe
+    from: [''],
+    to: [''],
+    sort: ['-publishAt' as SortOpt],
     pageSize: [20],
   });
 
   page = signal(1);
   loading = signal(true);
   errorMsg = signal<string | null>(null);
-
-  // Datos
   allItems = signal<Noticia[]>([]);
   categorias = signal<CategoriaPayload[]>([]);
 
+  private filtersSig = signal<Filters>(this.form.getRawValue());
+
+  // UI estado del dropdown de categorías
+  catOpen = signal(false);
+  catQuery = '';
+
   constructor() {
-    // Cargar categorías (para mapear id -> nombre/color)
+    // Cargar categorías
     this.categoriasSvc.obtenerCategorias().subscribe({
       next: cats => this.categorias.set(cats || []),
       error: () => {}
     });
 
-    // Cargar todas las noticias
-    this.noticiasSvc.getNoticias().subscribe({
-      next: items => { this.allItems.set(items || []); this.loading.set(false); },
-      error: () => { this.errorMsg.set('No se pudieron cargar las noticias.'); this.loading.set(false); }
+    // Cargar noticias
+    this.loadNoticias();
+    
+    // Reaccionar a cambios de filtros
+    this.form.valueChanges.subscribe(() => {
+      this.page.set(1);
+      this.filtersSig.set(this.form.getRawValue());
     });
-
-    // Reset de página si cambian filtros
-    this.form.valueChanges.subscribe(() => this.page.set(1));
   }
 
-  // ---------- Normalización y helpers seguros (evitan $oid/_id en plantilla) ----------
-  /** Devuelve IDs de categorías como strings, sin importar si vienen como string, Category, { $oid } o populado */
+  private loadNoticias() {
+    this.loading.set(true);
+    this.noticiasSvc.getNoticias().subscribe({
+      next: items => {
+        this.allItems.set(items || []);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.errorMsg.set('No se pudieron cargar las noticias.');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  // Cerrar dropdown al click fuera
+  @HostListener('document:click', ['$event'])
+  closeOnClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    const clickedInside = this.elRef.nativeElement.contains(target);
+    if (!clickedInside && this.catOpen()) {
+      console.log('Closing dropdown due to outside click');
+      this.catOpen.set(false);
+    }
+  }
+
+  toggleCatDropdown(event: Event) {
+    this.catOpen.set(!this.catOpen());
+    console.log('Dropdown toggled, catOpen:', this.catOpen());
+    event.stopPropagation();
+  }
+
+  closeCatDropdown() {
+    this.catOpen.set(false);
+    console.log('Dropdown closed, catOpen:', this.catOpen());
+  }
+
+  // ---------- Normalización ----------
   catIds(n: Noticia): string[] {
     const raw = Array.isArray(n?.categories) ? n.categories : [];
     return raw.map((c: string | Category | any) => {
@@ -77,26 +129,72 @@ export class AdminNoticias {
     return this.categorias().find(x => x._id === id)?.color || undefined;
   }
 
-  /** Imagen destacada */
   thumb(n: Noticia): string | undefined {
     return n?.meta?.image;
   }
 
-  /** Autor amigable */
   author(n: Noticia): string {
     return n?.authorName || '—';
   }
 
-  /** Fecha para la tabla: si no hay publishAt, usamos createdAt */
   dateFor(n: Noticia): Date | null {
-    // Tu interfaz no define publishAt, usamos createdAt
-    if (n?.createdAt) return new Date(n.createdAt);
-    return null;
+    return n?.createdAt ? new Date(n.createdAt) : null;
   }
 
-  // ---------- Filtro/orden (frontend) ----------
+  // ---------- Selector de categorías ----------
+  isCatSelected(id?: string): boolean {
+    if (!id) return false;
+    return (this.form.controls.categoryIds.value ?? []).includes(id);
+  }
+
+  toggleCat(id?: string, checked?: boolean) {
+    if (!id) return;
+    const ctrl = this.form.controls.categoryIds;
+    const set = new Set(ctrl.value ?? []);
+    if (checked) set.add(id); else set.delete(id);
+    ctrl.setValue([...set]);
+    ctrl.updateValueAndValidity();
+    this.filtersSig.set(this.form.getRawValue());
+  }
+
+  removeCat(id?: string) {
+    if (!id) return;
+    const ctrl = this.form.controls.categoryIds;
+    ctrl.setValue((ctrl.value ?? []).filter(x => x !== id));
+    ctrl.updateValueAndValidity();
+    this.filtersSig.set(this.form.getRawValue());
+  }
+
+  clearCategories() {
+    const ctrl = this.form.controls.categoryIds;
+    ctrl.setValue([]);
+    ctrl.updateValueAndValidity();
+    this.filtersSig.set(this.form.getRawValue());
+  }
+
+  selectedCats = computed(() =>
+    (this.form.controls.categoryIds.value ?? [])
+      .map(id => this.categorias().find(c => c._id === id))
+      .filter(Boolean) as CategoriaPayload[]
+  );
+
+  clearFilters() {
+    this.form.reset({
+      q: '',
+      state: 'all',
+      categoryIds: [],
+      from: '',
+      to: '',
+      sort: '-publishAt',
+      pageSize: 20
+    });
+    this.page.set(1);
+    this.filtersSig.set(this.form.getRawValue());
+  }
+
+  // ---------- Filtro/orden/paginación ----------
   filtered = computed(() => {
-    const v = this.form.getRawValue();
+    const v = this.filtersSig();
     const q = (v.q ?? '').trim().toLowerCase();
     const catFilter = v.categoryIds ?? [];
     const from = v.from ? new Date(v.from + 'T00:00:00') : null;
@@ -104,7 +202,6 @@ export class AdminNoticias {
 
     let rows = this.allItems();
 
-    // Búsqueda básica: título/slug/autor
     if (q) {
       rows = rows.filter(r =>
         (r.title ?? '').toLowerCase().includes(q) ||
@@ -113,7 +210,6 @@ export class AdminNoticias {
       );
     }
 
-    // Categorías (todas las seleccionadas deben estar presentes)
     if (catFilter.length) {
       rows = rows.filter(r => {
         const ids = this.catIds(r);
@@ -121,7 +217,6 @@ export class AdminNoticias {
       });
     }
 
-    // Rango de fechas sobre createdAt (porque publishAt no está en tu interfaz)
     rows = rows.filter(r => {
       const d = this.dateFor(r);
       if (!d && (from || to)) return false;
@@ -130,7 +225,6 @@ export class AdminNoticias {
       return true;
     });
 
-    // Orden (si no hay publishAt, tratamos publishAt como createdAt)
     const sort = v.sort as SortOpt;
     const byTitle = (a: Noticia, b: Noticia) => (a.title ?? '').localeCompare(b.title ?? '');
     const byCreated = (a: Noticia, b: Noticia) => {
@@ -138,40 +232,100 @@ export class AdminNoticias {
       const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
       return da - db;
     };
-    const byPublish = byCreated; // mismo criterio por ahora
+    const byPublish = byCreated;
 
     const sorted = [...rows];
     switch (sort) {
-      case 'title': sorted.sort(byTitle); break;
-      case '-title': sorted.sort((a,b)=>-byTitle(a,b)); break;
-      case 'createdAt': sorted.sort(byCreated); break;
-      case '-createdAt': sorted.sort((a,b)=>-byCreated(a,b)); break;
-      case 'publishAt': sorted.sort(byPublish); break;
-      case '-publishAt': default: sorted.sort((a,b)=>-byPublish(a,b)); break;
+      case 'title':
+        sorted.sort(byTitle);
+        break;
+      case '-title':
+        sorted.sort((a, b) => -byTitle(a, b));
+        break;
+      case 'createdAt':
+        sorted.sort(byCreated);
+        break;
+      case '-createdAt':
+        sorted.sort((a, b) => -byCreated(a, b));
+        break;
+      case 'publishAt':
+        sorted.sort(byPublish);
+        break;
+      case '-publishAt':
+      default:
+        sorted.sort((a, b) => -byPublish(a, b));
+        break;
     }
-
     return sorted;
   });
 
   total = computed(() => this.filtered().length);
   totalPages = computed(() => {
-    const size = this.form.value.pageSize ?? 20;
+    const size = this.filtersSig().pageSize ?? 20;
     return Math.max(1, Math.ceil(this.total() / size));
   });
 
   pageItems = computed(() => {
-    const size = this.form.value.pageSize ?? 20;
+    const size = this.filtersSig().pageSize ?? 20;
     const start = (this.page() - 1) * size;
     return this.filtered().slice(start, start + size);
   });
 
-  // Acciones (solo UI por ahora)
-  onApprove(_row: Noticia) { alert('Autorizar: pendiente de backend'); }
-  onDelete(_row: Noticia)  { alert('Eliminar: pendiente de backend'); }
+  // Acciones
+  onApprove(row: Noticia) {
+    const isAuthorized = row.autorizada ?? false;
+    const action = isAuthorized ? 'desautorizar' : 'autorizar';
+    if (!confirm(`¿Estás seguro de que quieres ${action} la noticia "${row.title}"?`)) {
+      return;
+    }
 
-  nextPage() { if (this.page() < this.totalPages()) this.page.set(this.page() + 1); }
-  prevPage() { if (this.page() > 1) this.page.set(this.page() - 1); }
+    this.loading.set(true);
+    this.noticiasSvc.toggleAutorizarNoticia(row._id!, !isAuthorized).subscribe({
+      next: updatedNoticia => {
+        this.allItems.set(
+          this.allItems().map(item =>
+            item._id === row._id ? { ...item, autorizada: updatedNoticia.autorizada } : item
+          )
+        );
+        alert(`Noticia ${action}da exitosamente.`);
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        console.error('Error al actualizar autorización:', err);
+        alert('Error al actualizar la autorización: ' + (err.message || 'Unknown error'));
+        this.loading.set(false);
+      }
+    });
+  }
+  onDelete(row: Noticia) {
+    if (!confirm(`¿Estás seguro de que quieres eliminar la noticia "${row.title}"? Esta acción no se puede deshacer.`)) {
+      return;
+    }
+    this.loading.set(true);
+    this.noticiasSvc.deleteNoticia(row._id!).subscribe({
+      next: () => {
+        this.allItems.set(this.allItems().filter(item => item._id !== row._id));
+        alert('Noticia eliminada exitosamente.');
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        console.error('Error deleting noticia:', err);
+        alert('Error al eliminar la noticia: ' + (err.message || 'Unknown error'));
+        this.loading.set(false);
+      }
+    });
+  }
+
+  nextPage() {
+    if (this.page() < this.totalPages()) this.page.set(this.page() + 1);
+  }
+
+  prevPage() {
+    if (this.page() > 1) this.page.set(this.page() - 1);
+  }
 
   trackById = (_: number, r: Noticia) => r._id ?? _;
-  badgeClass(_state: string) { return 'badge text-bg-secondary'; } // placeholder
+  badgeClass(_state: string) {
+    return 'badge text-bg-secondary';
+  }
 }

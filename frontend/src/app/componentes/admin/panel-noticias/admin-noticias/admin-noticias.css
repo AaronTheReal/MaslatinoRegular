@@ -1,3 +1,59 @@
+
+/* Aire general */
+.admin-wrap { padding-left: 1rem; padding-right: 1rem; }
+
+/* Tarjeta de tabla */
+.table-card { margin-top: 1rem; margin-bottom: 2rem; border-radius: 1rem; }
+
+/* Encabezado sticky de la tabla */
 .table thead th { position: sticky; top: 0; z-index: 5; }
+
 .object-fit-cover { object-fit: cover; }
 .placeholder { display:block; border-radius: .5rem; }
+
+.bg-light-subtle { background-color: rgba(0,0,0,.03); }
+
+/* Dropdown de categorías */
+.filter-dropdown-toggle {
+  border: 1px solid var(--bs-border-color);
+  background: #fff;
+  border-radius: .5rem;
+  padding: .5rem .75rem;
+}
+
+.filter-dropdown {
+  position: absolute;
+  inset: auto 0 auto 0;
+  z-index: 1000;
+  width: 100%;
+  max-height: 260px;
+  overflow: hidden;
+  border-radius: .5rem;
+}
+
+.filter-dropdown .cat-list {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+/* Chips */
+.bg-secondary-subtle { background-color: #eef2f7; }
+
+/* Chevron simple */
+.chev {
+  width: .6rem; height: .6rem; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg); transition: transform .15s ease;
+}
+.chev.up { transform: rotate(-135deg); }
+
+.btn-close-sm {
+  --bs-btn-close-width: 0.5em;
+  --bs-btn-close-height: 0.5em;
+  font-size: 0.75rem;
+}
+.dropdown-menu {
+  z-index: 1000;
+}
+.form-check-input {
+  margin-top: 0.3rem;
+}

@@ -49,4 +49,5 @@ export interface Noticia {
   createdAt?: string;
   updatedAt?: string;
   slug?: string;
+  autorizada?: boolean; // Asegúrate de que esté aquí
 }

@@ -15,6 +15,7 @@ import { PanelMultimedia } from './componentes/admin/panel-multimedia/panel-mult
 import { PanelNoticias } from './componentes/admin/panel-noticias/panel-noticias';
 import { PanelRadio } from './componentes/admin/panel-radio/panel-radio';
 import {AdminNoticias} from './componentes/admin/panel-noticias/admin-noticias/admin-noticias'
+import {EditarNoticias} from './componentes/admin/panel-noticias/editar-noticias/editar-noticias'
 
 export const routes: Routes = [
   { path: '', component: Dashboard },
@@ -35,6 +36,8 @@ export const routes: Routes = [
   { path: 'radio-panel', component: PanelRadio },
   { path: 'categorias-panel', component: PanelCategorias },
   { path: 'admin-noticias', component: AdminNoticias },
+  { path: 'admin/noticiaseditar/:id', component: EditarNoticias },
+
 
   
 

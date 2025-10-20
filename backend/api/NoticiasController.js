@@ -14,7 +14,99 @@ import User from '../models/Usuarios.js';
 dotenv.config();
 
 class noticiasController {
+ async updateNoticia(req, res) {
+    try {
+      const { id } = req.params;
+      const data = req.body;
 
+      // Validar que la noticia existe
+      const existingNoticia = await Noticia.findById(id);
+      if (!existingNoticia) {
+        return res.status(404).json({ error: 'Noticia no encontrada' });
+      }
+
+      // Actualizar la noticia
+      const updatedNoticia = await Noticia.findByIdAndUpdate(
+        id,
+        { ...data, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      )
+        .populate('categories', 'name slug color')
+        .lean();
+
+      if (!updatedNoticia) {
+        return res.status(404).json({ error: 'Error al actualizar la noticia' });
+      }
+
+      // Trigger recache if published
+      if (data.state === 'published') {
+        await recacheNoticia(updatedNoticia.slug);
+      }
+
+      return res.status(200).json(updatedNoticia);
+    } catch (e) {
+      console.error('Error updating noticia:', e);
+      return res.status(500).json({ error: 'Error al actualizar la noticia' });
+    }
+  }
+   async deleteNoticia(req, res) {
+    try {
+      const { id } = req.params;
+
+      console.log(req.params);
+      const existingNoticia = await Noticia.findById(id);
+      if (!existingNoticia) {
+        return res.status(404).json({ error: 'Noticia no encontrada' });
+      }
+
+      await Noticia.findByIdAndDelete(id);
+
+      if (existingNoticia.state === 'published') {
+        await recacheNoticia(existingNoticia.slug);
+      }
+
+      return res.status(204).json();
+    } catch (e) {
+      console.error('Error deleting noticia:', e);
+      return res.status(500).json({ error: 'Error al eliminar la noticia' });
+    }
+  }
+   async toggleAutorizarNoticia(req, res) {
+    try {
+      console.log("si llega?");
+      const { id } = req.params;
+      const { autorizada } = req.body;
+
+      // Validar que el campo autorizada es booleano
+      if (typeof autorizada !== 'boolean') {
+        return res.status(400).json({ error: 'El campo autorizada debe ser un booleano' });
+      }
+
+      // Validar que la noticia existe
+      const existingNoticia = await Noticia.findById(id);
+      if (!existingNoticia) {
+        return res.status(404).json({ error: 'Noticia no encontrada' });
+      }
+
+      // Actualizar solo el campo autorizada
+      const updatedNoticia = await Noticia.findByIdAndUpdate(
+        id,
+        { autorizada, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      )
+        .populate('categories', 'name slug color')
+        .lean();
+
+      if (!updatedNoticia) {
+        return res.status(404).json({ error: 'Error al actualizar la autorización de la noticia' });
+      }
+
+      return res.status(200).json(updatedNoticia);
+    } catch (e) {
+      console.error('Error toggling autorización:', e);
+      return res.status(500).json({ error: 'Error al actualizar la autorización' });
+    }
+  }
 async getNoticiasUsuario(req, res) {
   try {
     const { userId } = req.params;
