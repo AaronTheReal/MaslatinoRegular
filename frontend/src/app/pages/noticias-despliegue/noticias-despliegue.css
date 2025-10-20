@@ -1,0 +1,51 @@
+.sidebar-archivos, .sidebar-categorias {
+  padding: 0;
+}
+
+.sidebar-archivos li, .sidebar-categorias li {
+  margin-bottom: 0.5rem;
+}
+
+.archivo-link, .enlace-categoria {
+  display: block;
+  padding: 0.5rem 1rem;
+  color: #333;
+  text-decoration: none;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.archivo-link:hover, .enlace-categoria:hover {
+  background-color: #f8f9fa;
+  color: #007bff;
+}
+
+.archivo-link.active, .enlace-categoria.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-title a {
+  color: #333;
+  font-weight: 600;
+}
+
+.card-title a:hover {
+  color: #007bff;
+}
+
+@media (max-width: 767px) {
+  .sidebar-archivos, .sidebar-categorias {
+    text-align: center;
+  }
+  
+  .card-img {
+    height: 200px;
+    object-fit: cover;
+  }
+}

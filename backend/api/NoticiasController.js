@@ -14,6 +14,103 @@ import User from '../models/Usuarios.js';
 dotenv.config();
 
 class noticiasController {
+async getNoticiasByArchive(req, res) {
+  try {
+    const { anio, mes } = req.params;
+    const year = parseInt(anio);
+    const month = parseInt(mes);
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return res.status(400).json({ error: 'Año o mes inválido' });
+    }
+    console.log('Fetching archive:', { year, month });
+    const noticias = await Noticia.find({
+      createdAt: {
+        $gte: new Date(year, month - 1, 1),
+        $lt: new Date(year, month, 1)
+      },
+      //autorizada: true
+    })
+      .populate('categories', 'name slug color')
+      .lean();
+    console.log('Noticias found:', noticias.length);
+    res.status(200).json(noticias);
+  } catch (e) {
+    console.error('Error fetching noticias by archive:', e);
+    res.status(500).json({ error: 'Error al obtener noticias por archivo' });
+  }
+}
+async getArchivos(req, res) {
+  try {
+    const archivos = await Noticia.aggregate([
+      //{ $match: { autorizada: true } },
+      {
+        $group: {
+          _id: {
+            anio: { $year: '$createdAt' },
+            mes: { $month: '$createdAt' }
+          },
+          nombre: {
+            $first: {
+              $concat: [
+                { $arrayElemAt: [
+                    ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    { $subtract: [{ $month: '$createdAt' }, 1] }
+                  ]
+                },
+                ' ',
+                { $toString: { $year: '$createdAt' } }
+              ]
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          anio: '$_id.anio',
+          mes: '$_id.mes',
+          nombre: 1,
+          _id: 0
+        }
+      },
+      { $sort: { anio: -1, mes: -1 } }
+    ]);
+    res.status(200).json(archivos);
+  } catch (e) {
+    console.error('Error fetching archivos:', e);
+    res.status(500).json({ error: 'Error al obtener archivos' });
+  }
+}async getNoticiasByCategory(req, res) {
+  try {
+    const { slug } = req.params;
+    console.log('Fetching noticias for category slug:', slug);
+    const category = await Category.findOne({ slug }).lean();
+    if (!category) {
+      console.log('Category not found for slug:', slug);
+      return res.status(404).json({ error: 'Categoría no encontrada' });
+    }
+    console.log(category);
+    const noticias = await Noticia.find({
+      categories: category._id,
+      //autorizada: true
+    })
+      .populate('categories', 'name slug color')
+      .lean();
+    console.log('Noticias found:', noticias);
+    res.status(200).json(noticias);
+  } catch (e) {
+    console.error('Error fetching noticias by category:', e);
+    res.status(500).json({ error: 'Error al obtener noticias por categoría' });
+  }
+}
+async getCategorias(req, res) {
+  try {
+    const categorias = await Category.find().select('name slug color').lean();
+    res.status(200).json(categorias);
+  } catch (e) {
+    console.error('Error fetching categorias:', e);
+    res.status(500).json({ error: 'Error al obtener categorías' });
+  }
+}
  async updateNoticia(req, res) {
     try {
       const { id } = req.params;

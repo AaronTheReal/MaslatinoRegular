@@ -108,6 +108,10 @@ export default class MainRoute {
     router.route('/noticias/recientes').get(NoticiasController.getNoticiasRecientes);
     router.route('/noticias/recomendadas').get(NoticiasController.getNoticiasRecomendadas);
 
+    router.get('/noticias/archivo/:anio/:mes', NoticiasController.getNoticiasByArchive);
+    router.get('/noticias/categoria/:slug', NoticiasController.getNoticiasByCategory);
+    router.get('/archivos', NoticiasController.getArchivos);
+    router.get('/categorias', NoticiasController.getCategorias);
     
     router.route('/por-categorias-relevantes/:userId').get(NoticiasController.getNoticiasUsuario);
 

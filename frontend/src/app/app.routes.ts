@@ -16,6 +16,7 @@ import { PanelNoticias } from './componentes/admin/panel-noticias/panel-noticias
 import { PanelRadio } from './componentes/admin/panel-radio/panel-radio';
 import {AdminNoticias} from './componentes/admin/panel-noticias/admin-noticias/admin-noticias'
 import {EditarNoticias} from './componentes/admin/panel-noticias/editar-noticias/editar-noticias'
+import {NoticiasDespliegue} from './pages/noticias-despliegue/noticias-despliegue'
 
 export const routes: Routes = [
   { path: '', component: Dashboard },
@@ -39,6 +40,8 @@ export const routes: Routes = [
   { path: 'admin/noticiaseditar/:id', component: EditarNoticias },
 
 
-  
+  { path: 'archivo/:anio/:mes', component: NoticiasDespliegue },
+  { path: 'categoria/:slug', component: NoticiasDespliegue },
+
 
 ];
