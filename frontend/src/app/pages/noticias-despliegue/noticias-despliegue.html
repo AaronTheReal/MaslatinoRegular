@@ -1,87 +1,143 @@
-<div class="container py-5">
+<main class="container mt-8" *ngIf="vm$ | async as vm">
   <div class="row">
-    <!-- Sidebar -->
-    <div class="col-lg-3 col-md-4 mb-4">
-      <h4 class="mb-3">Archivos</h4>
-      <ul class="sidebar-archivos list-unstyled">
-        <li *ngFor="let mes of archivos; trackBy: trackByIndex">
-          <a [routerLink]="['/archivo', mes.anio, mes.mes]" 
-             class="archivo-link" 
-             [ngClass]="{'active': filterType === 'archive' && filterValue === mes.nombre}"
-             [attr.aria-label]="'Ver archivo: ' + mes.nombre">
-            {{ mes.nombre }}
-          </a>
-        </li>
-      </ul>
+    <!-- Contenido principal -->
+    <div class="col-lg-9 col-md-12 mb-4">
+      <section aria-labelledby="titulo-listado" class="noticia-card">
+        <h2 id="titulo-listado" *ngIf="vm.filterValue" class="mb-4">
+          Noticias {{ vm.filterType === 'archive' ? 'de' : 'en' }} {{ vm.filterValue }}
+        </h2>
 
-      <h4 class="mb-3 mt-5">Categorías</h4>
-      <ul class="sidebar-categorias list-unstyled">
-        <li *ngFor="let cat of categorias; trackBy: trackByCat" class="categoria-item">
-          <a *ngIf="cat?.slug" 
-             [routerLink]="['/categoria', cat.slug]" 
-             class="enlace-categoria" 
-             [ngClass]="{'active': filterType === 'category' && filterValue === cat.name}"
-             [attr.aria-label]="'Ver categoría: ' + (cat.name || 'Sin nombre')">
-            {{ cat.name || 'Sin nombre' }}
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <!-- Main Content -->
-    <div class="col-lg-9 col-md-8">
-      <h2 *ngIf="filterValue" class="mb-4">
-        Noticias {{ filterType === 'archive' ? 'de' : 'en' }} {{ filterValue }}
-      </h2>
-      <div *ngIf="loading" class="text-center">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-      </div>
-      <div *ngIf="error" class="alert alert-danger" role="alert">
-        {{ error }}
-      </div>
-      <div *ngIf="!loading && !error">
-        <!-- Debug: Display raw noticias$ data -->
-        <div class="debug" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">
-          <h5>Debug: Raw noticias$ data</h5>
-          <pre>{{ (noticias$ | async) | json }}</pre>
-        </div>
-        <div *ngFor="let noticia of noticias$ | async" class="card mb-3">
-          <div class="row g-0">
-            <div class="col-md-4">
-              <img [src]="noticia.meta?.image || 'assets/placeholder.jpg'" 
-                   class="img-fluid rounded-start" 
-                   [alt]="noticia.title || 'Sin título'" 
-                   style="object-fit: cover; height: 100%;">
-            </div>
-            <div class="col-md-8">
-              <div class="card-body">
-                <h5 class="card-title">
-                  <a [routerLink]="['/noticia', noticia.slug]" class="text-decoration-none">
-                    {{ noticia.title || 'Sin título' }}
-                  </a>
-                </h5>
-                <p class="card-text">{{ noticia.meta?.description || 'Sin descripción disponible' }}</p>
-                <p class="card-text">
-                  <small class="text-muted">
-                    Publicado el {{ noticia.createdAt ? (noticia.createdAt | date:'mediumDate') : 'Fecha desconocida' }}
-                    <span *ngIf="noticia.categories?.length">
-                      | Categorías: 
-                      <span *ngFor="let cat of noticia.categories; let isLast=last">
-                        <a [routerLink]="['/categoria', cat.slug]">{{ cat.name || 'Sin nombre' }}</a>{{ isLast ? '' : ', ' }}
-                      </span>
-                    </span>
-                  </small>
-                </p>
-              </div>
+        <!-- Loading -->
+        <div *ngIf="vm.loading" class="text-center my-4" aria-live="polite">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <!-- Skeletons -->
+          <div class="skeleton-card" *ngFor="let s of [0,1,2]; trackBy: trackByIndex">
+            <div class="skeleton-thumb"></div>
+            <div class="skeleton-text">
+              <div class="skeleton-line w-60"></div>
+              <div class="skeleton-line w-90"></div>
+              <div class="skeleton-line w-40"></div>
             </div>
           </div>
         </div>
-        <div *ngIf="(noticias$ | async)?.length === 0" class="alert alert-info">
-          No se encontraron noticias para este filtro.
+
+        <!-- Error -->
+        <div *ngIf="!vm.loading && vm.error" class="alert alert-danger" role="alert">
+          {{ vm.error }}
         </div>
-      </div>
+
+        <!-- Listado -->
+        <ng-container *ngIf="!vm.loading && !vm.error">
+          <!-- 👇🏻 agrega let index = index -->
+          <div *ngFor="let noticia of vm.items; let index = index; trackBy: trackBySlug" class="card mb-3">
+            <div class="row g-0">
+              <div class="col-md-4">
+                <!-- Contenedor con ratio fijo para evitar CLS -->
+                <div class="thumb-wrap">
+                  <img
+                    [src]="noticia.meta?.image || 'assets/placeholder.jpg'"
+                    class="img-fluid rounded-start card-img"
+                    [alt]="noticia.title || 'Sin título'"
+                    [attr.loading]="index > 2 ? 'lazy' : 'eager'"
+                    [attr.decoding]="index > 2 ? 'async' : 'auto'"
+                    [attr.fetchpriority]="index === 0 ? 'high' : 'auto'"
+                  />
+                </div>
+              </div>
+              <div class="col-md-8">
+                <div class="card-body">
+                  <h5 class="card-title">
+                    <a [routerLink]="['/noticia', noticia.slug]" class="text-decoration-none">
+                      {{ noticia.title || 'Sin título' }}
+                    </a>
+                  </h5>
+                  <p class="card-text">
+                    {{ noticia.meta?.description || noticia.summary || 'Sin descripción disponible' }}
+                  </p>
+                  <p class="card-text">
+                    <small class="text-muted">
+                      Publicado el
+                      {{ noticia.createdAt ? (noticia.createdAt | date: 'mediumDate') : 'Fecha desconocida' }}
+                      <span *ngIf="noticia.categories?.length">
+                        | Categorías:
+                        <span *ngFor="let cat of noticia.categories; let last = last">
+                          <a [routerLink]="['/categoria', cat.slug]">{{ cat.name || 'Sin nombre' }}</a>{{ last ? '' : ', ' }}
+                        </span>
+                      </span>
+                    </small>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="vm.items.length === 0" class="alert alert-info">
+            No se encontraron noticias para este filtro.
+          </div>
+        </ng-container>
+      </section>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-3 col-md-12">
+      <aside class="sidebar">
+        <div class="sidebar-search mb-4">
+          <input
+            type="text"
+            placeholder="Buscar"
+            class="form-control"
+            [(ngModel)]="busqueda"
+            (keyup.enter)="buscarNoticia()"
+            aria-label="Buscar noticias"
+          />
+        </div>
+
+        <h4 class="mb-3 mt-5">Entradas Recientes</h4>
+        <ul class="sidebar-recientes">
+          <li *ngFor="let n of vm.recientes; trackBy: trackBySlug">
+            <a
+              *ngIf="n?.slug"
+              [routerLink]="['/noticia', n.slug]"
+              class="enlace-reciente"
+              [attr.aria-label]="'Leer noticia: ' + (n.title || 'Sin título')"
+            >
+              {{ n.title || 'Sin título' }}
+            </a>
+            <ng-template #noSlug>
+              <span>{{ n.title || 'Sin título' }}</span>
+            </ng-template>
+          </li>
+        </ul>
+
+        <h4 class="mb-3 mt-5">Archivos</h4>
+        <ul class="sidebar-archivos">
+          <li *ngFor="let mes of vm.archivos; trackBy: trackByIndex">
+            <a
+              [routerLink]="['/archivo', mes.anio, mes.mes]"
+              class="archivo-link"
+              [attr.aria-label]="'Ver archivo: ' + mes.nombre"
+            >
+              {{ mes.nombre }}
+            </a>
+          </li>
+        </ul>
+
+        <h4 class="mb-3 mt-5">Categorías</h4>
+        <ul class="sidebar-categorias">
+          <li *ngFor="let cat of vm.categorias; trackBy: trackById" class="categoria-item">
+            <a
+              *ngIf="cat?.slug"
+              [routerLink]="['/categoria', cat.slug]"
+              class="enlace-categoria"
+              [attr.aria-label]="'Ver categoría: ' + (cat.name || 'Sin nombre')"
+            >
+              {{ cat.name || 'Sin nombre' }}
+            </a>
+          </li>
+        </ul>
+      </aside>
     </div>
   </div>
-</div>
+</main>
