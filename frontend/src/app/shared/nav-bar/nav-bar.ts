@@ -13,10 +13,14 @@ export class NavBar {
   @Output() searchClicked = new EventEmitter<void>();
   @Output() loginClicked = new EventEmitter<void>();
 
-  onSearchClick() {
-    this.searchClicked.emit();
-  }
+
   onLoginClick() {
     this.loginClicked.emit();
   }
+  onSearchClick(ev?: Event) {
+    console.log('pressed');
+    ev?.stopPropagation();          // ✅ keep this
+    this.searchClicked.emit();
+  }
+
 }

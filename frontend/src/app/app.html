@@ -1,4 +1,10 @@
-<app-nav-bar></app-nav-bar>
+<!-- src/app/app.html -->
+<app-nav-bar (searchClicked)="isSearchOpen = true"></app-nav-bar>
 
+<app-overlay
+  [open]="isSearchOpen"
+  (closed)="isSearchOpen = false"
+  (selected)="onSearchPicked($event)">
+</app-overlay>
 <router-outlet />
 <app-footer></app-footer>
