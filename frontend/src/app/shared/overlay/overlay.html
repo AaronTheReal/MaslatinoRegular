@@ -1,0 +1,43 @@
+<!-- Backdrop -->
+<div class="ol-backdrop" *ngIf="open" aria-hidden="true"></div>
+
+<!-- Panel -->
+<section
+  *ngIf="open"
+  #panel
+  class="ol-panel"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Búsqueda Más Latino"
+  (click)="$event.stopPropagation()" 
+>
+  <!-- Top: input + close -->
+  <div class="ol-row ol-top">
+    <div class="ol-input-wrap">
+      <span class="ol-icon">⌘K</span>
+      <input #searchInput
+             type="text"
+             [(ngModel)]="query"
+             (input)="onQueryChange()"
+             placeholder="Buscar noticias, podcasts, categorías…"
+             aria-label="Buscar"
+             class="ol-input" />
+      <button class="ol-close" (click)="close()" aria-label="Cerrar">Esc</button>
+    </div>
+  </div>
+
+  <!-- Quick actions: your sections -->
+  <div class="ol-row ol-quick">
+    <a *ngFor="let q of quickLinks"
+       class="ol-quick-item"
+       [routerLink]="q.route"
+       (click)="close()">
+      <span class="ol-qi-icon">{{q.icon}}</span>
+      <span class="ol-qi-label">{{q.label}}</span>
+    </a>
+  </div>
+
+
+
+
+</section>

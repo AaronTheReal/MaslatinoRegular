@@ -1,147 +1,95 @@
+<!-- Backdrop -->
+<div class="ol-backdrop" *ngIf="open" aria-hidden="true"></div>
 
+<!-- Panel -->
+<section
+  *ngIf="open"
+  #panel
+  class="ol-panel"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Búsqueda Más Latino"
+  (click)="$event.stopPropagation()" 
+>
+  <!-- Top: input + close -->
+  <div class="ol-row ol-top">
+    <div class="ol-input-wrap">
+      <span class="ol-icon">⌘K</span>
+      <input #searchInput
+             type="text"
+             [(ngModel)]="query"
+             (input)="onQueryChange()"
+             placeholder="Buscar noticias, podcasts, categorías…"
+             aria-label="Buscar"
+             class="ol-input" />
+      <button class="ol-close" (click)="close()" aria-label="Cerrar">Esc</button>
+    </div>
+  </div>
 
-/*
-import { Component, ChangeDetectionStrategy, inject, Renderer2 } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { NoticiasService } from '../../services/noticias-service';
-import { Noticia, Category } from '../../../models/noticia.model';
-import { Meta, Title } from '@angular/platform-browser';
-import { switchMap, tap, catchError } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
+  <!-- Quick actions: your sections -->
+  <div class="ol-row ol-quick">
+    <a *ngFor="let q of quickLinks"
+       class="ol-quick-item"
+       [routerLink]="q.route"
+       (click)="close()">
+      <span class="ol-qi-icon">{{q.icon}}</span>
+      <span class="ol-qi-label">{{q.label}}</span>
+    </a>
+  </div>
 
-@Component({
-  selector: 'app-noticias-individuales',
-  standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
-  templateUrl: './noticias-individuales.html',
-  styleUrls: ['./noticias-individuales.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-export class NoticiasIndividuales {
-  private readonly route = inject(ActivatedRoute);
-  private readonly noticiasService = inject(NoticiasService);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
-  private readonly renderer = inject(Renderer2);
+  <!-- Filters -->
+  <div class="ol-row ol-filters" role="tablist" aria-label="Filtros">
+    <button class="ol-chip" [class.active]="activeSection==='todo'" (click)="setSection('todo')" role="tab">Todo</button>
+    <button class="ol-chip" [class.active]="activeSection==='quienes'" (click)="setSection('quienes')" role="tab">¿Quiénes Somos?</button>
+    <button class="ol-chip" [class.active]="activeSection==='categorias'" (click)="setSection('categorias')" role="tab">Categorias</button>
+    <button class="ol-chip" [class.active]="activeSection==='podcast'" (click)="setSection('podcast')" role="tab">Podcast</button>
+    <button class="ol-chip" [class.active]="activeSection==='locales'" (click)="setSection('locales')" role="tab">Locales</button>
+    <button class="ol-chip" [class.active]="activeSection==='contacto'" (click)="setSection('contacto')" role="tab">Contacto</button>
+    <button class="ol-chip" [class.active]="activeSection==='privacy'" (click)="setSection('privacy')" role="tab">Privacy</button>
+  </div>
 
-  readonly noticia$: Observable<Noticia | null> = this.route.paramMap.pipe(
-    switchMap(params => {
-      const id = params.get('id');
-      console.log('si llega', id);
-      if (!id) {
-        console.log('No ID provided');
-        return of(null);
-      }
-      return this.noticiasService.getNoticiaById(id).pipe(
-        tap(noticia => {
-          console.log('que llega?', noticia);
-          if (noticia) {
-            // SEO: Set title and meta tags
-            this.title.setTitle(noticia.title || 'Noticia');
-            this.meta.updateTag({ name: 'description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:title', content: noticia.title || 'Noticia' });
-            this.meta.updateTag({ property: 'og:description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:image', content: noticia.meta?.image || '' });
+  <!-- Empty state (no typing) -->
+  <div class="ol-row ol-empty" *ngIf="!showResults">
+    <div class="ol-col">
+      <h4>Buscar por…</h4>
+      <ul class="ol-list">
+        <li>Temas (p. ej. <em>tecnología</em>, <em>cultura</em>)</li>
+        <li>Podcast (p. ej. <em>Voces de la Comunidad</em>)</li>
+        <li>Noticias locales</li>
+        <li>Secciones del sitio</li>
+      </ul>
+    </div>
+    <div class="ol-col">
+      <h4>Recientes</h4>
+      <div class="ol-recents">
+        <button *ngFor="let r of recent" (click)="useRecent(r)" class="ol-recent">{{r}}</button>
+      </div>
+    </div>
+  </div>
 
-            // Add schema.org Article structured data
-            const schema = {
-              '@context': 'https://schema.org',
-              '@type': 'Article',
-              headline: noticia.title || 'Noticia',
-              description: noticia.meta?.description || noticia.summary || 'Descripción no disponible',
-              image: noticia.meta?.image || '',
-              author: { '@type': 'Person', name: noticia.authorName || 'Anónimo' },
-              datePublished: noticia.createdAt || '',
-              dateModified: noticia.updatedAt || '',
-              publisher: {
-                '@type': 'Organization',
-                name: 'Mas Latino',
-                logo: {
-                  '@type': 'ImageObject',
-                  url: 'https://maslatino.com/logo.png' // Replace with your site’s logo URL
-                }
-              },
-              mainEntityOfPage: {
-                '@type': 'WebPage',
-                '@id': `https://maslatino.com/noticia/${noticia._id}` // Replace with your production URL
-              }
-            };
-            const script = this.renderer.createElement('script');
-            this.renderer.setAttribute(script, 'type', 'application/ld+json');
-            this.renderer.setProperty(script, 'textContent', JSON.stringify(schema));
-            this.renderer.appendChild(document.head, script);
-          }
-        }),
-        catchError(error => {
-          console.error('Error fetching noticia:', error);
-          return of(null);
-        })
-      );
-    })
-  );
+  <!-- Results -->
+  <div class="ol-row ol-results" *ngIf="showResults">
+    <div *ngIf="!filtered.length" class="ol-empty-mini">
+      Sin resultados para “{{query}}”.
+    </div>
 
-  getCategoryNames(categories: Category[] | undefined): string {
-    return categories?.map(cat => cat.name).join(', ') || 'Sin categorías';
-  }
-}
-*/
+    <a *ngFor="let item of filtered; let i = index"
+       class="ol-result"
+       [id]="'result-' + i"
+       [class.highlight]="i === highlightedIndex"
+       [routerLink]="item.route"
+       (click)="pick(item)">
+      <div class="ol-result-icon">🔎</div>
+      <div class="ol-result-main">
+        <div class="ol-result-title">{{ item.title }}</div>
+        <div class="ol-result-meta">{{ item.section }}</div>
+      </div>
+      <div class="ol-result-go">↵</div>
+    </a>
+  </div>
 
-
-
-
-
-/*
-import { Component, ChangeDetectionStrategy, inject } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { ActivatedRoute, RouterModule } from '@angular/router';
-import { NoticiasService } from '../../services/noticias-service';
-import { Noticia, Category } from '../../../models/noticia.model';
-import { Meta, Title } from '@angular/platform-browser';
-import { switchMap, tap } from 'rxjs/operators';
-import { Observable, of } from 'rxjs';
-
-@Component({
-  selector: 'app-noticias-individuales',
-  standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
-  templateUrl: './noticias-individuales.html',
-  styleUrls: ['./noticias-individuales.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
-})
-export class NoticiasIndividuales {
-  private readonly route = inject(ActivatedRoute);
-  private readonly noticiasService = inject(NoticiasService);
-  private readonly title = inject(Title);
-  private readonly meta = inject(Meta);
-
-  readonly noticia$: Observable<Noticia | null> = this.route.paramMap.pipe(
-    switchMap(params => {
-      const id = params.get('id');
-      console.log("si llega");
-      if (!id) {
-        return of(null);
-      }
-      return this.noticiasService.getNoticiaById(id).pipe(
-        tap(noticia => {
-                  console.log("que llega?",noticia);
-
-          if (noticia) {
-            // SEO: Set title and meta tags
-            this.title.setTitle(noticia.title || 'Noticia');
-            this.meta.updateTag({ name: 'description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:title', content: noticia.title || 'Noticia' });
-            this.meta.updateTag({ property: 'og:description', content: noticia.meta?.description || noticia.summary || 'Descripción no disponible' });
-            this.meta.updateTag({ property: 'og:image', content: noticia.meta?.image || '' });
-          }
-        })
-      );
-    })
-  );
-
-  getCategoryNames(categories: Category[] | undefined): string {
-    return categories?.map(cat => cat.name).join(', ') || 'Sin categorías';
-  }
-}
-
-*/
+  <!-- Footer hint -->
+  <footer class="ol-footer">
+    <span><b>Enter</b> abrir · <b>↑/↓</b> navegar · <b>Esc</b> cerrar</span>
+  </footer>
+</section>
