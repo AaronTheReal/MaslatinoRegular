@@ -1,0 +1,22 @@
+:root{ --ml-color-primary:#8E4EF6; --ml-line:#E5E7EB; --ml-text:#111; --ml-text-dim:#6B7280; }
+
+.row{
+  display:grid; grid-template-columns:20px 64px 1fr auto; gap:12px;
+  align-items:center; padding:12px 8px; border:1px solid var(--ml-line); border-radius:16px;
+}
+.dot{ width:10px; height:10px; border-radius:50%; background:var(--ml-color-primary); justify-self:center; }
+
+.when{ text-align:center; }
+.when .day{ font-weight:800; font-size:18px; line-height:1; }
+.when .mon{ font-size:12px; text-transform:uppercase; color:var(--ml-text-dim); }
+
+.title{
+  font-weight:800; color:var(--ml-text); text-decoration:none;
+}
+.title:hover{ text-decoration:underline; }
+.meta{ color:var(--ml-text-dim); font-size:14px; }
+.past{ color:#6b7280; }
+
+.actions .btn-mini{
+  background:var(--ml-color-primary); color:#fff; border-radius:999px; padding:8px 12px; text-decoration:none; font-weight:700;
+}

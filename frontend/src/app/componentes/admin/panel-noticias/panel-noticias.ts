@@ -34,6 +34,7 @@ export class PanelNoticias implements OnInit {
   publishAtError: string = '';
   paragraphWarnings: string[] = [];
   keywordDensityWarnings: string[] = [];
+  keyphraseWarnings: string[] = [];
   headerSuggestion: string = '';
   listSuggestion: string = '';
   quoteWarning: string = '';
@@ -53,7 +54,8 @@ export class PanelNoticias implements OnInit {
     private categoriasService: CategoriaService
   ) {
     this.noticiaForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60)]],
+      focusKeyphrase: ['', [Validators.required, Validators.maxLength(50)]],
+      title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60), this.titleContainsKeyphraseValidator()]],
       slug: ['', {
         validators: [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)],
         asyncValidators: [this.slugUniqueValidator()],
@@ -101,6 +103,10 @@ export class PanelNoticias implements OnInit {
       this.showChecklist = state === 'published';
       this.updatePublishTooltip();
     });
+    this.noticiaForm.get('focusKeyphrase')?.valueChanges.subscribe(() => {
+      this.noticiaForm.get('title')?.updateValueAndValidity();
+      this.updateSoftValidators();
+    });
   }
 
   ngOnInit(): void {
@@ -116,6 +122,17 @@ export class PanelNoticias implements OnInit {
     console.log('PanelNoticias inicializado');
   }
 
+  private titleContainsKeyphraseValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const title = control.value?.toLowerCase() || '';
+      const focusKeyphrase = control.parent?.get('focusKeyphrase')?.value?.toLowerCase() || '';
+      if (focusKeyphrase && title && !title.includes(focusKeyphrase)) {
+        return { titleContainsKeyphrase: true };
+      }
+      return null;
+    };
+  }
+
   private generateSlug(title: string): string {
     const normalized = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
       .replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
@@ -126,7 +143,7 @@ export class PanelNoticias implements OnInit {
     return (control: AbstractControl): ValidationErrors | null => {
       const content = control as FormArray;
       const h1Count = content.controls.filter(group => group.get('tag')?.value === 'h1').length;
-      return h1Count > 0 ? { multipleH1: true } : null; // Prohibido cualquier H1
+      return h1Count > 0 ? { multipleH1: true } : null;
     };
   }
 
@@ -380,7 +397,7 @@ export class PanelNoticias implements OnInit {
     });
 
     this.wordCount = totalWords;
-    this.readingTime = Math.ceil(totalWords / 200); // ~200 wpm
+    this.readingTime = Math.ceil(totalWords / 200);
     this.fleschScore = Math.round(206.835 - 1.015 * (totalWords / sentences) - 84.6 * (syllables / totalWords));
 
     this.paragraphWarnings = [];
@@ -417,6 +434,7 @@ export class PanelNoticias implements OnInit {
 
   private updateSoftValidators() {
     this.keywordDensityWarnings = [];
+    this.keyphraseWarnings = [];
     if (this.wordCount > 0) {
       this.tags.controls.forEach(tagCtrl => {
         const tag = tagCtrl.value?.toLowerCase();
@@ -428,6 +446,28 @@ export class PanelNoticias implements OnInit {
           }
         }
       });
+
+      const keyphrase = this.noticiaForm.get('focusKeyphrase')?.value?.toLowerCase();
+      if (keyphrase) {
+        const metaDesc = this.noticiaForm.get('meta.description')?.value?.toLowerCase() || '';
+        const firstPara = this.content.controls.find(g => g.get('type')?.value === 'text' && g.get('tag')?.value === 'p')?.get('text')?.value?.toLowerCase() || '';
+        const fullText = this.getFullText().toLowerCase();
+        const count = fullText.split(keyphrase).length - 1;
+        const density = this.wordCount > 0 ? (count / this.wordCount) * 100 : 0;
+
+        if (!metaDesc.includes(keyphrase)) {
+          this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" no está en la meta descripción.`);
+        }
+        if (!firstPara.includes(keyphrase)) {
+          this.keyphraseWarnings.push(`Sugiere incluir "${keyphrase}" en el primer párrafo para mejor SEO.`);
+        }
+        if (density > 2) {
+          this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" aparece al ${density.toFixed(1)}% - posible sobreoptimización (máx. 2%).`);
+        }
+        if (density < 0.5 && count > 0) {
+          this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" aparece al ${density.toFixed(1)}% - sugiere aumentar su uso (mín. 0.5%).`);
+        }
+      }
     }
 
     this.updateTitleRepetition();
@@ -521,7 +561,8 @@ export class PanelNoticias implements OnInit {
       links: this.content.controls.every(g => g.get('type')?.value !== 'link' || g.valid),
       publishAt: !this.publishAtError,
       noUtm: true,
-      sources: !this.sourcesSuggestion
+      sources: !this.sourcesSuggestion,
+      focusKeyphrase: this.noticiaForm.get('focusKeyphrase')?.valid && this.noticiaForm.get('title')?.valid
     };
   }
 
@@ -531,13 +572,15 @@ export class PanelNoticias implements OnInit {
       return;
     }
     const fails = [];
-    if (!this.checklist.title) fails.push('Título 50-60 chars');
+    if (!this.checklist.title) fails.push('Título 50-60 chars y debe incluir la palabra clave');
     if (!this.checklist.description) fails.push('Description 150-160 chars');
     if (!this.checklist.slug) fails.push('Slug válido/único');
     if (!this.checklist.headers) fails.push('Al menos 1 H2');
     if (!this.checklist.links) fails.push('Enlaces https/descriptivos');
     if (!this.checklist.publishAt) fails.push('publishAt correcto');
+    if (!this.checklist.noUtm) fails.push('Sin UTM innecesarias');
     if (!this.checklist.sources) fails.push('Fuentes claras');
+    if (!this.checklist.focusKeyphrase) fails.push('Palabra clave optimizada y en título');
     this.publishTooltip = fails.length ? 'Pendientes: ' + fails.join(', ') : '';
   }
 
@@ -546,7 +589,22 @@ export class PanelNoticias implements OnInit {
     this.markAllTouched();
     this.showChecklist = true;
     if (this.noticiaForm.invalid || (this.noticiaForm.get('state')?.value === 'published' && Object.values(this.checklist).some(v => !v))) {
-      alert('Por favor, completa todos los campos requeridos y pasa el checklist SEO.');
+      const errors = [];
+      if (this.noticiaForm.get('focusKeyphrase')?.invalid) errors.push('Palabra clave principal es obligatoria y debe cumplir con las validaciones.');
+      if (this.noticiaForm.get('title')?.invalid) {
+        if (this.noticiaForm.get('title')?.errors?.['required']) errors.push('Título es obligatorio.');
+        if (this.noticiaForm.get('title')?.errors?.['minlength']) errors.push('Título debe tener mínimo 50 caracteres.');
+        if (this.noticiaForm.get('title')?.errors?.['maxlength']) errors.push('Título debe tener máximo 60 caracteres.');
+        if (this.noticiaForm.get('title')?.errors?.['titleContainsKeyphrase']) errors.push('El título debe incluir la palabra clave principal.');
+      }
+      if (this.noticiaForm.get('slug')?.invalid) errors.push('Slug es obligatorio y debe ser único.');
+      if (this.noticiaForm.get('meta.description')?.invalid) errors.push('Meta descripción es obligatoria (150-160 caracteres).');
+      if (this.noticiaForm.get('meta.image')?.invalid) errors.push('Imagen destacada es obligatoria.');
+      if (this.noticiaForm.get('categories')?.invalid) errors.push('Al menos una categoría es obligatoria.');
+      if (this.noticiaForm.get('state')?.value === 'published' && Object.values(this.checklist).some(v => !v)) {
+        errors.push('Pasa todas las validaciones del checklist SEO.');
+      }
+      alert('Por favor, corrige los siguientes errores:\n- ' + errors.join('\n- '));
       this.isSubmitting = false;
       return;
     }
@@ -579,7 +637,7 @@ export class PanelNoticias implements OnInit {
   }
 
   private resetForm() {
-    this.noticiaForm.reset({ state: 'draft', publishAt: null });
+    this.noticiaForm.reset({ state: 'draft', publishAt: null, focusKeyphrase: '' });
     while (this.content.length) this.content.removeAt(0);
     while (this.tags.length) this.tags.removeAt(0);
     this.blockOpenState = [];
@@ -594,6 +652,7 @@ export class PanelNoticias implements OnInit {
     this.publishAtError = '';
     this.paragraphWarnings = [];
     this.keywordDensityWarnings = [];
+    this.keyphraseWarnings = [];
     this.headerSuggestion = '';
     this.listSuggestion = '';
     this.quoteWarning = '';

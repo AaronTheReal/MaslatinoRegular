@@ -1,0 +1,67 @@
+:root{
+  --ml-color-primary:#8E4EF6;
+  --ml-color-accent:#FE3824;
+  --ml-text:#111; --ml-text-dim:#6B7280;
+  --ml-line:#E5E7EB; --ml-radius:16px; --ml-radius-lg:24px;
+  --ml-shadow:0 4px 12px rgba(0,0,0,.12); --ml-shadow-lg:0 6px 18px rgba(0,0,0,.18);
+}
+
+.card{
+  text-decoration:none; color:inherit; display:flex;
+}
+.frame{
+  background:#000; border-radius:20px; padding:16px; width:100%;
+  display:flex; flex-direction:column; gap:12px;
+  box-shadow:var(--ml-shadow); transition:transform .2s ease, box-shadow .2s ease;
+}
+.card:hover .frame{ transform:translateY(-4px); box-shadow:var(--ml-shadow-lg); }
+
+.media{
+  position:relative; width:100%;
+  border-radius:12px; overflow:hidden;
+  aspect-ratio:16/9;
+}
+.media img{
+  width:100%; height:100%; object-fit:cover; display:block; transform:scale(1.0); transition:transform .3s ease;
+}
+.card:hover .media img{ transform:scale(1.02); }
+
+.badge-date{
+  position:absolute; left:12px; top:12px;
+  background:#fff; color:#000; border-radius:12px; padding:6px 8px; text-align:center;
+  box-shadow:var(--ml-shadow);
+}
+.badge-date .day{ display:block; font-weight:800; font-size:18px; line-height:1; }
+.badge-date .mon{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em; }
+
+.badge-featured{
+  position:absolute; right:12px; top:12px;
+  background:var(--ml-color-primary); color:#fff; border-radius:999px; padding:6px 10px; font-weight:700; font-size:12px;
+}
+.badge-past{
+  position:absolute; right:12px; top:44px;
+  background:#111; color:#fff; border-radius:999px; padding:6px 10px; font-weight:700; font-size:12px; opacity:.85;
+}
+
+.body{ color:#fff; }
+.title{
+  font-size:clamp(16px,2vw,22px); font-weight:800; margin:0 0 4px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.meta{ margin:0; color:#e5e7eb; font-size:14px; }
+
+.chips{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.chip{
+  border:1px solid rgba(255,255,255,.2); color:#e5e7eb;
+  border-radius:999px; padding:4px 8px; font-size:12px;
+}
+.chip.rest{ opacity:.8; }
+
+.actions{
+  margin-top:10px; display:flex; align-items:center; justify-content:space-between;
+}
+.link{ color:#fff; opacity:.9; font-weight:600; }
+.btn-mini{
+  background:var(--ml-color-accent); color:#fff; border-radius:999px; padding:6px 10px; font-weight:700; text-decoration:none;
+}
+.btn-mini:hover{ filter:brightness(.95); }

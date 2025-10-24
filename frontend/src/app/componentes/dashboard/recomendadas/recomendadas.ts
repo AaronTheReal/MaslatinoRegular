@@ -3,11 +3,13 @@ import { CommonModule, isPlatformServer, DatePipe } from '@angular/common';
 import { NoticiasService } from '../../../services/noticias-service';
 import { Noticia } from '../../../../models/noticia.model';
 import { Observable, tap } from 'rxjs';
+import { RouterModule } from '@angular/router';
+
 
 @Component({
   selector: 'app-recomendadas',
   standalone: true,
-  imports: [CommonModule, DatePipe],
+  imports: [CommonModule, DatePipe,RouterModule],
   templateUrl: './recomendadas.html',
   styleUrl: './recomendadas.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

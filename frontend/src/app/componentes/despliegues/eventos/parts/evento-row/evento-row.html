@@ -1,0 +1,24 @@
+<div class="row">
+  <div class="dot"></div>
+  <div class="when">
+    <div class="day">{{ evento.startAt | date:'dd' }}</div>
+    <div class="mon">{{ evento.startAt | date:'MMM' }}</div>
+  </div>
+
+  <div class="content">
+    <a class="title" [routerLink]="['/eventos', (evento._id || evento.slug)]">{{ evento.title }}</a>
+    <div class="meta">
+      <span *ngIf="evento.location?.name">{{ evento.location?.name }} • </span>
+      <ng-container *ngIf="!evento.allDay; else allday">
+        {{ evento.startAt | date:'shortTime' }}
+        <ng-container *ngIf="evento.endAt">– {{ evento.endAt | date:'shortTime' }}</ng-container>
+      </ng-container>
+      <ng-template #allday>Todo el día</ng-template>
+      <span *ngIf="isPast" class="past"> • Finalizado</span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a *ngIf="firstLink" class="btn-mini" [href]="firstLink.url" [attr.target]="firstLink.external ? '_blank': null">Boletos</a>
+  </div>
+</div>

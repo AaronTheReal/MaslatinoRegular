@@ -31,5 +31,9 @@ export const serverRoutes: ServerRoute[] = [
 
   { path: 'archivo/:anio/*',  renderMode: RenderMode.Server },
   { path: 'categoria/*',  renderMode:  RenderMode.Server },
+  { path: 'eventos-show', renderMode: RenderMode.Server },
+  { path: 'recomendadas-show', renderMode: RenderMode.Server },
+              { path: 'podcast-show', renderMode: RenderMode.Server },
+      
   
 ];

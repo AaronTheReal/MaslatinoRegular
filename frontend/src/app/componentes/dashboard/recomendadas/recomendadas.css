@@ -61,3 +61,48 @@
 .seccion-noticias {
   margin-top: 64px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+.boton-contacto {
+  background-color: #8e4ef6; /* bg-red-500 */
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 700;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+
+  display: inline-block;   /* asegura que solo ocupe el tamaño de su contenido */
+  width: auto;             /* no ocupa todo el ancho */
+  align-self: center;      /* si el contenedor es flex */
+  margin: 40px auto;          /* si el contenedor no es flex, se centra igual */
+}
+
+.boton-contacto:hover {
+  background-color: #dc2626; /* bg-red-600 */
+}
+
+.fila-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .fila-inputs {
+    flex-direction: row;
+  }
+}
