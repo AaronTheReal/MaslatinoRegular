@@ -1,0 +1,38 @@
+<a class="card" [routerLink]="['/eventos', (evento._id || evento.slug)]">
+  <!-- Marco negro -->
+  <div class="frame">
+    <div class="media">
+      <img [src]="cover" [alt]="evento.title" loading="lazy" />
+      <div class="badge-date">
+        <span class="day">{{ evento.startAt | date:'dd' }}</span>
+        <span class="mon">{{ evento.startAt | date:'MMM' }}</span>
+      </div>
+      <div *ngIf="evento.featured" class="badge-featured">Destacado</div>
+      <div *ngIf="isPast" class="badge-past">Finalizado</div>
+    </div>
+
+    <div class="body">
+      <h3 class="title">{{ evento.title }}</h3>
+      <p class="meta">
+        <ng-container *ngIf="evento.location?.name as ln">{{ ln }} • </ng-container>
+        <span>
+          <ng-container *ngIf="!evento.allDay; else allday">
+            {{ evento.startAt | date:'shortTime' }}
+            <ng-container *ngIf="evento.endAt">– {{ evento.endAt | date:'shortTime' }}</ng-container>
+          </ng-container>
+          <ng-template #allday>Todo el día</ng-template>
+        </span>
+      </p>
+
+      <div class="chips" *ngIf="evento.tags?.length">
+        <span class="chip" *ngFor="let t of (evento.tags | slice:0:3)">{{ t }}</span>
+        <span class="chip rest" *ngIf="(evento.tags?.length || 0) > 3">+{{ (evento.tags!.length - 3) }}</span>
+      </div>
+
+      <div class="actions">
+        <span class="link">Ver detalles →</span>
+        <a *ngIf="firstLink" class="btn-mini" [href]="firstLink.url" [attr.target]="firstLink.external ? '_blank': null" (click)="$event.stopPropagation()">Boletos</a>
+      </div>
+    </div>
+  </div>
+</a>

@@ -2,11 +2,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PodcastPCService, PodcastDesktopPayload } from './../../../services/podcast-servicePC';
+import { RouterModule } from '@angular/router';
+
 
 @Component({
   selector: 'app-podcasts',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,RouterModule],
   templateUrl: './podcasts.html',
   styleUrl: './podcasts.css'
 })

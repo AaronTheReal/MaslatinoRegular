@@ -5,10 +5,12 @@ import { Navigation, Pagination } from 'swiper/modules';
 import { CalendarPCService, CalendarItemPC } from './../../../services/calendario-servicePC';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
 import { isPlatformBrowser } from '@angular/common';
+import { RouterModule } from '@angular/router';
+
 
 @Component({
   selector: 'app-eventos',
-  imports: [CommonModule],
+  imports: [CommonModule,RouterModule],
   templateUrl: './eventos.html',
   styleUrl: './eventos.css',
   standalone: true,

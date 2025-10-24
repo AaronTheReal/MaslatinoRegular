@@ -1,0 +1,162 @@
+<!-- src/app/pages/podcast/podcast.html -->
+<section class="podcasts-page">
+  <!-- Título con “+” patrón unificado -->
+  <h2 class="titulo-seccion">PODCASTS</h2>
+
+  <!-- Filtros -->
+  <div class="filters-bar" role="region" aria-label="Filtros de podcasts">
+    <div class="filters-left">
+      <div class="search-wrap">
+        <input
+          type="search"
+          class="input search"
+          placeholder="Buscar podcasts..."
+          [value]="search()"
+            (input)="onSearchInput(($any($event.target)).value)"
+          aria-label="Buscar por título o descripción"
+        />
+      </div>
+
+      <div class="select-wrap">
+        <label class="label" for="lang">Idioma</label>
+        <select id="lang" class="input select" [value]="selectedLang()" (change)="onSelectLang(($any($event.target)).value)">
+          <option value="">Todos</option>
+          <option value="es">Español</option>
+          <option value="es-MX">Español (MX)</option>
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="en-CA">English (CA)</option>
+          <option value="pt-BR">Português (BR)</option>
+          <option value="fr">Français</option>
+          <!-- Agrega los demás que uses -->
+        </select>
+      </div>
+
+      <div class="select-wrap">
+        <label class="label" for="sort">Ordenar</label>
+        <select id="sort" class="input select" [value]="sort()" (change)="onSortChange(($any($event.target)).value)">
+          <option value="newest">Más recientes</option>
+          <option value="az">A–Z</option>
+          <option value="episodes">Más episodios</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filters-right">
+      <div class="layout-toggle" role="tablist" aria-label="Cambiar diseño">
+        <button
+          class="btn-toggle"
+          [class.active]="layout() === 'frame'"
+          role="tab"
+          aria-selected="{{layout()==='frame'}}"
+          (click)="onLayoutChange('frame')">Marco</button>
+        <button
+          class="btn-toggle"
+          [class.active]="layout() === 'list'"
+          role="tab"
+          aria-selected="{{layout()==='list'}}"
+          (click)="onLayoutChange('list')">Lista</button>
+      </div>
+      <button class="btn-secondary" (click)="clearFilters()" aria-label="Limpiar filtros">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- Chips de categorías -->
+  <div class="chips-row" *ngIf="categories().length">
+    <button
+      *ngFor="let c of categories()"
+      type="button"
+      class="chip"
+      [class.active]="selectedCats().includes(c._id)"
+      (click)="onToggleCat(c._id)"
+      [attr.aria-pressed]="selectedCats().includes(c._id)">
+      <span class="dot" [style.backgroundColor]="c.color || '#8e4ef6'"></span>
+      {{ c.name }}
+    </button>
+  </div>
+
+  <!-- Estado error -->
+  <div class="alert error" *ngIf="error()">{{ error() }}</div>
+
+  <!-- Skeletons -->
+  <div class="grid" *ngIf="loading()">
+    <div class="card skeleton" *ngFor="let s of [0,1,2,3,4,5,6,7]">
+      <div class="marco-tarjeta">
+        <div class="contenido-interno">
+          <div class="skel-img"></div>
+          <div class="skel-title"></div>
+          <div class="skel-meta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista / Grid -->
+  <ng-container *ngIf="!loading()">
+    <div class="empty" *ngIf="!podcasts().length">
+      <p>No encontramos podcasts con esos filtros.</p>
+      <button class="btn-primary" (click)="clearFilters()">Ver todos</button>
+    </div>
+
+    <!-- Grid “Marco” -->
+    <div class="grid" *ngIf="podcasts().length && layout() === 'frame'">
+      <a
+        class="card"
+        *ngFor="let p of podcasts(); trackBy: trackById"
+        [routerLink]="['/podcast', p._id]"
+      >
+        <div class="marco-tarjeta" tabindex="0">
+          <div class="contenido-interno">
+            <img
+              class="imagen-tarjeta"
+              [src]="p.coverImage || p.meta?.image || 'assets/default-news.jpg'"
+              [alt]="p.title"
+              loading="lazy"
+              decoding="async"
+            />
+            <h3 class="titulo-tarjeta">{{ p.title }}</h3>
+            <p class="subtitulo" *ngIf="p.subtitle">{{ p.subtitle }}</p>
+
+            <div class="meta-row">
+              <span class="badge lang">{{ langLabel(p.language) }}</span>
+              <span class="meta">{{ episodesCount(p) }} ep.</span>
+              <span class="meta" *ngIf="latestDate(p)">Actualizado {{ latestDate(p) }}</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Lista -->
+    <div class="list" *ngIf="podcasts().length && layout() === 'list'">
+      <a
+        class="row-item"
+        *ngFor="let p of podcasts(); trackBy: trackById"
+        [routerLink]="['/podcast', p._id]"
+      >
+        <img
+          class="row-cover"
+          [src]="p.coverImage || p.meta?.image || 'assets/default-news.jpg'"
+          [alt]="p.title"
+          loading="lazy"
+        />
+        <div class="row-content">
+          <h3 class="row-title">{{ p.title }}</h3>
+          <p class="row-sub" *ngIf="p.subtitle">{{ p.subtitle }}</p>
+          <div class="row-meta">
+            <span class="badge lang">{{ langLabel(p.language) }}</span>
+            <span class="meta">{{ episodesCount(p) }} ep.</span>
+            <span class="meta" *ngIf="latestDate(p)">Actualizado {{ latestDate(p) }}</span>
+          </div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Paginación -->
+    <div class="load-more" *ngIf="podcasts().length">
+      <button class="btn-primary" (click)="loadMore()" [disabled]="!hasMore() || loadingMore()">
+        {{ loadingMore() ? 'Cargando…' : (hasMore() ? 'Mostrar más' : 'No hay más') }}
+      </button>
+    </div>
+  </ng-container>
+</section>
