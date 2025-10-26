@@ -1,20 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormArray, Validators, ValidatorFn, AbstractControl, ValidationErrors, AsyncValidatorFn } from '@angular/forms';
+import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import {
+  FormBuilder, FormGroup, FormArray, Validators, ValidatorFn,
+  AbstractControl, ValidationErrors, AsyncValidatorFn
+} from '@angular/forms';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+
 import { NoticiasService } from '../../../services/noticias-service';
 import { VistaPrevia } from '../../admin/panel-noticias/vista-previa/vista-previa';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { marked } from 'marked';
-import { debounceTime, distinctUntilChanged, switchMap, map, catchError } from 'rxjs/operators';
+import { debounceTime, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
   selector: 'app-panel-noticias',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, VistaPrevia, FormsModule, NgSelectModule],
+  imports: [ReactiveFormsModule, CommonModule, VistaPrevia, FormsModule, NgSelectModule, CKEditorModule],
   templateUrl: './panel-noticias.html',
   styleUrls: ['./panel-noticias.css']
 })
@@ -22,30 +26,55 @@ export class PanelNoticias implements OnInit {
   noticiaForm: FormGroup;
   categoriasDisponibles: CategoriaPayload[] = [];
   previewDataObj: any;
-  blockOpenState: boolean[] = [];
-  wordCount: number = 0;
-  readingTime: number = 0;
-  imageCount: number = 0;
-  headerCount: number = 0;
-  fleschScore: number = 0;
-  titleWarning: string = '';
-  metaDescWarning: string = '';
-  metaImageWarning: string = '';
-  publishAtError: string = '';
+
+  // Métricas
+  wordCount = 0;
+  readingTime = 0;
+  imageCount = 0;
+  headerCount = 0;
+  fleschScore = 0;
+
+  // Avisos
+  titleWarning = '';
+  metaDescWarning = '';
+  metaImageWarning = '';
+  publishAtError = '';
   paragraphWarnings: string[] = [];
   keywordDensityWarnings: string[] = [];
   keyphraseWarnings: string[] = [];
-  headerSuggestion: string = '';
-  listSuggestion: string = '';
-  quoteWarning: string = '';
-  localSeoSuggestion: string = '';
-  titleRepetitionWarning: string = '';
-  sourcesSuggestion: string = '';
-  showChecklist: boolean = false;
+  headerSuggestion = '';
+  listSuggestion = '';
+  quoteWarning = '';
+  localSeoSuggestion = '';
+  titleRepetitionWarning = '';
+  sourcesSuggestion = '';
+
+  // Checklist / UI
+  showChecklist = false;
   checklist: any = {};
-  publishTooltip: string = '';
-  isSubmitting: boolean = false;
-  canonicalUrl: string = '';
+  publishTooltip = '';
+  isSubmitting = false;
+  canonicalUrl = '';
+
+  // SSR guardas
+  isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  public Editor: any = null;
+
+  // Dominio para distinguir enlaces internos
+  private domain = 'yourdomain.com'; // TODO: cambia por tu dominio
+
+  // CKEditor config
+  public editorConfig: any = {
+    toolbar: ['heading','bold','italic','link','bulletedList','numberedList','blockQuote','undo','redo','insertTable'],
+    heading: {
+      options: [
+        { model:'paragraph', title:'Párrafo' },
+        { model:'heading2', view:'h2', title:'H2' },
+        { model:'heading3', view:'h3', title:'H3' }
+      ]
+    }
+    // No ofrecemos H1 en la toolbar
+  };
 
   constructor(
     private fb: FormBuilder,
@@ -55,33 +84,45 @@ export class PanelNoticias implements OnInit {
   ) {
     this.noticiaForm = this.fb.group({
       focusKeyphrase: ['', [Validators.required, Validators.maxLength(50)]],
-      title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60), this.titleContainsKeyphraseValidator()]],
+      title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60),
+                   this.titleContainsKeyphraseValidator(), this.titleCaseValidator(), this.noSpecialCharsValidator()]],
       slug: ['', {
-        validators: [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)],
+        validators: [Validators.required, Validators.pattern(/^[a-z0-9-]+$/), this.slugLengthValidator(),
+                     this.slugContainsKeyphraseValidator(), this.noStopWordsValidator(), this.noDatesValidator(),
+                     this.noAccentsSymbolsValidator()],
         asyncValidators: [this.slugUniqueValidator()],
         updateOn: 'blur'
       }],
+      extracto: ['', [Validators.required, Validators.minLength(150), Validators.maxLength(300),
+                      this.keyphraseOnceValidator(), this.noDoubleQuotesValidator(), this.naturalLanguageValidator()]],
       summary: ['', [Validators.minLength(150), Validators.maxLength(160)]],
-      tags: this.fb.array([]),
+      tags: this.fb.array([], [Validators.minLength(1), Validators.maxLength(5)]),
       categories: [[], Validators.required],
+
       location: this.fb.group({
         country: [''],
         region: [''],
         city: ['']
       }),
+
       meta: this.fb.group({
-        description: ['', [Validators.required, Validators.minLength(150), Validators.maxLength(160)]],
-        image: ['', [Validators.required, Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i)]],
+        description: ['', [Validators.required, Validators.minLength(120), Validators.maxLength(160),
+                           this.keyphraseOnceValidator(), this.noDoubleQuotesValidator(), this.naturalLanguageValidator()]],
+        image: ['', [Validators.required, Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i), this.imageFilenameValidator()]],
+        imageAltGlobal: ['', [Validators.required, Validators.minLength(8), this.altKeyphraseHyphenValidator()]],
         canonical: ['', Validators.pattern(/^https?:\/\/.+/)],
         ogTitle: [''],
-        ogDescription: [''],
-        imageAltGlobal: ['']
+        ogDescription: ['', [Validators.maxLength(300)]],
       }),
+
       state: ['draft'],
       publishAt: [null],
-      content: this.fb.array([], [this.maxOneH1Validator(), this.contentMinValidator()])
+
+      // Body WYSIWYG
+      body: ['', [this.bodySeoValidator()]]
     });
 
+    // Listeners
     this.noticiaForm.get('title')?.valueChanges.subscribe(title => {
       if (title) {
         const slug = this.generateSlug(title);
@@ -92,7 +133,7 @@ export class PanelNoticias implements OnInit {
     });
 
     this.noticiaForm.get('slug')?.valueChanges.subscribe(slug => {
-      this.canonicalUrl = `https://yourdomain.com/${slug}`;
+      this.canonicalUrl = `https://${this.domain}/${slug}`;
     });
 
     this.noticiaForm.get('meta.description')?.valueChanges.subscribe(() => this.updateMetaDescWarning());
@@ -100,456 +141,517 @@ export class PanelNoticias implements OnInit {
     this.noticiaForm.get('publishAt')?.valueChanges.subscribe(() => this.validatePublishAt());
     this.noticiaForm.get('location.city')?.valueChanges.subscribe(() => this.updateLocalSeoSuggestion());
     this.noticiaForm.get('state')?.valueChanges.subscribe(state => {
-      this.showChecklist = state === 'published';
+      this.showChecklist = state === 'review';
       this.updatePublishTooltip();
+      this.noticiaForm.get('body')?.updateValueAndValidity(); // el body exige fuerte en review
     });
+
     this.noticiaForm.get('focusKeyphrase')?.valueChanges.subscribe(() => {
       this.noticiaForm.get('title')?.updateValueAndValidity();
+      this.noticiaForm.get('slug')?.updateValueAndValidity();
+      this.noticiaForm.get('meta.description')?.updateValueAndValidity();
+      this.noticiaForm.get('extracto')?.updateValueAndValidity();
+      this.noticiaForm.get('meta.imageAltGlobal')?.updateValueAndValidity();
+      this.noticiaForm.get('body')?.updateValueAndValidity();
       this.updateSoftValidators();
     });
   }
 
   ngOnInit(): void {
+    // Carga diferida del editor solo en navegador
+    if (this.isBrowser) {
+      import('@ckeditor/ckeditor5-build-classic').then(m => {
+        this.Editor = m.default;
+      });
+    }
+
+    // Vista previa reactiva
     this.previewDataObj = this.buildPreviewData();
-    this.noticiaForm.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+    this.noticiaForm.valueChanges.pipe(debounceTime(200)).subscribe(() => {
       this.previewDataObj = this.buildPreviewData();
-      this.updateMetrics();
+      this.updateMetricsFromHTML();
       this.updateSoftValidators();
       this.updateChecklist();
       this.updatePublishTooltip();
     });
+
     this.loadCategories();
-    console.log('PanelNoticias inicializado');
   }
 
+  // ===== Getters =====
+  get tags(): FormArray {
+    return this.noticiaForm.get('tags') as FormArray;
+  }
+
+  // ===== Tags =====
+  addTag() {
+    if (this.tags.length < 5) this.tags.push(this.fb.control('', Validators.required));
+  }
+  removeTag(i: number) {
+    if (this.tags.length > 0) this.tags.removeAt(i);
+  }
+
+  // =============== VALIDADORES ===============
   private titleContainsKeyphraseValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      const title = control.value?.toLowerCase() || '';
-      const focusKeyphrase = control.parent?.get('focusKeyphrase')?.value?.toLowerCase() || '';
-      if (focusKeyphrase && title && !title.includes(focusKeyphrase)) {
-        return { titleContainsKeyphrase: true };
+      const title = (control.value || '').toLowerCase();
+      const focus = control.parent?.get('focusKeyphrase')?.value?.toLowerCase() || '';
+      if (focus && title) {
+        const startWords = title.split(/\s+/).slice(0, 5).join(' ');
+        if (!startWords.includes(focus)) return { titleContainsKeyphrase: true };
       }
       return null;
     };
   }
-
-  private generateSlug(title: string): string {
-    const normalized = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-      .replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
-    return normalized;
-  }
-
-  private maxOneH1Validator(): ValidatorFn {
+  private titleCaseValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      const content = control as FormArray;
-      const h1Count = content.controls.filter(group => group.get('tag')?.value === 'h1').length;
-      return h1Count > 0 ? { multipleH1: true } : null;
+      const title = (control.value || '') as string;
+      const words = title.split(/\s+/);
+      const majorWords = words.filter(w => w.length > 3);
+      const isTitleCase = majorWords.every(w => /^[A-ZÁÉÍÓÚÑ]/.test(w));
+      return isTitleCase ? null : { titleCase: true };
+    };
+  }
+  private noSpecialCharsValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const t = (control.value || '') as string;
+      return /[!¡/?]/.test(t) ? { noSpecialChars: true } : null;
     };
   }
 
-  private contentMinValidator(): ValidatorFn {
+  // Slug
+  private slugLengthValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (this.noticiaForm?.get('state')?.value !== 'published') return null;
+      const slug = (control.value || '') as string;
+      const parts = slug.split('-').filter(Boolean);
+      return parts.length >= 3 && parts.length <= 6 ? null : { slugLength: true };
+    };
+  }
+  private slugContainsKeyphraseValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '').toLowerCase();
+      const focus = control.parent?.get('focusKeyphrase')?.value?.toLowerCase() || '';
+      if (focus) {
+        const keySlug = focus.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-');
+        if (!slug.includes(keySlug)) return { slugContainsKeyphrase: true };
+      }
+      return null;
+    };
+  }
+  private noStopWordsValidator(): ValidatorFn {
+    const stop = ['el','la','de','por','con','a','en','y','o','un','una','los','las'];
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '') as string;
+      return slug.split('-').some(p => stop.includes(p)) ? { noStopWords: true } : null;
+    };
+  }
+  private noDatesValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '') as string;
+      return /\d{4}|\b\d{2}\b/.test(slug) ? { noDates: true } : null;
+    };
+  }
+  private noAccentsSymbolsValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '') as string;
+      return /[^a-z0-9-]/.test(slug) ? { noAccentsSymbols: true } : null;
+    };
+  }
+
+  // Meta / Extracto
+  private keyphraseOnceValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const text = (control.value || '').toLowerCase();
+      const focus =
+        control.parent?.parent?.get('focusKeyphrase')?.value?.toLowerCase() ||
+        control.root.get('focusKeyphrase')?.value?.toLowerCase() || '';
+      if (focus) {
+        const rx = new RegExp(focus.replace(/\s+/g, '\\s+'), 'g');
+        const count = (text.match(rx) || []).length;
+        if (count !== 1) return { keyphraseOnce: true };
+      }
+      return null;
+    };
+  }
+  private noDoubleQuotesValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      return /"/.test(control.value || '') ? { noDoubleQuotes: true } : null;
+    };
+  }
+  private naturalLanguageValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const text = (control.value || '') as string;
+      const focus =
+        control.parent?.parent?.get('focusKeyphrase')?.value ||
+        control.root.get('focusKeyphrase')?.value || '';
+      if (!text) return null;
+      if (focus && text.split(String(focus)).length - 1 > 1) return { naturalLanguage: true };
+      if (/\b(keywords?|seo|optimiza(do)?)\b/i.test(text)) return { naturalLanguage: true };
+      return null;
+    };
+  }
+
+  // Imagen
+  private imageFilenameValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const url = control.value || '';
+      try {
+        const filename = new URL(url).pathname.split('/').pop() || '';
+        return /^[a-z0-9-]+(\.jpg|\.png|\.webp)$/i.test(filename) ? null : { imageFilename: true };
+      } catch { return null; }
+    };
+  }
+  private altKeyphraseHyphenValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const alt = String(control.value || '').toLowerCase();
+      const key =
+        control.parent?.parent?.get('focusKeyphrase')?.value ||
+        control.root.get('focusKeyphrase')?.value || '';
+      const focus = key.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if (!focus) return null;
+      const hyphenKey = focus.trim().replace(/\s+/g,'-');
+      return alt.includes(hyphenKey) ? null : { altKeyphraseHyphen: true };
+    };
+  }
+
+  // Body SEO (activo en “review”)
+  private bodySeoValidator(): ValidatorFn {
+    return (_: AbstractControl): ValidationErrors | null => {
+      if (this.noticiaForm?.get('state')?.value !== 'review') return null;
+
+      const html = (this.noticiaForm.get('body')?.value || '').toString();
+      if (!this.isBrowser) return null; // no validar en SSR
+
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+
+      const text = doc.body.textContent?.trim() || '';
+      const words = text.split(/\s+/).filter(Boolean);
+      const wordCount = words.length;
+
+      const focus = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase();
+      const fullLower = text.toLowerCase();
+      const keyCount = focus ? (fullLower.split(focus).length - 1) : 0;
+      const density = wordCount ? (keyCount / wordCount) * 100 : 0;
+
+      const h2s = Array.from(doc.querySelectorAll('h2')).map(h => (h.textContent || '').toLowerCase());
+      const paragraphs = Array.from(doc.querySelectorAll('p')).map(p => (p.textContent || '').toLowerCase());
+
+      const links = Array.from(doc.querySelectorAll('a[href]')) as HTMLAnchorElement[];
+      const totalLinks = links.length;
+      const internal = links.filter(a => a.href.includes(this.domain)).length;
+      const external = totalLinks - internal;
+
+      const images = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+      const srcs = images.map(i => i.src).filter(Boolean);
+      const uniqueImages = (new Set(srcs)).size === srcs.length;
+
+      const hyphenKey = focus.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,'-');
+      const altOk = !focus || images.every(img => (img.alt || '').toLowerCase().includes(hyphenKey));
+
       const errors: any = {};
-      if (this.headerCount < 1 && this.wordCount > 400) errors.minHeaders = true;
+      if (wordCount < 300) errors.minWords = true;
+      if (wordCount > 400 && h2s.length < 1) errors.minHeaders = true;
+
+      if (focus) {
+        const firstTwo = (paragraphs[0] || '').split(/[.!?]/).slice(0,2).join('.');
+        if (!firstTwo.includes(focus)) errors.keyphraseFirstPara = true;
+        if (!h2s.some(t => t.includes(focus))) errors.keyphraseH2 = true;
+        const lastPara = paragraphs[paragraphs.length - 1] || '';
+        if (lastPara && !lastPara.includes(focus)) errors.keyphraseConclusion = true;
+        if (density < 0.5 || density > 2) errors.keyphraseDensity = true;
+        if (!altOk) errors.altKeyphraseHyphen = true;
+      }
+
+      if (external < 1 || external > 3 || internal < 2 || internal > 3 || totalLinks > 7) errors.links = true;
+      if (!uniqueImages) errors.uniqueImages = true;
+
       return Object.keys(errors).length ? errors : null;
     };
   }
 
+  // Async validator slug único
   private slugUniqueValidator(): AsyncValidatorFn {
     return (control: AbstractControl) => {
-      if (!control.value) return of(null);
-      return this.noticiasService.getNoticiaBySlug(control.value).pipe(
-        map(noticia => noticia ? { slugUnique: true } : null),
+      const value = (control.value || '').trim();
+      if (!value) return of(null);
+      return this.noticiasService.getNoticiaBySlug(value).pipe(
+        map(noticia => (noticia ? { slugUnique: true } : null)),
         catchError(() => of(null))
       );
     };
   }
 
-  private buildPreviewData() {
-    const raw = this.noticiaForm.value;
-    const meta = raw.meta;
-    return {
-      ...raw,
-      content: raw.content.map((block: any) => {
-        const base = { ...block, style: { ...(block.style || {}) } };
-        switch (block.type) {
-          case 'text':
-            return { ...base, html: this.sanitizer.bypassSecurityTrustHtml(marked.parse(block.text || '') as string) };
-          case 'list':
-            return { ...base, itemsHtml: block.items.map((item: string) => this.sanitizer.bypassSecurityTrustHtml(marked.parse(item) as string)) };
-          case 'quote':
-            const quoteHtml = marked.parse(`> ${block.quote || ''}`) as string;
-            return { ...base, html: this.sanitizer.bypassSecurityTrustHtml(quoteHtml), style: { ...base.style, textAlign: 'center' } };
-          case 'image':
-            const captionHtml = block.caption ? marked.parse(block.caption) as string : '';
-            return { ...base, captionHtml: this.sanitizer.bypassSecurityTrustHtml(captionHtml) };
-          case 'credit':
-            return { ...base, html: this.sanitizer.bypassSecurityTrustHtml(marked.parse(block.creditText || '') as string) };
-          default:
-            return base;
-        }
-      }),
-      meta: {
-        ...meta,
-        ogTitle: meta.ogTitle || raw.title,
-        ogDescription: meta.ogDescription || meta.description,
-        canonical: meta.canonical || `https://yourdomain.com/${raw.slug}`
-      }
-    };
+  // =============== HELPERS / MÉTRICAS ===============
+  onBodyChange() {
+    // CKEditor dispara (change), Textarea dispara (input)
+    this.updateMetricsFromHTML();
+    // refresca preview inmediatamente
+    this.previewDataObj = this.buildPreviewData();
   }
 
-  get content(): FormArray {
-    return this.noticiaForm.get('content') as FormArray;
-  }
+  private updateMetricsFromHTML() {
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
 
-  get tags(): FormArray {
-    return this.noticiaForm.get('tags') as FormArray;
-  }
+    const doc = new DOMParser().parseFromString(html, 'text/html');
 
-  addTag() {
-    this.tags.push(this.fb.control('', Validators.required));
-  }
+    const text = doc.body.textContent || '';
+    const words = text.split(/\s+/).filter(Boolean);
+    this.wordCount = words.length;
+    this.readingTime = Math.ceil(this.wordCount / 200);
 
-  removeTag(index: number) {
-    this.tags.removeAt(index);
-  }
+    this.headerCount = doc.querySelectorAll('h2, h3').length;
+    this.imageCount = doc.querySelectorAll('img[alt]').length;
 
-  getListItems(blockIndex: number): FormArray {
-    const blockGroup = this.content.at(blockIndex) as FormGroup;
-    const itemsControl = blockGroup.get('items');
-    return itemsControl instanceof FormArray ? itemsControl : this.fb.array([]);
-  }
-
-  getBlock(i: number): FormGroup {
-    return this.content.at(i) as FormGroup;
-  }
-
-  private createBlockGroup(type: string): FormGroup {
-    switch (type) {
-      case 'text':
-        return this.fb.group({
-          type: ['text'],
-          text: ['', Validators.required],
-          tag: ['p'],
-          style: this.fb.group({
-            fontSize: [''],
-            fontWeight: [''],
-            fontFamily: ['']
-          })
-        });
-      case 'image':
-        return this.fb.group({
-          type: ['image'],
-          url: ['', [Validators.required, Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i)]],
-          alt: ['', [Validators.required, Validators.minLength(8)]],
-          caption: ['']
-        });
-      case 'list':
-        return this.fb.group({
-          type: ['list'],
-          ordered: [false],
-          items: this.fb.array([this.fb.control('', Validators.required)])
-        });
-      case 'quote':
-        return this.fb.group({
-          type: ['quote'],
-          quote: ['', Validators.required],
-          authorQuote: [''],
-          style: this.fb.group({
-            fontFamily: ['Arial, sans-serif'],
-            fontStyle: ['italic'],
-            textAlign: ['center']
-          })
-        });
-      case 'link':
-        return this.fb.group({
-          type: ['link'],
-          href: ['', [Validators.required, Validators.pattern(/^https:\/\/.+/) ]],
-          textLink: ['', [Validators.required, this.noGenericAnchorValidator()]]
-        });
-      case 'credit':
-        return this.fb.group({
-          type: ['credit'],
-          creditText: ['', Validators.required]
-        });
-      default:
-        return this.fb.group({ type: [type], data: [''] });
-    }
-  }
-
-  private noGenericAnchorValidator(): ValidatorFn {
-    const generics = ['clic aquí', 'aquí', 'leer más', 'click here', 'here', 'read more'];
-    return (control: AbstractControl): ValidationErrors | null => {
-      const value = control.value?.toLowerCase();
-      return generics.some(g => value.includes(g)) ? { genericAnchor: true } : null;
-    };
-  }
-
-  addBlock(type: string) {
-    const blockGroup = this.createBlockGroup(type);
-    this.content.push(blockGroup);
-    this.blockOpenState.push(true);
-    this.content.updateValueAndValidity();
-  }
-
-  removeBlock(i: number) {
-    this.content.removeAt(i);
-    this.blockOpenState.splice(i, 1);
-    this.content.updateValueAndValidity();
-  }
-
-  toggleBlock(i: number) {
-    this.blockOpenState[i] = !this.blockOpenState[i];
-  }
-
-  addListItem(blockIndex: number) {
-    const items = this.getListItems(blockIndex);
-    if (items.length < 7) {
-      items.push(this.fb.control('', Validators.required));
-    }
-  }
-
-  removeListItem(blockIndex: number, itemIndex: number) {
-    const items = this.getListItems(blockIndex);
-    if (items.length > 1) items.removeAt(itemIndex);
-  }
-
-  cleanUtm(blockIndex: number) {
-    const hrefCtrl = this.getBlock(blockIndex).get('href');
-    if (!hrefCtrl) return;
-    let url = hrefCtrl.value;
-    if (url) {
-      try {
-        const urlObj = new URL(url);
-        urlObj.searchParams.delete('utm_source');
-        urlObj.searchParams.delete('utm_medium');
-        urlObj.searchParams.delete('utm_campaign');
-        urlObj.searchParams.delete('utm_term');
-        urlObj.searchParams.delete('utm_content');
-        hrefCtrl.setValue(urlObj.toString());
-      } catch {}
-    }
-  }
-
-  onPaste(event: ClipboardEvent) {
-    event.preventDefault();
-    const text = event.clipboardData?.getData('text/plain');
-    document.execCommand('insertText', false, text);
-  }
-
-  onMetaImageLoad(event: Event) {
-    const img = event.target as HTMLImageElement;
-    const width = img.naturalWidth;
-    const height = img.naturalHeight;
-    const ratio = width / height;
-    if (width < 1200 || height < 630 || Math.abs(ratio - 1.91) > 0.1) {
-      this.metaImageWarning = 'Imagen recomendada: ≥1200x630, ratio ~1.91:1. Actual: ' + width + 'x' + height;
-    }
-  }
-
-  loadCategories() {
-    this.categoriasService.obtenerCategorias().subscribe(categories => {
-      this.categoriasDisponibles = categories;
-    });
-  }
-
-  private updateMetrics() {
-    let totalWords = 0;
-    let paras: string[] = [];
-    this.imageCount = 0;
-    this.headerCount = 0;
-    let syllables = 0;
-    let sentences = 0;
-
-    this.content.controls.forEach(group => {
-      const type = group.get('type')?.value;
-      if (type === 'text') {
-        const text = group.get('text')?.value || '';
-        const tag = group.get('tag')?.value;
-        const words = text.trim().split(/\s+/).length;
-        totalWords += words;
-        if (tag === 'p') {
-          paras.push(text);
-        } else if (['h2', 'h3'].includes(tag)) {
-          this.headerCount++;
-        }
-        syllables += text.match(/[aeiouáéíóúü]/gi)?.length || 0;
-        sentences += text.match(/[.!?]/g)?.length || 1;
-      } else if (type === 'image') {
-        if (group.get('alt')?.value) this.imageCount++;
-      } else if (type === 'list') {
-        const items = group.get('items') as FormArray;
-        items.controls.forEach(item => {
-          const text = item.value || '';
-          totalWords += text.trim().split(/\s+/).length;
-          syllables += text.match(/[aeiouáéíóúü]/gi)?.length || 0;
-          sentences += text.match(/[.!?]/g)?.length || 1;
-        });
-      } else if (type === 'quote') {
-        const quote = group.get('quote')?.value || '';
-        totalWords += quote.trim().split(/\s+/).length;
-        syllables += quote.match(/[aeiouáéíóúü]/gi)?.length || 0;
-        sentences += quote.match(/[.!?]/g)?.length || 1;
-        if (quote.length > 280) this.quoteWarning = 'Si >280 chars, considera convertir en párrafo + atribución.';
-        else this.quoteWarning = '';
-      }
-    });
-
-    this.wordCount = totalWords;
-    this.readingTime = Math.ceil(totalWords / 200);
-    this.fleschScore = Math.round(206.835 - 1.015 * (totalWords / sentences) - 84.6 * (syllables / totalWords));
+    const vowels = (text.match(/[aeiouáéíóúü]/gi) || []).length;
+    const sentences = (text.match(/[.!?]/g) || []).length || 1;
+    this.fleschScore = this.wordCount
+      ? Math.round(206.835 - 1.015 * (this.wordCount / sentences) - 84.6 * (vowels / this.wordCount))
+      : 0;
 
     this.paragraphWarnings = [];
-    let shortParaStreak = 0;
+    const paras = Array.from(doc.querySelectorAll('p')).map(p => p.textContent || '');
+    let shortStreak = 0;
     paras.forEach((p, i) => {
-      const words = p.trim().split(/\s+/).length;
-      if (words > 120) {
-        this.paragraphWarnings.push(`Párrafo ${i+1} tiene ${words} palabras. Divide en 2–3 para mejorar lectura.`);
-      }
-      if (words < 20) {
-        shortParaStreak++;
-        if (shortParaStreak > 3) {
-          this.paragraphWarnings.push(`Más de 3 párrafos cortos seguidos. Considera unir algunos.`);
-        }
-      } else {
-        shortParaStreak = 0;
-      }
+      const wc = (p.trim().split(/\s+/).filter(Boolean)).length;
+      if (wc > 120 || wc < 40) this.paragraphWarnings.push(`Párrafo ${i+1}: ${wc} palabras (objetivo 40–80).`);
+      if (wc < 20) {
+        shortStreak++;
+        if (shortStreak > 3) this.paragraphWarnings.push('Más de 3 párrafos muy cortos seguidos: considera unir.');
+      } else shortStreak = 0;
     });
-    const avgParaWords = paras.length ? totalWords / paras.length : 0;
-    if (avgParaWords < 40 || avgParaWords > 80) {
-      this.paragraphWarnings.push(`Media de palabras por párrafo: ${Math.round(avgParaWords)}. Objetivo 40-80.`);
-    }
+    const avg = paras.length ? Math.round(this.wordCount / paras.length) : 0;
+    if (avg && (avg < 40 || avg > 80)) this.paragraphWarnings.push(`Media por párrafo: ${avg} (objetivo 40–80).`);
 
-    if (this.wordCount > 400 && this.headerCount < 1) {
-      this.headerSuggestion = 'Artículo >400 palabras: requiere al menos un H2.';
-    } else if (this.headerCount > 0 && this.content.controls.some(g => g.get('type')?.value === 'list' && (g.get('items') as FormArray).length > 5)) {
-      this.headerSuggestion = 'Listas largas: sugiere H3 bajo un H2.';
-    } else {
-      this.headerSuggestion = '';
-    }
+    if (this.wordCount > 400 && this.headerCount < 1) this.headerSuggestion = 'Artículo >400 palabras requiere ≥1 H2.';
+    else this.headerSuggestion = '';
 
-    this.content.updateValueAndValidity();
+    this.updateTitleRepetition();
+
+    const bodyLower = text.toLowerCase();
+    if (bodyLower.includes('fuentes:') || bodyLower.includes('sources:')) {
+      const hasLinks = Array.from(doc.querySelectorAll('a[href^="https://"]')).length > 0;
+      this.sourcesSuggestion = hasLinks ? '' : 'Si hay “Fuentes:”, exige lista de enlaces https con textos claros.';
+    } else this.sourcesSuggestion = '';
   }
 
   private updateSoftValidators() {
     this.keywordDensityWarnings = [];
     this.keyphraseWarnings = [];
-    if (this.wordCount > 0) {
-      this.tags.controls.forEach(tagCtrl => {
-        const tag = tagCtrl.value?.toLowerCase();
-        if (tag) {
-          const count = this.getFullText().toLowerCase().split(tag).length - 1;
-          const density = (count / this.wordCount) * 100;
-          if (density > 3) {
-            this.keywordDensityWarnings.push(`Tag "${tag}" aparece al ${density.toFixed(1)}% - posible sobre-optimización.`);
-          }
-        }
-      });
 
-      const keyphrase = this.noticiaForm.get('focusKeyphrase')?.value?.toLowerCase();
-      if (keyphrase) {
-        const metaDesc = this.noticiaForm.get('meta.description')?.value?.toLowerCase() || '';
-        const firstPara = this.content.controls.find(g => g.get('type')?.value === 'text' && g.get('tag')?.value === 'p')?.get('text')?.value?.toLowerCase() || '';
-        const fullText = this.getFullText().toLowerCase();
-        const count = fullText.split(keyphrase).length - 1;
-        const density = this.wordCount > 0 ? (count / this.wordCount) * 100 : 0;
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
 
-        if (!metaDesc.includes(keyphrase)) {
-          this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" no está en la meta descripción.`);
-        }
-        if (!firstPara.includes(keyphrase)) {
-          this.keyphraseWarnings.push(`Sugiere incluir "${keyphrase}" en el primer párrafo para mejor SEO.`);
-        }
-        if (density > 2) {
-          this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" aparece al ${density.toFixed(1)}% - posible sobreoptimización (máx. 2%).`);
-        }
-        if (density < 0.5 && count > 0) {
-          this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" aparece al ${density.toFixed(1)}% - sugiere aumentar su uso (mín. 0.5%).`);
-        }
-      }
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const text = (doc.body.textContent || '').toLowerCase();
+    const wc = text.split(/\s+/).filter(Boolean).length;
+
+    const keyphrase = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase();
+    if (keyphrase && wc > 0) {
+      const count = text.split(keyphrase).length - 1;
+      const density = (count / wc) * 100;
+      if (density > 2) this.keyphraseWarnings.push(`La palabra clave aparece al ${density.toFixed(1)}% - posible sobreoptimización (máx. 2%).`);
+      if (density < 0.5 && count > 0) this.keyphraseWarnings.push(`La palabra clave aparece al ${density.toFixed(1)}% - sugiere aumentar su uso (mín. 0.5%).`);
     }
 
-    this.updateTitleRepetition();
-
-    const fullText = this.getFullText().toLowerCase();
-    if (fullText.includes('fuentes:') || fullText.includes('sources:')) {
-      if (!this.content.controls.some(g => g.get('type')?.value === 'list' && g.get('items')?.value.some((item: string) => item.match(/^https:\/\/.+/)))) {
-        this.sourcesSuggestion = 'Si hay “Fuentes:”, exige lista de enlaces https con nombres claros (sin naked-URLs).';
-      } else {
-        this.sourcesSuggestion = '';
-      }
-    }
-
-    this.listSuggestion = '';
-    const hasOrdered = this.content.controls.some(g => g.get('type')?.value === 'list' && g.get('ordered')?.value);
-    const hasUnordered = this.content.controls.some(g => g.get('type')?.value === 'list' && !g.get('ordered')?.value);
-    if (hasOrdered && hasUnordered) {
-      this.listSuggestion = 'Mezcla listas ordenadas/no ordenadas: sugiere separarlas.';
+    const firstPara = (doc.querySelector('p')?.textContent || '').toLowerCase();
+    const metaDesc = (this.noticiaForm.get('meta.description')?.value || '').toLowerCase();
+    if (keyphrase) {
+      if (!metaDesc.includes(keyphrase)) this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" no está en la meta descripción.`);
+      if (!firstPara.includes(keyphrase)) this.keyphraseWarnings.push(`Sugiere incluir "${keyphrase}" en el primer párrafo.`);
     }
   }
 
-  private getFullText(): string {
-    let text = '';
-    this.content.controls.forEach(group => {
-      const type = group.get('type')?.value;
-      if (type === 'text' || type === 'quote') {
-        text += (group.get('text')?.value || group.get('quote')?.value || '') + ' ';
-      } else if (type === 'list') {
-        const items = group.get('items') as FormArray;
-        items.controls.forEach(item => text += item.value + ' ');
-      }
-    });
-    return text.trim();
+  private generateSlug(title: string): string {
+    return title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
   }
+
+  /** Convierte el HTML del body en bloques para Vista Previa */
+   private parseHtmlToBlocks(html: string) {
+    if (!this.isBrowser) return [];
+    const doc = new DOMParser().parseFromString(html || '', 'text/html');
+    const out: any[] = [];
+
+    const walk = (node: ChildNode) => {
+      if (!(node as HTMLElement).tagName) return;
+
+      const el = node as HTMLElement;
+      const tag = (el.tagName || '').toLowerCase();
+      const style = { textAlign: (el.style?.textAlign || '') as 'left'|'center'|'right' };
+
+      if (tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span') {
+        out.push({
+          type: 'text',
+          tag,
+          html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML),
+          text: el.textContent || '',
+          style
+        });
+      } else if (tag === 'blockquote') {
+        out.push({
+          type: 'quote',
+          html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML),
+          quote: el.textContent || '',
+          style
+        });
+      } else if (tag === 'img') {
+        out.push({
+          type: 'image',
+          url: el.getAttribute('src') || '',
+          alt: el.getAttribute('alt') || '',
+          captionHtml: null
+        });
+      } else if (tag === 'figure') {
+        const img = el.querySelector('img');
+        const figcap = el.querySelector('figcaption');
+        out.push({
+          type: 'image',
+          url: img?.getAttribute('src') || '',
+          alt: img?.getAttribute('alt') || '',
+          captionHtml: figcap ? this.sanitizer.bypassSecurityTrustHtml(figcap.innerHTML) : null
+        });
+      } else if (tag === 'ul' || tag === 'ol') {
+        const items = Array.from(el.querySelectorAll(':scope > li'));
+        out.push({
+          type: 'list',
+          ordered: tag === 'ol',
+          items: items.map(li => (li.textContent || '').trim()),
+          itemsHtml: items.map(li => this.sanitizer.bypassSecurityTrustHtml(li.innerHTML)),
+          style
+        });
+      } else if (tag === 'a') {
+        out.push({
+          type: 'link',
+          href: el.getAttribute('href') || '',
+          textLink: el.textContent || ''
+        });
+      }
+    };
+
+    Array.from(doc.body.children).forEach(walk);
+    return out;
+  }
+
+ private parseHtmlToBlocksForSave(html: string) {
+    if (!this.isBrowser) return [];
+    const doc = new DOMParser().parseFromString(html || '', 'text/html');
+    const out: any[] = [];
+
+    const walk = (node: ChildNode) => {
+      if (!(node as HTMLElement).tagName) return;
+
+      const el = node as HTMLElement;
+      const tag = (el.tagName || '').toLowerCase();
+      const style = { textAlign: (el.style?.textAlign || '') as 'left'|'center'|'right' };
+
+      if (tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span') {
+        out.push({
+          type: 'text',
+          tag,
+          html: el.innerHTML || '',      // <-- string plano
+          text: el.textContent || '',
+          style
+        });
+      } else if (tag === 'blockquote') {
+        out.push({
+          type: 'quote',
+          html: el.innerHTML || '',      // <-- string plano
+          quote: el.textContent || '',
+          style
+        });
+      } else if (tag === 'img') {
+        out.push({
+          type: 'image',
+          url: el.getAttribute('src') || '',
+          alt: el.getAttribute('alt') || '',
+          captionHtml: null              // string o null
+        });
+      } else if (tag === 'figure') {
+        const img = el.querySelector('img');
+        const figcap = el.querySelector('figcaption');
+        out.push({
+          type: 'image',
+          url: img?.getAttribute('src') || '',
+          alt: img?.getAttribute('alt') || '',
+          captionHtml: figcap ? (figcap.innerHTML || '') : null // <-- string plano
+        });
+      } else if (tag === 'ul' || tag === 'ol') {
+        const items = Array.from(el.querySelectorAll(':scope > li'));
+        out.push({
+          type: 'list',
+          ordered: tag === 'ol',
+          items: items.map(li => (li.textContent || '').trim()),
+          style
+        });
+      } else if (tag === 'a') {
+        out.push({
+          type: 'link',
+          href: el.getAttribute('href') || '',
+          textLink: el.textContent || ''
+        });
+      }
+    };
+
+    Array.from(doc.body.children).forEach(walk);
+    return out;
+  }
+  private buildPreviewData() {
+    const raw = this.noticiaForm.value;
+    const meta = raw.meta;
+    const html = String(raw.body || '');
+    const bodyHtml: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+    const contentBlocks = this.parseHtmlToBlocks(html);
+
+    return {
+      ...raw,
+      bodyHtml,
+      content: contentBlocks, // para VistaPrevia por bloques
+      meta: {
+        ...meta,
+        ogTitle: meta.ogTitle || raw.title,
+        ogDescription: meta.ogDescription || (raw.extracto || meta.description),
+        canonical: meta.canonical || `https://${this.domain}/${raw.slug}`
+      }
+    };
+  }
+
+  get previewData() { return this.previewDataObj; }
 
   private updateTitleWarning() {
     const len = this.noticiaForm.get('title')?.value?.length || 0;
-    if (len < 50 && len > 45) this.titleWarning = 'Tu título tiene ' + len + ' caracteres. Para aparecer completo en Google, apunta a 50–60.';
-    else if (len > 60 && len < 65) this.titleWarning = 'Tu título tiene ' + len + ' caracteres. Para aparecer completo en Google, apunta a 50–60.';
+    if ((len < 50 && len > 45) || (len > 60 && len < 65))
+      this.titleWarning = `Tu título tiene ${len} caracteres. Ideal: 50–60.`;
     else this.titleWarning = '';
   }
-
   private updateMetaDescWarning() {
     const len = this.noticiaForm.get('meta.description')?.value?.length || 0;
-    if (len < 150 && len > 140) this.metaDescWarning = 'La descripción tiene ' + len + ' caracteres. Acórtala para evitar cortes en los resultados.';
-    else if (len > 160 && len < 170) this.metaDescWarning = 'La descripción supera 160 caracteres. Acórtala para evitar cortes en los resultados.';
+    if (len < 120 && len > 110) this.metaDescWarning = `Meta description con ${len} chars. Objetivo: 120–160.`;
+    else if (len > 160 && len < 170) this.metaDescWarning = 'Supera 160 chars. Acórtala.';
     else this.metaDescWarning = '';
   }
-
   private validatePublishAt() {
-    if (this.noticiaForm.get('state')?.value !== 'published') return;
-    const publishAt = new Date(this.noticiaForm.get('publishAt')?.value);
-    if (!publishAt) {
-      this.publishAtError = 'Fecha de publicación requerida para publicar.';
-      return;
-    }
+    if (this.noticiaForm.get('state')?.value !== 'review') return;
+    const raw = this.noticiaForm.get('publishAt')?.value;
+    const publishAt = raw ? new Date(raw) : null;
+    if (!publishAt) { this.publishAtError = 'Fecha de publicación requerida para revisión.'; return; }
     const now = new Date();
     const futureLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    if (publishAt > futureLimit) {
-      this.publishAtError = 'Fecha no puede ser más de 24h en el futuro (usa "programada" si aplica).';
-    } else {
-      this.publishAtError = '';
-    }
+    this.publishAtError = publishAt > futureLimit ? 'Fecha no puede ser más de 24h en el futuro.' : '';
   }
-
   private updateLocalSeoSuggestion() {
     const city = this.noticiaForm.get('location.city')?.value;
-    if (city && !this.getFullText().includes(city)) {
-      this.localSeoSuggestion = `Sugiere añadir mención a "${city}" en el primer 30% del texto para local SEO.`;
-    } else {
-      this.localSeoSuggestion = '';
-    }
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
+    const text = new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
+    this.localSeoSuggestion = (city && !text.includes(city)) ? `Sugiere añadir mención a "${city}" en el primer 30% del texto.` : '';
   }
-
   private updateTitleRepetition() {
-    const title = this.noticiaForm.get('title')?.value?.toLowerCase();
-    const firstPara = this.content.controls.find(g => g.get('type')?.value === 'text' && g.get('tag')?.value === 'p')?.get('text')?.value?.toLowerCase() || '';
-    if (title && firstPara.startsWith(title)) {
-      this.titleRepetitionWarning = 'La primera frase repite el título - resta CTR, varíala.';
-    } else {
-      this.titleRepetitionWarning = '';
-    }
+    const title = (this.noticiaForm.get('title')?.value || '').toLowerCase();
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
+    const firstPara = (new DOMParser().parseFromString(html, 'text/html').querySelector('p')?.textContent || '').toLowerCase();
+    this.titleRepetitionWarning = (title && firstPara.startsWith(title)) ? 'La primera frase repite el título: varíala para mejorar CTR.' : '';
   }
 
   private updateChecklist() {
@@ -558,134 +660,136 @@ export class PanelNoticias implements OnInit {
       description: this.noticiaForm.get('meta.description')?.valid,
       slug: this.noticiaForm.get('slug')?.valid,
       headers: this.headerCount >= 1 || this.wordCount <= 400,
-      links: this.content.controls.every(g => g.get('type')?.value !== 'link' || g.valid),
+      links: true,
+      image: this.noticiaForm.get('meta.image')?.valid,
       publishAt: !this.publishAtError,
       noUtm: true,
       sources: !this.sourcesSuggestion,
-      focusKeyphrase: this.noticiaForm.get('focusKeyphrase')?.valid && this.noticiaForm.get('title')?.valid
+      focusKeyphrase: this.noticiaForm.get('focusKeyphrase')?.valid && this.noticiaForm.get('title')?.valid,
+      imageAltGlobal: this.noticiaForm.get('meta.imageAltGlobal')?.valid,
+      wordCount: this.wordCount >= 300,
+      extracto: this.noticiaForm.get('extracto')?.valid,
+      categories: this.noticiaForm.get('categories')?.valid,
+      tags: this.tags?.valid
     };
   }
-
   private updatePublishTooltip() {
-    if (this.noticiaForm.get('state')?.value !== 'published') {
-      this.publishTooltip = '';
-      return;
-    }
-    const fails = [];
-    if (!this.checklist.title) fails.push('Título 50-60 chars y debe incluir la palabra clave');
-    if (!this.checklist.description) fails.push('Description 150-160 chars');
+    if (this.noticiaForm.get('state')?.value !== 'review') { this.publishTooltip = ''; return; }
+    const fails: string[] = [];
+    if (!this.checklist.title) fails.push('Título 50–60 + keyword');
+    if (!this.checklist.description) fails.push('Meta 120–160 + keyword');
     if (!this.checklist.slug) fails.push('Slug válido/único');
-    if (!this.checklist.headers) fails.push('Al menos 1 H2');
-    if (!this.checklist.links) fails.push('Enlaces https/descriptivos');
-    if (!this.checklist.publishAt) fails.push('publishAt correcto');
-    if (!this.checklist.noUtm) fails.push('Sin UTM innecesarias');
+    if (!this.checklist.headers) fails.push('≥1 H2 si >400');
+    if (!this.checklist.image) fails.push('Imagen destacada OK');
+    if (!this.checklist.publishAt) fails.push('Fecha publicación válida');
     if (!this.checklist.sources) fails.push('Fuentes claras');
-    if (!this.checklist.focusKeyphrase) fails.push('Palabra clave optimizada y en título');
+    if (!this.checklist.focusKeyphrase) fails.push('Keyword optimizada');
+    if (!this.checklist.imageAltGlobal) fails.push('Alt global con keyword-guiones');
+    if (!this.checklist.wordCount) fails.push('≥300 palabras');
+    if (!this.checklist.extracto) fails.push('Extracto 150–300 con keyword');
+    if (!this.checklist.categories) fails.push('≥1 categoría');
+    if (!this.checklist.tags) fails.push('1–5 etiquetas');
     this.publishTooltip = fails.length ? 'Pendientes: ' + fails.join(', ') : '';
   }
 
-  onSubmit() {
-    this.isSubmitting = true;
-    this.markAllTouched();
-    this.showChecklist = true;
-    if (this.noticiaForm.invalid || (this.noticiaForm.get('state')?.value === 'published' && Object.values(this.checklist).some(v => !v))) {
-      const errors = [];
-      if (this.noticiaForm.get('focusKeyphrase')?.invalid) errors.push('Palabra clave principal es obligatoria y debe cumplir con las validaciones.');
-      if (this.noticiaForm.get('title')?.invalid) {
-        if (this.noticiaForm.get('title')?.errors?.['required']) errors.push('Título es obligatorio.');
-        if (this.noticiaForm.get('title')?.errors?.['minlength']) errors.push('Título debe tener mínimo 50 caracteres.');
-        if (this.noticiaForm.get('title')?.errors?.['maxlength']) errors.push('Título debe tener máximo 60 caracteres.');
-        if (this.noticiaForm.get('title')?.errors?.['titleContainsKeyphrase']) errors.push('El título debe incluir la palabra clave principal.');
-      }
-      if (this.noticiaForm.get('slug')?.invalid) errors.push('Slug es obligatorio y debe ser único.');
-      if (this.noticiaForm.get('meta.description')?.invalid) errors.push('Meta descripción es obligatoria (150-160 caracteres).');
-      if (this.noticiaForm.get('meta.image')?.invalid) errors.push('Imagen destacada es obligatoria.');
-      if (this.noticiaForm.get('categories')?.invalid) errors.push('Al menos una categoría es obligatoria.');
-      if (this.noticiaForm.get('state')?.value === 'published' && Object.values(this.checklist).some(v => !v)) {
-        errors.push('Pasa todas las validaciones del checklist SEO.');
-      }
-      alert('Por favor, corrige los siguientes errores:\n- ' + errors.join('\n- '));
-      this.isSubmitting = false;
-      return;
-    }
-    const data = this.prepareSubmitData();
-    this.noticiasService.createNoticia(data).subscribe({
-      next: res => {
-        console.log('Noticia creada:', res);
-        this.resetForm();
-        alert('Noticia creada exitosamente.');
-        this.isSubmitting = false;
-      },
-      error: err => {
-        console.error('Error creating noticia:', err);
-        alert('Error al crear la noticia: ' + err.message);
-        this.isSubmitting = false;
-      }
+  // ===== Servicios / Submit =====
+  loadCategories() {
+    this.categoriasService.obtenerCategorias().subscribe(categories => {
+      this.categoriasDisponibles = categories;
     });
   }
 
-  private markAllTouched() {
-    this.noticiaForm.markAllAsTouched();
-    this.content.controls.forEach((group, i) => {
-      if (group.get('type')?.value === 'list') {
-        this.getListItems(i).markAllAsTouched();
-      } else {
-        Object.values((group as FormGroup).controls).forEach(ctrl => ctrl.markAsTouched());
-      }
-    });
-    this.tags.markAllAsTouched();
+  onMetaImageLoad(event: Event) {
+    const img = event.target as HTMLImageElement;
+    const width = img.naturalWidth;
+    const height = img.naturalHeight;
+    const ratio = width / height;
+    if (width < 1200 || height < 630 || Math.abs(ratio - 1.91) > 0.1) {
+      this.metaImageWarning = `Imagen recomendada: ≥1200x630, ratio ~1.91:1. Actual: ${width}x${height}`;
+    }
   }
+onSubmit() {
+  this.isSubmitting = true;
+  this.noticiaForm.markAllAsTouched();
+  this.noticiaForm.get('body')?.updateValueAndValidity();
+
+  // ——— Mostrar avisos si hay errores, pero NO bloquear ———
+  if (this.noticiaForm.invalid || (this.noticiaForm.get('state')?.value === 'review' && Object.values(this.checklist).some((v: any) => !v))) {
+    const errors: string[] = [];
+    if (this.noticiaForm.get('focusKeyphrase')?.invalid) errors.push('Keyword principal obligatoria.');
+    if (this.noticiaForm.get('title')?.invalid) errors.push('Título inválido.');
+    if (this.noticiaForm.get('slug')?.invalid) errors.push('Slug inválido/duplicado.');
+    if (this.noticiaForm.get('extracto')?.invalid) errors.push('Extracto redes 150–300 con keyword 1 vez.');
+    if (this.noticiaForm.get('meta.description')?.invalid) errors.push('Meta desc 120–160 con keyword 1 vez.');
+    if (this.noticiaForm.get('meta.image')?.invalid) errors.push('Imagen destacada inválida.');
+    if (this.noticiaForm.get('meta.imageAltGlobal')?.invalid) errors.push('Alt global debe incluir keyword-con-guiones.');
+    if (this.noticiaForm.get('categories')?.invalid) errors.push('Al menos una categoría.');
+    if (this.noticiaForm.get('state')?.value === 'review' && Object.values(this.checklist).some((v: any) => !v)) {
+      errors.push('Checklist SEO pendiente(s).');
+    }
+
+    // Importante: solo informamos; NO frenamos el submit
+    alert('Se guardará aunque haya pendientes:\n- ' + errors.join('\n- '));
+  }
+
+  const data = this.prepareSubmitData();
+
+  this.noticiasService.createNoticia(data).subscribe({
+    next: _ => {
+      this.resetForm();
+      alert('Noticia creada (aunque hubiera avisos).');
+      this.isSubmitting = false;
+    },
+    error: err => {
+      // Si el backend rechaza por campos realmente obligatorios del server,
+      // verás aquí el motivo.
+      alert('Error al crear la noticia: ' + err.message);
+      this.isSubmitting = false;
+    }
+  });
+}
+
 
   private resetForm() {
-    this.noticiaForm.reset({ state: 'draft', publishAt: null, focusKeyphrase: '' });
-    while (this.content.length) this.content.removeAt(0);
-    while (this.tags.length) this.tags.removeAt(0);
-    this.blockOpenState = [];
-    this.wordCount = 0;
-    this.readingTime = 0;
-    this.imageCount = 0;
-    this.headerCount = 0;
-    this.fleschScore = 0;
-    this.titleWarning = '';
-    this.metaDescWarning = '';
-    this.metaImageWarning = '';
-    this.publishAtError = '';
-    this.paragraphWarnings = [];
-    this.keywordDensityWarnings = [];
-    this.keyphraseWarnings = [];
-    this.headerSuggestion = '';
-    this.listSuggestion = '';
-    this.quoteWarning = '';
-    this.localSeoSuggestion = '';
-    this.titleRepetitionWarning = '';
-    this.sourcesSuggestion = '';
+    this.noticiaForm.reset({ state: 'draft', publishAt: null, focusKeyphrase: '', body: '' });
+    this.wordCount = this.readingTime = this.imageCount = this.headerCount = this.fleschScore = 0;
+    this.titleWarning = this.metaDescWarning = this.metaImageWarning = this.publishAtError = '';
+    this.paragraphWarnings = this.keywordDensityWarnings = this.keyphraseWarnings = [];
+    this.headerSuggestion = this.listSuggestion = this.quoteWarning = this.localSeoSuggestion = '';
+    this.titleRepetitionWarning = this.sourcesSuggestion = '';
     this.showChecklist = false;
     this.checklist = {};
     this.publishTooltip = '';
     this.canonicalUrl = '';
+    this.previewDataObj = this.buildPreviewData();
   }
 
-  private prepareSubmitData() {
+ private prepareSubmitData() {
     const raw = this.noticiaForm.value;
     const categories: string[] = raw.categories;
     const authorId = 'a94f23c8bd7e4ad1f6c30ae5';
-    const submitData = {
+
+    // NUEVO: construimos los bloques "planos" y el HTML para guardar
+    const html = String(raw.body || '');
+    const contentForSave = this.parseHtmlToBlocksForSave(html);
+
+    // Si quieres forzar "draft" cuando hay errores, descomenta:
+    // const state = (this.noticiaForm.invalid || Object.values(this.checklist).some(v => !v)) ? 'draft' : raw.state;
+
+    return {
       ...raw,
       categories,
       author: authorId,
+      bodyHtml: html,                // <-- GUARDAR el HTML tal cual
+      content: contentForSave,       // <-- GUARDAR bloques serializables
       meta: {
         ...raw.meta,
         ogTitle: raw.meta.ogTitle || raw.title,
-        ogDescription: raw.meta.ogDescription || raw.meta.description,
-        canonical: raw.meta.canonical || `https://yourdomain.com/${raw.slug}`,
+        ogDescription: raw.meta.ogDescription || (raw.extracto || raw.meta.description),
+        canonical: raw.meta.canonical || `https://${this.domain}/${raw.slug}`,
         twitterCard: 'summary_large_image'
       }
+      // state                         // si descomentaste la lógica de "draft", agrega aquí: state
     };
-    console.log('Submit Data:', JSON.stringify(submitData, null, 2));
-    return submitData;
-  }
-
-  get previewData() {
-    return this.previewDataObj;
   }
 }

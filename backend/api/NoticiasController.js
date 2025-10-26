@@ -1,19 +1,37 @@
-
-
-
-// SpotifyController.js
-
 import axios from 'axios';
 import dotenv from 'dotenv';
-import Noticia from '../models/Noticias.js'; // asegúrate de importar el modelo
+import Noticia from '../models/Noticias.js';
 import Category from '../models/Categorias.js';
-import { recacheNoticia } from '../utils/prerender-service.js';
 import User from '../models/Usuarios.js';
-
+import { recacheNoticia } from '../utils/prerender-service.js';
 
 dotenv.config();
-
+// Helpers
+// Helpers (si ya los tienes definidos/importados, no dupliques)
+function generarSlug(texto = '') {
+  return texto
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+async function ensureUniqueSlug(baseSlug) {
+  let slug = baseSlug;
+  let i = 2;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const exists = await Noticia.findOne({ slug }, { _id: 1 }).lean();
+    if (!exists) return slug;
+    slug = `${baseSlug}-${i++}`;
+  }
+}
 class noticiasController {
+
+
+
 async getNoticiasByArchive(req, res) {
   try {
     const { anio, mes } = req.params;
@@ -402,93 +420,108 @@ async getAllNoticias(req, res, next) {
     console.error(e);
     res.status(500).json({ error: 'Error al obtener noticias' });
   }
-}
-// Controller: createNoticia
+} 
 async createNoticia(req, res, next) {
   try {
-    // Extraer datos del body
     const {
       title,
+      slug: slugFromClient,
       summary,
       categories,
       tags,
       location,
-      content,
+      content,      // opcional (bloques ya “planos” que mandaste del front)
+      body,         // HTML del editor (opcional)
+      bodyHtml,     // idem, preferido si lo traes así
+      state,
       publishAt,
-      meta
+      meta = {}
     } = req.body;
 
-    // Validación mínima
-    if (!title) {
-      return res.status(400).json({ message: 'El campo title es obligatorio.' });
+    // Requisitos mínimos del backend (lo demás puede venir “cojo” y se guarda igual)
+    if (!title) return res.status(400).json({ message: 'El campo title es obligatorio.' });
+    if (!meta.description || !meta.image) {
+      return res.status(400).json({ message: 'meta.description y meta.image son obligatorios.' });
     }
 
-    if (!Array.isArray(content)) {
-      return res.status(400).json({ message: 'El campo content debe ser un array de bloques.' });
-    }
-
-    if (!meta || !meta.description || !meta.image) {
-      return res.status(400).json({ 
-        message: 'Los campos meta.description y meta.image son obligatorios.' 
-      });
-    }
-
-    // Obtener author
+    // Autor
     let authorId;
     if (req.user && req.user.id) {
       authorId = req.user.id;
     } else if (req.body.author) {
-      authorId = req.body.author; // Temporal
+      authorId = req.body.author;
     } else {
       return res.status(400).json({ message: 'No se proporcionó author.' });
     }
 
-    function generarSlug(texto) {
-      return texto
-        .toString()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-    }
+    // Slug final y único
+    const baseSlug = slugFromClient ? generarSlug(slugFromClient) : generarSlug(title);
+    const finalSlug = await ensureUniqueSlug(baseSlug);
 
-    // Construir objeto de noticia
-    const nuevaNoticia = new Noticia({
+    // Normalizar categorías/tags
+    const normCategories = Array.isArray(categories)
+      ? categories
+      : typeof categories === 'string'
+        ? categories.split(',').map(s => s.trim())
+        : [];
+
+    const normTags = Array.isArray(tags)
+      ? tags
+      : typeof tags === 'string'
+        ? tags.split(',').map(s => s.trim())
+        : [];
+
+    // ===== NORMALIZAR CONTENT PARA textAlign (evitar '' que rompe enum) =====
+    const normContent = Array.isArray(content) ? content.map((b) => {
+      const out = { ...b };
+      if (out.style) {
+        const ta = (out.style.textAlign ?? '').toString().trim();
+        if (!['left', 'center', 'right'].includes(ta)) {
+          // elimina para que el setter/default del esquema actúe
+          delete out.style.textAlign;
+        }
+      }
+      return out;
+    }) : [];
+
+    // Elegir HTML (el modelo lo sanitiza en pre-save)
+    const html = bodyHtml || body || '';
+
+    const doc = new Noticia({
       title,
-      slug: generarSlug(title),
+      slug: finalSlug,
       summary,
       author: authorId,
-      categories: Array.isArray(categories)
-        ? categories
-        : typeof categories === 'string'
-        ? categories.split(',').map((s) => s.trim())
-        : [],
-      tags: Array.isArray(tags)
-        ? tags
-        : typeof tags === 'string'
-        ? tags.split(',').map((s) => s.trim())
-        : [],
+      categories: normCategories,
+      tags: normTags,
       location: location || {},
-      content,
+      content: normContent,     // <— usamos la versión normalizada
+      bodyHtml: html,
       meta: {
-        description: meta.description,
-        image: meta.image
+        description:    meta.description,
+        image:          meta.image,
+        imageAltGlobal: meta.imageAltGlobal || '',
+        canonical:      meta.canonical || '',
+        ogTitle:        meta.ogTitle || title,
+        ogDescription:  meta.ogDescription || (summary || meta.description),
+        twitterCard:    meta.twitterCard || 'summary_large_image'
       },
-      publishAt
+      state: state || 'draft',
+      publishAt: publishAt || null
     });
 
-    // Debug log
-    console.log('Saving noticia:', JSON.stringify(nuevaNoticia.toObject(), null, 2));
+    // Debug
+    console.log('Saving noticia:', JSON.stringify(doc.toObject(), null, 2));
 
-    // Guardar en base de datos
-    const saved = await nuevaNoticia.save();
+    const saved = await doc.save();
 
-    // ⚡️ Notificar a Prerender.io que recachee la URL
-    await recacheNoticia(saved.slug);
+    // Recache (no bloqueante)
+    try {
+      await recacheNoticia(saved.slug);
+    } catch (e) {
+      console.warn('recacheNoticia falló (no bloqueante):', e?.message || e);
+    }
 
-    // Respuesta al cliente
     return res.status(201).json(saved);
   } catch (error) {
     console.error('Error en createNoticia:', error);

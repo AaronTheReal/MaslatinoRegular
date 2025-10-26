@@ -1,7 +1,6 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-vista-previa',
@@ -29,26 +28,22 @@ export class VistaPrevia {
     };
     state: string;
     publishAt: string | null;
-    content: Array<{
+    bodyHtml?: SafeHtml;             // ← CKEditor HTML seguro
+    content?: Array<{
       type: string;
-      html?: SafeHtml; // Already sanitized in panel-noticias
-      style?: {
-        fontSize?: string;
-        fontWeight?: string;
-        fontFamily?: string;
-        textAlign?: 'left' | 'center' | 'right';
-      };
+      html?: SafeHtml;
+      style?: { fontSize?: string; fontWeight?: string; fontFamily?: string; textAlign?: 'left'|'center'|'right' };
       text?: string;
       tag?: string;
       url?: string;
       alt?: string;
       caption?: string;
-      captionHtml?: SafeHtml; // Already sanitized
+      captionHtml?: SafeHtml;
       quote?: string;
       authorQuote?: string;
       ordered?: boolean;
       items?: string[];
-      itemsHtml?: SafeHtml[]; // Already sanitized
+      itemsHtml?: SafeHtml[];
       href?: string;
       textLink?: string;
       creditText?: string;
@@ -57,53 +52,38 @@ export class VistaPrevia {
 
   constructor(private sanitizer: DomSanitizer) {}
 
-  /**
-   * Sanitizes raw HTML strings and adds target/rel attributes to links.
-   * Only used for unsanitized string inputs.
-   */
   formatHtml(rawHtml: string = ''): SafeHtml {
-    const withTargets = rawHtml.replace(
-      /<a\s+/g,
-      `<a target="_blank" rel="noopener noreferrer" `
-    );
+    const withTargets = rawHtml.replace(/<a\s+/g, `<a target="_blank" rel="noopener noreferrer" `);
     return this.sanitizer.bypassSecurityTrustHtml(withTargets);
   }
 
-  /**
-   * Check if there is any H1 in content blocks (prohibited per maxOneH1Validator).
-   */
   hasMultipleH1(): boolean {
-    return this.data.content.some(block => block.tag === 'h1');
+    // Tus bloques nunca generan H1; por si acaso, detecta si alguien metió un H1 en el HTML crudo
+    try {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = String(this.data?.bodyHtml || '');
+      return tmp.querySelectorAll('h1').length > 0;
+    } catch {
+      return false;
+    }
   }
 
-  /**
-   * Get character count for a field.
-   */
-  getCharCount(field: string): number {
+  getCharCount(field: string | undefined): number {
     return field ? field.length : 0;
   }
 
-  /**
-   * Get SEO status for a field (title, summary, meta.description).
-   */
-  getSeoStatus(field: string, min: number, max: number): string {
+  getSeoStatus(field: string | undefined, min: number, max: number): string {
     const length = this.getCharCount(field);
     if (length < min) return 'text-warning';
     if (length > max) return 'text-danger';
     return 'text-dark';
   }
 
-  /**
-   * Check if link text is generic.
-   */
   isGenericAnchor(text: string): boolean {
     const generics = ['clic aquí', 'aquí', 'leer más', 'click here', 'here', 'read more'];
-    return generics.some(g => text.toLowerCase().includes(g));
+    return !!text && generics.some(g => text.toLowerCase().includes(g));
   }
 
-  /**
-   * Handle image load errors.
-   */
   handleImageError(): void {
     console.warn('Error loading image in preview');
   }

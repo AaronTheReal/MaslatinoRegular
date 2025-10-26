@@ -1,27 +1,73 @@
-<section class="seccion-noticias">
-  <h2 class="titulo-seccion">PODCASTS</h2>
 
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    {{ errorMessage }}
-  </div>
+<div class="podcasts-page">
+  <div class="container">
 
+    <!-- HERO simple (opcional) -->
+    <section class="section hero">
+      <div class="hero-copy">
+        <h1 class="hero-title">
+          <span class="stroke">CONECTATE</span>
+          <span class="stroke">CON TUS</span>
+          <span class="brand">RAICES</span>
+          <span class="brand">LATINAS</span>
+        </h1>
+        <p class="hero-sub">
+          Explora los podcasts destacados de nuestra comunidad.
+        </p>
+      </div>
+    </section>
 
-  <div class="contenedor-tarjetas">
-    <div class="tarjeta" *ngFor="let podcast of podcasts">
-      <div class="marco-tarjeta">
-        <div class="contenido-interno">
-          <img [src]="podcast.coverImage" [alt]="podcast.title" class="imagen-tarjeta" />
-          <h3 class="titulo-tarjeta">{{ podcast.title }}</h3>
+    <!-- Estado de carga -->
+    <section class="section" *ngIf="loading">
+      <div class="loading">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Cargando podcasts…</p>
+      </div>
+    </section>
+
+    <!-- Error -->
+    <section class="section" *ngIf="!loading && errorMessage">
+      <div class="alert">
+        {{ errorMessage }}
+      </div>
+    </section>
+
+    <!-- Grid de podcasts -->
+    <section class="section" *ngIf="!loading && !errorMessage">
+      <div class="text-center">
+        <h2 class="title">PODCAST</h2>
+        <p class="lead">Tu experiencia latina todo en uno.</p>
+      </div>
+
+      <div class="podcasts-grid">
+        <div
+          class="podcast-item"
+          *ngFor="let p of podcasts; trackBy: trackById"
+        >
+          <a
+            class="podcast-card"
+            [routerLink]="['/podcast', getSlugOrId(p)]"
+            [attr.aria-label]="'Ir a ' + getTitle(p)"
+          >
+            <div class="podcast-cover">
+              <img [src]="getCover(p)" [alt]="getTitle(p)" loading="lazy" />
+            </div>
+          </a>
+
+          <div class="podcast-cta">
+            <button class="play-btn" type="button" (click)="onPlay(p)" [attr.aria-label]="'Reproducir ' + getTitle(p)">
+              <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M8 5v14l11-7L8 5z" fill="currentColor"></path>
+              </svg>
+            </button>
+          </div>
+
+          <h3 class="podcast-title">
+            <a [routerLink]="['/podcast', getSlugOrId(p)]">{{ getTitle(p) }}</a>
+          </h3>
         </div>
       </div>
-    </div>
+    </section>
+
   </div>
-
-
-
-
-       <div class="fila-inputs">
-      <a [routerLink]="['/podcast-show']"  class="boton-contacto">Ver más</a>
-     </div>
-
-</section>
+</div>
