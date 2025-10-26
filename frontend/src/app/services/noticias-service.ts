@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
-import { Observable, of, tap, map, shareReplay } from 'rxjs';
+import { Observable, of, tap, map, shareReplay, catchError } from 'rxjs';
 import { Noticia } from '../../models/noticia.model';
 import { isPlatformServer } from '@angular/common';
 
@@ -127,7 +127,7 @@ export class NoticiasService {
     return observable;
   }
 
-  getArchivos(): Observable<{ anio: number; mes: number; nombre: string }[]> {
+  getArchivos(): Observable<{ anio: number; mes: number; nombre: string; }[]> {
     const key = makeStateKey<{ anio: number; mes: number; nombre: string }[]>('archivos');
     if (this.ts.hasKey(key)) {
       const data = this.ts.get<{ anio: number; mes: number; nombre: string }[]>(key, []);
@@ -189,5 +189,12 @@ export class NoticiasService {
       return observable.pipe(tap(data => this.ts.set(key, data)));
     }
     return observable;
+  }
+
+  checkImageUnique(url: string): Observable<boolean> {
+    return this.http.get<{ unique: boolean }>(`${this.baseUrl}/image-unique?url=${encodeURIComponent(url)}`).pipe(
+      map(res => res.unique),
+      catchError(() => of(true)) // Fallback if endpoint not implemented
+    );
   }
 }
