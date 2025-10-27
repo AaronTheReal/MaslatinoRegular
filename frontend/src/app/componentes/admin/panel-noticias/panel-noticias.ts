@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, HostListener } from '@angular/core';
 import {
   FormBuilder, FormGroup, FormArray, Validators, ValidatorFn,
   AbstractControl, ValidationErrors, AsyncValidatorFn
@@ -73,8 +73,14 @@ export class PanelNoticias implements OnInit {
         { model:'heading3', view:'h3', title:'H3' }
       ]
     }
-    // No ofrecemos H1 en la toolbar
   };
+
+  // ======== NUEVO: Estado de UI del estudio ========
+  dockMode: 'hidden' | 'right' | 'bottom' = 'right';
+  seoEssentialsOpen = true;     // drop-down superior
+  inspectorOpen = false;        // drop-up inferior
+  splitRatio = 0.52;            // ancho del panel editor (dock right)
+  private resizing = false;
 
   constructor(
     private fb: FormBuilder,
@@ -274,8 +280,8 @@ export class PanelNoticias implements OnInit {
     };
   }
   private noDoubleQuotesValidator(): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      return /"/.test(control.value || '') ? { noDoubleQuotes: true } : null;
+    return (_: AbstractControl): ValidationErrors | null => {
+      return /"/.test(_.value || '') ? { noDoubleQuotes: true } : null;
     };
   }
   private naturalLanguageValidator(): ValidatorFn {
@@ -320,7 +326,7 @@ export class PanelNoticias implements OnInit {
       if (this.noticiaForm?.get('state')?.value !== 'review') return null;
 
       const html = (this.noticiaForm.get('body')?.value || '').toString();
-      if (!this.isBrowser) return null; // no validar en SSR
+      if (!this.isBrowser) return null;
 
       const doc = new DOMParser().parseFromString(html, 'text/html');
 
@@ -383,9 +389,7 @@ export class PanelNoticias implements OnInit {
 
   // =============== HELPERS / MÉTRICAS ===============
   onBodyChange() {
-    // CKEditor dispara (change), Textarea dispara (input)
     this.updateMetricsFromHTML();
-    // refresca preview inmediatamente
     this.previewDataObj = this.buildPreviewData();
   }
 
@@ -468,7 +472,7 @@ export class PanelNoticias implements OnInit {
   }
 
   /** Convierte el HTML del body en bloques para Vista Previa */
-   private parseHtmlToBlocks(html: string) {
+  private parseHtmlToBlocks(html: string) {
     if (!this.isBrowser) return [];
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const out: any[] = [];
@@ -533,7 +537,7 @@ export class PanelNoticias implements OnInit {
     return out;
   }
 
- private parseHtmlToBlocksForSave(html: string) {
+  private parseHtmlToBlocksForSave(html: string) {
     if (!this.isBrowser) return [];
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const out: any[] = [];
@@ -549,14 +553,14 @@ export class PanelNoticias implements OnInit {
         out.push({
           type: 'text',
           tag,
-          html: el.innerHTML || '',      // <-- string plano
+          html: el.innerHTML || '',
           text: el.textContent || '',
           style
         });
       } else if (tag === 'blockquote') {
         out.push({
           type: 'quote',
-          html: el.innerHTML || '',      // <-- string plano
+          html: el.innerHTML || '',
           quote: el.textContent || '',
           style
         });
@@ -565,7 +569,7 @@ export class PanelNoticias implements OnInit {
           type: 'image',
           url: el.getAttribute('src') || '',
           alt: el.getAttribute('alt') || '',
-          captionHtml: null              // string o null
+          captionHtml: null
         });
       } else if (tag === 'figure') {
         const img = el.querySelector('img');
@@ -574,7 +578,7 @@ export class PanelNoticias implements OnInit {
           type: 'image',
           url: img?.getAttribute('src') || '',
           alt: img?.getAttribute('alt') || '',
-          captionHtml: figcap ? (figcap.innerHTML || '') : null // <-- string plano
+          captionHtml: figcap ? (figcap.innerHTML || '') : null
         });
       } else if (tag === 'ul' || tag === 'ol') {
         const items = Array.from(el.querySelectorAll(':scope > li'));
@@ -596,6 +600,7 @@ export class PanelNoticias implements OnInit {
     Array.from(doc.body.children).forEach(walk);
     return out;
   }
+
   private buildPreviewData() {
     const raw = this.noticiaForm.value;
     const meta = raw.meta;
@@ -606,7 +611,7 @@ export class PanelNoticias implements OnInit {
     return {
       ...raw,
       bodyHtml,
-      content: contentBlocks, // para VistaPrevia por bloques
+      content: contentBlocks,
       meta: {
         ...meta,
         ogTitle: meta.ogTitle || raw.title,
@@ -708,47 +713,42 @@ export class PanelNoticias implements OnInit {
       this.metaImageWarning = `Imagen recomendada: ≥1200x630, ratio ~1.91:1. Actual: ${width}x${height}`;
     }
   }
-onSubmit() {
-  this.isSubmitting = true;
-  this.noticiaForm.markAllAsTouched();
-  this.noticiaForm.get('body')?.updateValueAndValidity();
 
-  // ——— Mostrar avisos si hay errores, pero NO bloquear ———
-  if (this.noticiaForm.invalid || (this.noticiaForm.get('state')?.value === 'review' && Object.values(this.checklist).some((v: any) => !v))) {
-    const errors: string[] = [];
-    if (this.noticiaForm.get('focusKeyphrase')?.invalid) errors.push('Keyword principal obligatoria.');
-    if (this.noticiaForm.get('title')?.invalid) errors.push('Título inválido.');
-    if (this.noticiaForm.get('slug')?.invalid) errors.push('Slug inválido/duplicado.');
-    if (this.noticiaForm.get('extracto')?.invalid) errors.push('Extracto redes 150–300 con keyword 1 vez.');
-    if (this.noticiaForm.get('meta.description')?.invalid) errors.push('Meta desc 120–160 con keyword 1 vez.');
-    if (this.noticiaForm.get('meta.image')?.invalid) errors.push('Imagen destacada inválida.');
-    if (this.noticiaForm.get('meta.imageAltGlobal')?.invalid) errors.push('Alt global debe incluir keyword-con-guiones.');
-    if (this.noticiaForm.get('categories')?.invalid) errors.push('Al menos una categoría.');
-    if (this.noticiaForm.get('state')?.value === 'review' && Object.values(this.checklist).some((v: any) => !v)) {
-      errors.push('Checklist SEO pendiente(s).');
+  onSubmit() {
+    this.isSubmitting = true;
+    this.noticiaForm.markAllAsTouched();
+    this.noticiaForm.get('body')?.updateValueAndValidity();
+
+    if (this.noticiaForm.invalid || (this.noticiaForm.get('state')?.value === 'review' && Object.values(this.checklist).some((v: any) => !v))) {
+      const errors: string[] = [];
+      if (this.noticiaForm.get('focusKeyphrase')?.invalid) errors.push('Keyword principal obligatoria.');
+      if (this.noticiaForm.get('title')?.invalid) errors.push('Título inválido.');
+      if (this.noticiaForm.get('slug')?.invalid) errors.push('Slug inválido/duplicado.');
+      if (this.noticiaForm.get('extracto')?.invalid) errors.push('Extracto redes 150–300 con keyword 1 vez.');
+      if (this.noticiaForm.get('meta.description')?.invalid) errors.push('Meta desc 120–160 con keyword 1 vez.');
+      if (this.noticiaForm.get('meta.image')?.invalid) errors.push('Imagen destacada inválida.');
+      if (this.noticiaForm.get('meta.imageAltGlobal')?.invalid) errors.push('Alt global debe incluir keyword-con-guiones.');
+      if (this.noticiaForm.get('categories')?.invalid) errors.push('Al menos una categoría.');
+      if (this.noticiaForm.get('state')?.value === 'review' && Object.values(this.checklist).some((v: any) => !v)) {
+        errors.push('Checklist SEO pendiente(s).');
+      }
+      alert('Se guardará aunque haya pendientes:\n- ' + errors.join('\n- '));
     }
 
-    // Importante: solo informamos; NO frenamos el submit
-    alert('Se guardará aunque haya pendientes:\n- ' + errors.join('\n- '));
+    const data = this.prepareSubmitData();
+
+    this.noticiasService.createNoticia(data).subscribe({
+      next: _ => {
+        this.resetForm();
+        alert('Noticia creada (aunque hubiera avisos).');
+        this.isSubmitting = false;
+      },
+      error: err => {
+        alert('Error al crear la noticia: ' + err.message);
+        this.isSubmitting = false;
+      }
+    });
   }
-
-  const data = this.prepareSubmitData();
-
-  this.noticiasService.createNoticia(data).subscribe({
-    next: _ => {
-      this.resetForm();
-      alert('Noticia creada (aunque hubiera avisos).');
-      this.isSubmitting = false;
-    },
-    error: err => {
-      // Si el backend rechaza por campos realmente obligatorios del server,
-      // verás aquí el motivo.
-      alert('Error al crear la noticia: ' + err.message);
-      this.isSubmitting = false;
-    }
-  });
-}
-
 
   private resetForm() {
     this.noticiaForm.reset({ state: 'draft', publishAt: null, focusKeyphrase: '', body: '' });
@@ -764,24 +764,20 @@ onSubmit() {
     this.previewDataObj = this.buildPreviewData();
   }
 
- private prepareSubmitData() {
+  private prepareSubmitData() {
     const raw = this.noticiaForm.value;
     const categories: string[] = raw.categories;
     const authorId = 'a94f23c8bd7e4ad1f6c30ae5';
 
-    // NUEVO: construimos los bloques "planos" y el HTML para guardar
     const html = String(raw.body || '');
     const contentForSave = this.parseHtmlToBlocksForSave(html);
-
-    // Si quieres forzar "draft" cuando hay errores, descomenta:
-    // const state = (this.noticiaForm.invalid || Object.values(this.checklist).some(v => !v)) ? 'draft' : raw.state;
 
     return {
       ...raw,
       categories,
       author: authorId,
-      bodyHtml: html,                // <-- GUARDAR el HTML tal cual
-      content: contentForSave,       // <-- GUARDAR bloques serializables
+      bodyHtml: html,
+      content: contentForSave,
       meta: {
         ...raw.meta,
         ogTitle: raw.meta.ogTitle || raw.title,
@@ -789,7 +785,42 @@ onSubmit() {
         canonical: raw.meta.canonical || `https://${this.domain}/${raw.slug}`,
         twitterCard: 'summary_large_image'
       }
-      // state                         // si descomentaste la lógica de "draft", agrega aquí: state
     };
+  }
+
+  // ======== NUEVO: atajos y split ========
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent) {
+    const mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+    if (e.key.toLowerCase() === 'p') { e.preventDefault(); this.cycleDock(); }
+    if (e.key.toLowerCase() === 'b') { e.preventDefault(); this.inspectorOpen = !this.inspectorOpen; }
+    if (e.key === ';') { e.preventDefault(); this.seoEssentialsOpen = !this.seoEssentialsOpen; }
+  }
+
+  cycleDock() {
+    this.dockMode = this.dockMode === 'hidden' ? 'right' : this.dockMode === 'right' ? 'bottom' : 'hidden';
+  }
+
+  onGutterDown(_: MouseEvent) {
+    if (this.dockMode !== 'right') return;
+    this.resizing = true;
+    document.body.classList.add('resizing');
+  }
+
+  @HostListener('window:mouseup')
+  onMouseUp() {
+    this.resizing = false;
+    document.body.classList.remove('resizing');
+  }
+
+  @HostListener('window:mousemove', ['$event'])
+  onMouseMove(e: MouseEvent) {
+    if (!this.resizing || this.dockMode !== 'right') return;
+    const wrap = document.querySelector('.studio-wrap') as HTMLElement;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    this.splitRatio = Math.min(0.8, Math.max(0.3, x / rect.width));
   }
 }

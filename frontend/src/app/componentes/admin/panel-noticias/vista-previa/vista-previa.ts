@@ -28,7 +28,7 @@ export class VistaPrevia {
     };
     state: string;
     publishAt: string | null;
-    bodyHtml?: SafeHtml;             // ← CKEditor HTML seguro
+    bodyHtml?: SafeHtml;
     content?: Array<{
       type: string;
       html?: SafeHtml;
@@ -58,7 +58,6 @@ export class VistaPrevia {
   }
 
   hasMultipleH1(): boolean {
-    // Tus bloques nunca generan H1; por si acaso, detecta si alguien metió un H1 en el HTML crudo
     try {
       const tmp = document.createElement('div');
       tmp.innerHTML = String(this.data?.bodyHtml || '');
