@@ -35,6 +35,7 @@ export class NoticiasService {
 
   /** Crear */
   createNoticia(data: Noticia): Observable<Noticia> {
+    console.log("queee", data);
     return this.http
       .post<Noticia>(`${this.baseUrl}/noticiasPost`, data)
       .pipe(shareReplay(1));
