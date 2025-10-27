@@ -93,9 +93,15 @@ export class PanelNoticias implements OnInit {
       title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60),
                    this.titleContainsKeyphraseValidator(), this.titleCaseValidator(), this.noSpecialCharsValidator()]],
       slug: ['', {
-        validators: [Validators.required, Validators.pattern(/^[a-z0-9-]+$/), this.slugLengthValidator(),
-                     this.slugContainsKeyphraseValidator(), this.noStopWordsValidator(), this.noDatesValidator(),
-                     this.noAccentsSymbolsValidator()],
+        validators: [
+          Validators.required,
+          Validators.pattern(/^[a-z0-9-]+$/),
+          this.slugLengthValidator(),
+          this.slugContainsKeyphraseValidator(),
+          this.noStopWordsValidator(),
+          this.noDatesValidator(),
+          this.noAccentsSymbolsValidator()
+        ],
         asyncValidators: [this.slugUniqueValidator()],
         updateOn: 'blur'
       }],
@@ -113,12 +119,15 @@ export class PanelNoticias implements OnInit {
 
       meta: this.fb.group({
         description: ['', [Validators.required, Validators.minLength(120), Validators.maxLength(160),
-                           this.keyphraseOnceValidator(), this.noDoubleQuotesValidator(), this.naturalLanguageValidator()]],
+                          this.keyphraseOnceValidator(), this.noDoubleQuotesValidator(), this.naturalLanguageValidator()]],
         image: ['', [Validators.required, Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i), this.imageFilenameValidator()]],
         imageAltGlobal: ['', [Validators.required, Validators.minLength(8), this.altKeyphraseHyphenValidator()]],
         canonical: ['', Validators.pattern(/^https?:\/\/.+/)],
         ogTitle: [''],
         ogDescription: ['', [Validators.maxLength(300)]],
+        // NUEVO
+        imageCaption: ['', [Validators.maxLength(140)]],
+        imageCaptionUrl: ['', [Validators.maxLength(300), Validators.pattern(/^https?:\/\/.+/)]],
       }),
 
       state: ['draft'],
@@ -137,6 +146,7 @@ export class PanelNoticias implements OnInit {
       this.updateTitleWarning();
       this.updateTitleRepetition();
     });
+
 
     this.noticiaForm.get('slug')?.valueChanges.subscribe(slug => {
       this.canonicalUrl = `https://${this.domain}/${slug}`;
@@ -580,21 +590,24 @@ export class PanelNoticias implements OnInit {
           alt: img?.getAttribute('alt') || '',
           captionHtml: figcap ? (figcap.innerHTML || '') : null
         });
-      } else if (tag === 'ul' || tag === 'ol') {
-        const items = Array.from(el.querySelectorAll(':scope > li'));
-        out.push({
-          type: 'list',
-          ordered: tag === 'ol',
-          items: items.map(li => (li.textContent || '').trim()),
-          style
-        });
-      } else if (tag === 'a') {
+      }  else if (tag === 'a') {
         out.push({
           type: 'link',
           href: el.getAttribute('href') || '',
           textLink: el.textContent || ''
         });
-      }
+      }else if (tag === 'ul' || tag === 'ol') {
+      const items = Array.from(el.querySelectorAll(':scope > li'));
+      out.push({
+        type: 'list',
+        ordered: tag === 'ol',
+        // conserva texto y HTML (con <a>)
+        items: items.map(li => (li.textContent || '').trim()),
+        itemsHtml: items.map(li => li.innerHTML || ''), // <-- NUEVO: preserva enlaces
+        style
+      });
+    }
+
     };
 
     Array.from(doc.body.children).forEach(walk);

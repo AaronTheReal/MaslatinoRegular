@@ -1,3 +1,4 @@
+// models/Noticia.js
 import mongoose from 'mongoose';
 import { marked } from 'marked';
 import createDOMPurify from 'dompurify';
@@ -27,7 +28,6 @@ const BlockSchema = new Schema({
       enum: ['left', 'center', 'right'],
       default: 'left',
       set: (v) => {
-        // Normaliza: '', null, undefined => undefined (así cae el default)
         if (v === '' || v === null || v === undefined) return undefined;
         const val = String(v).trim();
         return ['left', 'center', 'right'].includes(val) ? val : undefined;
@@ -47,6 +47,7 @@ const BlockSchema = new Schema({
 
   // Lista
   items: [{ type: String }],
+  itemsHtml: [{ type: String }], // <--- NUEVO: preserva HTML de cada <li> (incluye <a>)
   ordered: { type: Boolean },
 
   // Cita
@@ -61,13 +62,19 @@ BlockSchema.pre('validate', function (next) {
       if (!this.html && !this.text) return next(new Error('Bloque text requiere html o text.'));
       break;
     case 'image':
-      break; // permitir vacío en edición
+      // permitir vacío en edición
+      break;
     case 'link':
       if (!this.href || !this.textLink) return next(new Error('Bloque link requiere href y textLink.'));
       break;
-    case 'list':
-      if (!Array.isArray(this.items) || this.items.length === 0) return next(new Error('Bloque list requiere items no vacío.'));
+    case 'list': {
+      const okItems = Array.isArray(this.items) && this.items.length > 0;
+      const okItemsHtml = Array.isArray(this.itemsHtml) && this.itemsHtml.length > 0;
+      if (!okItems && !okItemsHtml) {
+        return next(new Error('Bloque list requiere items o itemsHtml no vacío.'));
+      }
       break;
+    }
     case 'quote':
       if (!this.quote && !this.html) return next(new Error('Bloque quote requiere quote o html.'));
       break;
@@ -75,14 +82,13 @@ BlockSchema.pre('validate', function (next) {
   if (this.style) {
     const ta = (this.style.textAlign || '').trim();
     if (!['left', 'center', 'right'].includes(ta)) {
-      // fuerza a 'left' si viene vacío o inválido
       this.style.textAlign = 'left';
     }
   }
   next();
 });
 
-// Conversión Markdown → HTML sanitizado (solo si html está vacío)
+// Conversión Markdown → HTML sanitizado (solo si html está vacío) + saneo de itemsHtml
 BlockSchema.pre('save', function (next) {
   try {
     if (this.type === 'text') {
@@ -95,6 +101,11 @@ BlockSchema.pre('save', function (next) {
     }
 
     if (this.type === 'list') {
+      // Sanea cada <li> con HTML si viene desde el front
+      if (Array.isArray(this.itemsHtml) && this.itemsHtml.length) {
+        this.itemsHtml = this.itemsHtml.map(h => DOMPurify.sanitize(String(h)));
+      }
+      // Genera html desde items plano si no hay html
       if (!this.html && Array.isArray(this.items)) {
         const mdList = (this.ordered
           ? this.items.map((it, i) => `${i + 1}. ${it}`)
@@ -165,7 +176,10 @@ const NoticiaSchema = new Schema({
     canonical:       { type: String, trim: true },
     ogTitle:         { type: String, trim: true },
     ogDescription:   { type: String, trim: true },
-    twitterCard:     { type: String, trim: true }
+    twitterCard:     { type: String, trim: true },
+    // NUEVO: pie de foto global y su enlace
+    imageCaption:    { type: String, trim: true },
+    imageCaptionUrl: { type: String, trim: true }
   },
 
   state:     { type: String, enum: ['draft', 'review', 'published'], default: 'draft' },
@@ -186,8 +200,6 @@ NoticiaSchema.pre('save', function (next) {
 });
 
 export default model('Noticia', NoticiaSchema);
-
-
 
 
 

@@ -421,6 +421,7 @@ async getAllNoticias(req, res, next) {
     res.status(500).json({ error: 'Error al obtener noticias' });
   }
 } 
+// dentro de tu controlador (donde ya tienes helpers generarSlug / ensureUniqueSlug, etc.)
 async createNoticia(req, res, next) {
   try {
     const {
@@ -430,15 +431,15 @@ async createNoticia(req, res, next) {
       categories,
       tags,
       location,
-      content,      // opcional (bloques ya “planos” que mandaste del front)
+      content,      // bloques “planos” del front (puede incluir itemsHtml en listas)
       body,         // HTML del editor (opcional)
-      bodyHtml,     // idem, preferido si lo traes así
+      bodyHtml,     // preferido si ya lo mandas así
       state,
       publishAt,
       meta = {}
     } = req.body;
 
-    // Requisitos mínimos del backend (lo demás puede venir “cojo” y se guarda igual)
+    // Requisitos mínimos
     if (!title) return res.status(400).json({ message: 'El campo title es obligatorio.' });
     if (!meta.description || !meta.image) {
       return res.status(400).json({ message: 'meta.description y meta.image son obligatorios.' });
@@ -471,20 +472,29 @@ async createNoticia(req, res, next) {
         ? tags.split(',').map(s => s.trim())
         : [];
 
-    // ===== NORMALIZAR CONTENT PARA textAlign (evitar '' que rompe enum) =====
+    // ===== NORMALIZAR CONTENT (mantener itemsHtml y limpiar textAlign inválido) =====
     const normContent = Array.isArray(content) ? content.map((b) => {
       const out = { ...b };
+
+      // Aseguramos estructura style
       if (out.style) {
         const ta = (out.style.textAlign ?? '').toString().trim();
         if (!['left', 'center', 'right'].includes(ta)) {
-          // elimina para que el setter/default del esquema actúe
+          // deja que el setter/default del Schema decida
           delete out.style.textAlign;
         }
       }
+
+      // En listas, permitir que venga itemsHtml (se saneará en el pre-save del Schema)
+      if (out.type === 'list') {
+        if (!Array.isArray(out.items)) out.items = [];
+        if (!Array.isArray(out.itemsHtml)) out.itemsHtml = []; // <-- clave: preserva <a> dentro de <li>
+      }
+
       return out;
     }) : [];
 
-    // Elegir HTML (el modelo lo sanitiza en pre-save)
+    // HTML (el Schema lo sanea en pre-save)
     const html = bodyHtml || body || '';
 
     const doc = new Noticia({
@@ -495,7 +505,7 @@ async createNoticia(req, res, next) {
       categories: normCategories,
       tags: normTags,
       location: location || {},
-      content: normContent,     // <— usamos la versión normalizada
+      content: normContent,
       bodyHtml: html,
       meta: {
         description:    meta.description,
@@ -504,14 +514,17 @@ async createNoticia(req, res, next) {
         canonical:      meta.canonical || '',
         ogTitle:        meta.ogTitle || title,
         ogDescription:  meta.ogDescription || (summary || meta.description),
-        twitterCard:    meta.twitterCard || 'summary_large_image'
+        twitterCard:    meta.twitterCard || 'summary_large_image',
+        // ===== NUEVO: pie de foto global y su enlace =====
+        imageCaption:    meta.imageCaption || '',
+        imageCaptionUrl: meta.imageCaptionUrl || ''
       },
       state: state || 'draft',
       publishAt: publishAt || null
     });
 
-    // Debug
-    console.log('Saving noticia:', JSON.stringify(doc.toObject(), null, 2));
+    // Debug opcional
+    // console.log('Saving noticia:', JSON.stringify(doc.toObject(), null, 2));
 
     const saved = await doc.save();
 
@@ -531,6 +544,7 @@ async createNoticia(req, res, next) {
     next(error);
   }
 }
+
 }
 
 const NoticiasController = new noticiasController();

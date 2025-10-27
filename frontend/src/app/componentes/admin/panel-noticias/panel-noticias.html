@@ -7,12 +7,16 @@
     </div>
     <div class="right">
       <div class="btn-group">
-        <button type="button" class="btn btn-outline-secondary" (click)="seoEssentialsOpen = !seoEssentialsOpen"
+        <button type="button" class="btn btn-outline-secondary"
+                (click)="seoEssentialsOpen = !seoEssentialsOpen"
                 [attr.aria-expanded]="seoEssentialsOpen">SEO Essentials</button>
+
         <button type="button" class="btn btn-outline-secondary" (click)="cycleDock()">
           Vista previa: {{ dockMode === 'hidden' ? 'Oculta' : dockMode === 'right' ? 'Derecha' : 'Abajo' }}
         </button>
-        <button type="button" class="btn btn-outline-secondary" (click)="inspectorOpen = !inspectorOpen">
+
+        <button type="button" class="btn btn-outline-secondary"
+                (click)="inspectorOpen = !inspectorOpen">
           Inspector SEO
         </button>
       </div>
@@ -22,64 +26,181 @@
   <!-- ===== FORMULARIO GLOBAL ===== -->
   <form [formGroup]="noticiaForm" (ngSubmit)="onSubmit()">
 
-    <!-- ===== SEO Essentials (drop-down) ===== -->
-    <div class="seo-essentials card shadow-sm" [class.open]="seoEssentialsOpen" [style.height.px]="seoEssentialsOpen ? null : 0">
+    <!-- ===== SEO Essentials ===== -->
+    <div class="seo-essentials card shadow-sm" [class.open]="seoEssentialsOpen"
+         [style.height.px]="seoEssentialsOpen ? null : 0">
       <div class="card-body">
         <div class="row g-3">
-          <!-- Keyword -->
+
+          <!-- Focus keyphrase -->
           <div class="col-12 col-md-4">
             <label class="form-label">Palabra clave principal <span class="required">*</span></label>
-            <input type="text" class="form-control" formControlName="focusKeyphrase" placeholder="Ej: eventos latinos"/>
-            <small class="text-muted">Úsala en título, cuerpo, meta, extracto y alt.</small>
+            <input type="text" class="form-control" formControlName="focusKeyphrase"
+                   placeholder="Ej: eventos latinos" />
+            <small class="text-muted d-block">Úsala en título, slug, meta, extracto, alt y cuerpo.</small>
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('focusKeyphrase')?.touched && noticiaForm.get('focusKeyphrase')?.invalid">
+              <span *ngIf="noticiaForm.get('focusKeyphrase')?.errors?.['required']">Obligatoria.</span>
+              <span *ngIf="noticiaForm.get('focusKeyphrase')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+            </div>
           </div>
+
           <!-- Título -->
           <div class="col-12 col-md-4">
             <label class="form-label">Título <span class="required">*</span></label>
-            <input type="text" class="form-control" formControlName="title" placeholder="Ej: Eventos Latinos Boston 2025"/>
+            <input type="text" class="form-control" formControlName="title"
+                   placeholder="Ej: Eventos Latinos Boston 2025" />
             <small class="text-muted">{{ noticiaForm.get('title')?.value?.length || 0 }} / 60</small>
+            <div class="text-warning small" *ngIf="titleWarning">{{ titleWarning }}</div>
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('title')?.touched && noticiaForm.get('title')?.invalid">
+              <span *ngIf="noticiaForm.get('title')?.errors?.['minlength']">Ideal 50–60 chars (≥50).</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['maxlength']">Ideal 50–60 chars (≤60).</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['titleContainsKeyphrase']">
+                La keyword debe estar cerca del inicio.</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['titleCase']">
+                Usa Mayúscula Inicial en palabras principales.</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['noSpecialChars']">
+                Evita signos “¡ ! / ?”.</span>
+            </div>
+            <div class="text-warning small" *ngIf="titleRepetitionWarning">{{ titleRepetitionWarning }}</div>
           </div>
+
           <!-- Slug -->
           <div class="col-12 col-md-4">
             <label class="form-label">Slug <span class="required">*</span></label>
-            <input type="text" class="form-control" formControlName="slug" placeholder="eventos-latinos-boston"/>
-            <small class="text-muted">Canonical: {{ canonicalUrl }}</small>
+            <input type="text" class="form-control" formControlName="slug"
+                   placeholder="eventos-latinos-boston" />
+            <small class="text-muted d-block">Canonical: {{ canonicalUrl }}</small>
+            <!--
+            <small class="text-muted d-block">Reglas: minúsculas, <strong>solo guiones medios (-)</strong>,
+              3–6 palabras, incluye keyword, <strong>sin fechas</strong>, sin tildes ni símbolos, sin stopwords
+              (“el”, “la”, “de”...).</small>
+              -->
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('slug')?.touched && noticiaForm.get('slug')?.invalid">
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['required']">Obligatorio.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['pattern']">Solo a–z, 0–9 y guiones medios (-).</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['slugLength']">Debe tener 3–6 palabras.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['slugContainsKeyphrase']">Incluye la keyword.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['noStopWords']">Evita (“el”, “la”, “de”...) en el slug.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['noDates']">No incluyas fechas/años.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['noAccentsSymbols']">Sin tildes/acentos/símbolos.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['slugUnique']">Este slug ya existe.</span>
+            </div>
           </div>
 
-          <!-- Meta -->
+          <!-- Meta Description -->
           <div class="col-12 col-lg-8" formGroupName="meta">
             <label class="form-label">Meta Description <span class="required">*</span></label>
-            <textarea rows="2" class="form-control" formControlName="description" placeholder="Descripción para motores de búsqueda"></textarea>
+            <textarea rows="2" class="form-control" formControlName="description"
+                      placeholder="Descripción para motores de búsqueda (120–160, 1 vez la keyword)"></textarea>
             <small class="text-muted">{{ noticiaForm.get('meta.description')?.value?.length || 0 }} / 160</small>
+            <div class="text-warning small" *ngIf="metaDescWarning">{{ metaDescWarning }}</div>
+            <div class="text-danger small mt-1"
+                *ngIf="noticiaForm.get('meta.description')?.touched && noticiaForm.get('meta.description')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['required']">Obligatoria.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['minlength']">Mínimo 120 caracteres.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['maxlength']">Máximo 160 caracteres.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['keyphraseOnce']">
+                La keyword debe aparecer 1 vez.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['noDoubleQuotes']">Sin comillas dobles.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['naturalLanguage']">
+                Usa lenguaje natural (sin “seo/optimizado”).</span>
+            </div>
           </div>
+
+          <!-- Imagen destacada -->
           <div class="col-12 col-lg-4" formGroupName="meta">
             <label class="form-label">Imagen Destacada (URL) <span class="required">*</span></label>
-            <input type="text" class="form-control" formControlName="image" placeholder="https://.../archivo-seo.webp"/>
+            <input type="text" class="form-control" formControlName="image"
+                   placeholder="https://.../archivo-seo.webp"
+                   (change)="metaImageWarning=''"
+                   (blur)="metaImageWarning=''" />
+            <small class="text-muted d-block">https, .jpg/.png/.webp, nombre de archivo con guiones y keyword.</small>
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('meta.image')?.touched && noticiaForm.get('meta.image')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.image')?.errors?.['required']">Obligatoria.</span>
+              <span *ngIf="noticiaForm.get('meta.image')?.errors?.['pattern']">Debe ser URL https y .jpg/.png/.webp.</span>
+              <span *ngIf="noticiaForm.get('meta.image')?.errors?.['imageFilename']">Nombre de archivo no optimizado.</span>
+            </div>
+
+            <!-- Preview invisible para medir dimensiones -->
+            <img [src]="noticiaForm.get('meta.image')?.value || ''" (load)="onMetaImageLoad($event)" alt="" style="display:none" />
+            <div class="text-warning small" *ngIf="metaImageWarning">{{ metaImageWarning }}</div>
           </div>
+
+          <!-- Alt global -->
+          <div class="col-12 col-lg-6" formGroupName="meta">
+            <label for="imageAltGlobal" class="form-label">ALT global imagen <span class="required">*</span></label>
+            <input id="imageAltGlobal" type="text" class="form-control" formControlName="imageAltGlobal"
+                   placeholder="keyword-con-guiones ..." />
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('meta.imageAltGlobal')?.touched && noticiaForm.get('meta.imageAltGlobal')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.imageAltGlobal')?.errors?.['required']">Obligatorio.</span>
+              <span *ngIf="noticiaForm.get('meta.imageAltGlobal')?.errors?.['minlength']">Mínimo 8 caracteres.</span>
+              <span *ngIf="noticiaForm.get('meta.imageAltGlobal')?.errors?.['altKeyphraseHyphen']">
+                Debe incluir la keyword-con-guiones.</span>
+            </div>
+          </div>
+
+          <!-- Canonical opcional -->
+          <div class="col-12 col-lg-6" formGroupName="meta">
+            <label for="canonical" class="form-label">Canonical (opcional)</label>
+            <input id="canonical" type="text" class="form-control" formControlName="canonical"
+                   placeholder="https://..." />
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('meta.canonical')?.touched && noticiaForm.get('meta.canonical')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.canonical')?.errors?.['pattern']">URL inválida.</span>
+            </div>
+          </div>
+
+          <!-- Pie de foto + link (opcionales) -->
+          <div class="col-12" formGroupName="meta">
+            <label for="imageCaption" class="form-label">Pie de foto (opcional)</label>
+            <textarea id="imageCaption" class="form-control" formControlName="imageCaption" rows="2"
+                      placeholder="Ej.: Concierto en el City Hall. Foto: Juan Pérez"></textarea>
+            <small class="text-muted">{{ noticiaForm.get('meta.imageCaption')?.value?.length || 0 }} / 140</small>
+            <div class="text-danger small"
+                 *ngIf="noticiaForm.get('meta.imageCaption')?.touched && noticiaForm.get('meta.imageCaption')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.imageCaption')?.errors?.['maxlength']">Máximo 140 caracteres.</span>
+            </div>
+
+            <label for="imageCaptionUrl" class="form-label mt-2">Enlace del pie (opcional)</label>
+            <input id="imageCaptionUrl" type="url" class="form-control" formControlName="imageCaptionUrl"
+                   placeholder="https://autor-o-fuente.com/credito" />
+            <div class="text-danger small"
+                 *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.touched && noticiaForm.get('meta.imageCaptionUrl')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.errors?.['pattern']">Debe ser una URL válida (http/https).</span>
+              <span *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.errors?.['maxlength']">Máximo 300 caracteres.</span>
+            </div>
+          </div>
+
         </div>
 
         <!-- Avisos rápidos -->
         <div class="row mt-2 small">
-          <div class="col" *ngIf="titleWarning"  class="text-warning">{{ titleWarning }}</div>
-          <div class="col" *ngIf="metaDescWarning" class="text-warning">{{ metaDescWarning }}</div>
+          <div class="col text-warning" *ngIf="titleWarning">{{ titleWarning }}</div>
+          <div class="col text-warning" *ngIf="metaDescWarning">{{ metaDescWarning }}</div>
         </div>
       </div>
     </div>
 
-    <!-- ===== Área de trabajo (split) ===== -->
+    <!-- ===== Área de trabajo / Editor ===== -->
     <div class="studio-wrap" [class.dock-right]="dockMode === 'right'" [class.dock-bottom]="dockMode === 'bottom'">
 
-      <!-- ===== Editor ===== -->
+      <!-- Editor -->
       <div class="pane editor" [style.flex-basis.%]="dockMode === 'right' ? splitRatio*100 : 100">
         <div class="card shadow-sm h-100">
           <div class="card-body">
 
-            <!-- Campos NO duplicados (ya están en SEO Essentials arriba) -->
             <!-- Extracto redes -->
             <div class="form-group mb-3">
               <label for="extracto">Extracto (redes) <span class="required">*</span> (150–300, keyword 1 vez)</label>
               <textarea id="extracto" class="form-control" formControlName="extracto" rows="2"></textarea>
               <small class="text-muted">{{ noticiaForm.get('extracto')?.value?.length || 0 }} / 300</small>
-              <div *ngIf="noticiaForm.get('extracto')?.touched && noticiaForm.get('extracto')?.invalid" class="text-danger small mt-1">
+              <div class="text-danger small mt-1"
+                   *ngIf="noticiaForm.get('extracto')?.touched && noticiaForm.get('extracto')?.invalid">
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['required']">Obligatorio. </span>
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['minlength']">Mínimo 150. </span>
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['maxlength']">Máximo 300. </span>
@@ -98,16 +219,6 @@
 
             <!-- Meta extra -->
             <div class="form-group mb-3" formGroupName="meta">
-              <label for="imageAltGlobal">Alt global imagen <span class="required">*</span></label>
-              <input id="imageAltGlobal" type="text" class="form-control" formControlName="imageAltGlobal" placeholder="keyword-con-guiones ..."/>
-            </div>
-
-            <div class="form-group mb-3" formGroupName="meta">
-              <label for="canonical">Canonical (opcional)</label>
-              <input id="canonical" type="text" class="form-control" formControlName="canonical" placeholder="https://..."/>
-            </div>
-
-            <div class="form-group mb-3" formGroupName="meta">
               <label for="ogTitle">OG/Twitter Title</label>
               <input id="ogTitle" type="text" class="form-control" formControlName="ogTitle"/>
             </div>
@@ -115,6 +226,10 @@
             <div class="form-group mb-3" formGroupName="meta">
               <label for="ogDescription">OG/Twitter Description (máx 300)</label>
               <textarea id="ogDescription" class="form-control" formControlName="ogDescription" rows="2"></textarea>
+              <div class="text-danger small"
+                   *ngIf="noticiaForm.get('meta.ogDescription')?.touched && noticiaForm.get('meta.ogDescription')?.invalid">
+                <span *ngIf="noticiaForm.get('meta.ogDescription')?.errors?.['maxlength']">Máx 300 caracteres.</span>
+              </div>
             </div>
 
             <!-- Tags -->
@@ -126,7 +241,13 @@
                   <button type="button" class="btn btn-sm btn-danger" (click)="removeTag(i)">Eliminar</button>
                 </div>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addTag()" [disabled]="tags.length >= 5">+ Añadir Tag</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                      (click)="addTag()" [disabled]="tags.length >= 5">+ Añadir Tag</button>
+              <div class="text-danger small mt-1" *ngIf="tags?.touched && tags?.invalid">
+                <span *ngIf="tags?.errors?.['minlength']">Mínimo 1 tag.</span>
+                <span *ngIf="tags?.errors?.['maxlength']">Máximo 5 tags.</span>
+              </div>
+
               <div *ngIf="keywordDensityWarnings.length > 0" class="text-warning mt-2 small">
                 <div *ngFor="let w of keywordDensityWarnings">{{ w }}</div>
               </div>
@@ -135,15 +256,19 @@
             <!-- Categorías -->
             <div class="form-group mb-3">
               <label for="categories">Categorías <span class="required">*</span></label>
-              <ng-select
+              <ng-select id="categories"
                 formControlName="categories"
                 [items]="categoriasDisponibles"
                 bindLabel="name"
                 bindValue="_id"
                 [multiple]="true"
                 [closeOnSelect]="false"
-                placeholder="Selecciona categorías"
-              ></ng-select>
+                placeholder="Selecciona categorías">
+              </ng-select>
+              <div class="text-danger small mt-1"
+                   *ngIf="noticiaForm.get('categories')?.touched && noticiaForm.get('categories')?.invalid">
+                Debes elegir al menos 1 categoría.
+              </div>
             </div>
 
             <!-- Ubicación -->
@@ -173,25 +298,19 @@
               </div>
             </div>
 
-            <!-- BODY WYSIWYG -->
+            <!-- BODY -->
             <div class="form-group mb-3">
               <label>Contenido</label>
-
               <ng-container *ngIf="isBrowser && Editor; else fallbackWhileLoading">
-                <ckeditor
-                  [editor]="Editor"
-                  formControlName="body"
-                  [config]="editorConfig"
-                  (change)="onBodyChange()"
-                ></ckeditor>
+                <ckeditor [editor]="Editor" formControlName="body" [config]="editorConfig" (change)="onBodyChange()"></ckeditor>
               </ng-container>
-
               <ng-template #fallbackWhileLoading>
-                <textarea class="form-control" formControlName="body" rows="10" (input)="onBodyChange()"
-                          placeholder="Escribe aquí tu noticia si no ves el editor aún..."></textarea>
+                <textarea class="form-control" formControlName="body" rows="10"
+                          (input)="onBodyChange()" placeholder="Escribe aquí tu noticia si no ves el editor aún..."></textarea>
               </ng-template>
 
-              <div *ngIf="noticiaForm.get('body')?.touched && noticiaForm.get('body')?.invalid" class="text-danger mt-2 small">
+              <div class="text-danger mt-2 small"
+                   *ngIf="noticiaForm.get('body')?.touched && noticiaForm.get('body')?.invalid">
                 <span *ngIf="noticiaForm.get('body')?.errors?.['minWords']">≥300 palabras. </span>
                 <span *ngIf="noticiaForm.get('body')?.errors?.['minHeaders']">Si >400, ≥1 H2. </span>
                 <span *ngIf="noticiaForm.get('body')?.errors?.['keyphraseFirstPara']">Keyword en primeras 2 frases. </span>
@@ -242,7 +361,7 @@
               </ul>
             </div>
 
-            <!-- Botón de enviar -->
+            <!-- Botón -->
             <div class="text-center">
               <button type="submit" class="btn btn-primary" [disabled]="isSubmitting" [title]="publishTooltip">
                 {{ isSubmitting ? 'Guardando...' : 'Guardar Noticia' }}
@@ -253,12 +372,12 @@
         </div>
       </div>
 
-      <!-- ===== Divisor (dock right) ===== -->
+      <!-- Divisor -->
       <div class="gutter" *ngIf="dockMode === 'right'" (mousedown)="onGutterDown($event)">
         <span class="gutter-handle" aria-hidden="true">⋮⋮</span>
       </div>
 
-      <!-- ===== Vista previa ===== -->
+      <!-- Vista previa -->
       <div class="pane preview" *ngIf="dockMode !== 'hidden'"
            [style.flex-basis.%]="dockMode === 'right' ? (100 - splitRatio*100) : null">
         <div class="card shadow-sm h-100">
@@ -269,8 +388,7 @@
         </div>
       </div>
 
-    </div> <!-- /studio-wrap -->
-
+    </div>
   </form>
 
   <!-- ===== Inspector SEO (drop-up) ===== -->
