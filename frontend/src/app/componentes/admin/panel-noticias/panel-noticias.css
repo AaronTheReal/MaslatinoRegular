@@ -1,41 +1,71 @@
+.required { color: #d9534f; }
 
-.required {
-  color: #d9534f; /* rojo tipo Bootstrap danger */
+/* Toolbar */
+.studio .studio-toolbar{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; margin-bottom:1rem;
+}
+.studio .studio-toolbar .btn-group .btn{ white-space:nowrap; }
+
+/* SEO Essentials drop-down */
+.seo-essentials{
+  overflow:hidden; transition:height .25s ease, opacity .25s ease, margin .25s ease;
+  margin-bottom:1rem; opacity:1;
+}
+.seo-essentials:not(.open){ height:0!important; margin:0; opacity:0; }
+
+/* Work area */
+.studio .studio-wrap{
+  display:flex; gap:.75rem; min-height:60vh;
+}
+.studio .studio-wrap.dock-right { flex-direction:row; }
+.studio .studio-wrap.dock-bottom { flex-direction:column; }
+
+/* Panes */
+.pane{ display:flex; flex-direction:column; min-height:0; }
+.pane .card{ flex:1; }
+
+/* Gutter (resizable) */
+.gutter{
+  width:10px; cursor:col-resize; display:flex; align-items:center; justify-content:center;
+  user-select:none; -webkit-user-select:none;
+}
+.gutter .gutter-handle{ font-size:18px; opacity:.35; }
+body.resizing *{ cursor:col-resize!important; }
+
+/* Inspector drop-up (bottom sheet) */
+.inspector{
+  position:fixed; left:0; right:0; bottom:0; z-index:1040;
+  transform:translateY(90%); transition:transform .25s ease, box-shadow .25s ease;
+}
+.inspector.open{ transform:translateY(0); }
+.inspector .inspector-inner{
+  margin:0 auto; max-width:1200px; background:#fff; border:1px solid #e9ecef; border-bottom:none;
+  border-top-left-radius:12px; border-top-right-radius:12px; box-shadow:0 -8px 24px rgba(0,0,0,.08);
+}
+.inspector .inspector-header{
+  display:flex; align-items:center; gap:1rem; padding:.75rem 1rem; border-bottom:1px solid #eef0f2;
+}
+.inspector .inspector-header .spacer{ flex:1; }
+.inspector .inspector-content{ padding:1rem; max-height:40vh; overflow:auto; }
+
+/* Grabber button */
+.inspector .grabber{
+  position:absolute; left:50%; transform:translateX(-50%);
+  bottom: calc(100% - 8px);
+  width:64px; height:16px; border-radius:999px; background:#e9ecef; border:1px solid #dee2e6;
 }
 
-/* Ajustes para .content-blocks-preview si deseas fondo distinto */
-.content-blocks-preview {
-  background: #f8f9fa; /* gris claro */
-  padding: 0.75rem;
-  border-radius: 0.25rem;
+/* Responsive */
+@media (max-width: 991.98px){
+  .studio .studio-wrap{ flex-direction:column; }
+  .gutter{ display:none; }
 }
 
-/* Mejorar contraste en inputs en modo oscuro/claro si no usas Bootstrap */
+/* Acentos visuales mínimos */
+.card-title{ font-weight:600; }
+.shadow-sm { box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important; }
 
-/* Si quieres limitar aún más el ancho interno de inputs en pantallas muy grandes: */
-.form-control {
-  max-width: 100%;
-}
-
-/* Si deseas que el <h2> se vea con cierta clase: */
-.card-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-/* Sombra personalizada si no usas Bootstrap */
-.shadow-sm {
-  box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075)!important;
-}
-/* panel-noticias.css */
-.content-blocks-preview div[formGroup] {
-  background: #fff;
-}
-.content-blocks-preview label {
-  font-weight: 500;
-}
-
-
-
-
-
+/* Extras ligeros heredados */
+.form-control { max-width: 100%; }
+.content-blocks-preview { background:#f8f9fa; padding:.75rem; border-radius:.25rem; }

@@ -1,5 +1,5 @@
 <div *ngIf="data; else noData" class="preview-container">
-  <!-- SEO Feedback Section -->
+  <!-- SEO Feedback -->
   <div class="card mb-4">
     <div class="card-body">
       <h3 class="card-title">Vista Previa SEO</h3>
@@ -30,46 +30,30 @@
         </p>
         <small class="text-muted">Caracteres: {{ getCharCount(data.meta?.description) }} / 160</small>
         <div *ngIf="getCharCount(data.meta?.description) < 150 || getCharCount(data.meta?.description) > 160" class="text-danger">
-          <small>Recomendado: 150-160 caracteres para SEO óptimo.</small>
+          <small>Recomendado: 150-160 caracteres.</small>
         </div>
       </div>
 
-      <!-- Summary (Fallback) -->
+      <!-- Summary -->
       <div class="mb-3">
-        <label class="fw-bold">Resumen (Fallback para meta description)</label>
-        <p class="{{ getSeoStatus(data.summary, 150, 160) }}">
-          {{ data.summary || '— Resumen vacío —' }}
-        </p>
+        <label class="fw-bold">Resumen (Fallback)</label>
+        <p class="{{ getSeoStatus(data.summary, 150, 160) }}">{{ data.summary || '— Resumen vacío —' }}</p>
         <small class="text-muted">Caracteres: {{ getCharCount(data.summary) }} / 160</small>
-        <div *ngIf="data.summary && (getCharCount(data.summary) < 150 || getCharCount(data.summary) > 160)" class="text-danger">
-          <small>Recomendado: 150-160 caracteres para SEO óptimo.</small>
-        </div>
       </div>
 
       <!-- Tags -->
       <div class="mb-3">
-        <label class="fw-bold">Tags (Palabras clave)</label>
-        <p *ngIf="data.tags?.length; else noTags">
-          {{ data.tags.join(', ') }}
-        </p>
-        <ng-template #noTags>
-          <p class="text-muted">— Sin tags —</p>
-        </ng-template>
-        <small class="text-muted">Añade palabras clave relevantes para SEO.</small>
+        <label class="fw-bold">Tags</label>
+        <p *ngIf="data.tags?.length; else noTags">{{ data.tags.join(', ') }}</p>
+        <ng-template #noTags><p class="text-muted">— Sin tags —</p></ng-template>
       </div>
 
       <!-- Meta Image -->
       <div class="mb-3">
         <label class="fw-bold">Imagen Destacada</label>
         <div>
-          <img
-            *ngIf="data.meta?.image"
-            [src]="data.meta.image"
-            [alt]="data.meta?.imageAltGlobal || 'Imagen destacada'"
-            class="img-fluid mb-2"
-            style="max-height: 200px;"
-            (error)="handleImageError()"
-          />
+          <img *ngIf="data.meta?.image" [src]="data.meta.image" [alt]="data.meta?.imageAltGlobal || 'Imagen destacada'"
+               class="img-fluid mb-2" style="max-height: 200px;" (error)="handleImageError()"/>
           <p>{{ data.meta?.image || '— Sin imagen —' }}</p>
           <div *ngIf="!data.meta?.image" class="text-danger">
             <small>Se requiere una imagen destacada para SEO.</small>
@@ -79,12 +63,8 @@
 
       <!-- Location -->
       <div class="mb-3">
-        <label class="fw-bold">Ubicación (Local SEO)</label>
-        <p>
-          {{ data.location?.city || '—' }},
-          {{ data.location?.region || '—' }},
-          {{ data.location?.country || '—' }}
-        </p>
+        <label class="fw-bold">Ubicación</label>
+        <p>{{ data.location?.city || '—' }}, {{ data.location?.region || '—' }}, {{ data.location?.country || '—' }}</p>
       </div>
 
       <!-- Publish Date -->
@@ -106,10 +86,10 @@
       <h3 class="card-title">Contenido</h3>
       <hr />
 
-      <!-- 1) Si vienen bloques parseados -->
       <ng-container *ngIf="data.content?.length; else rawHtml">
         <ng-container *ngFor="let block of data.content; let i = index">
           <ng-container [ngSwitch]="block.type">
+
             <!-- TEXTO -->
             <ng-container *ngSwitchCase="'text'">
               <ng-container [ngSwitch]="block.tag">
@@ -125,15 +105,10 @@
 
             <!-- IMAGEN -->
             <figure *ngSwitchCase="'image'" class="mb-4 text-center">
-              <img
-                [src]="block.url || ''"
-                [alt]="block.alt || 'Imagen sin descripción'"
-                class="img-fluid"
-                [attr.aria-label]="block.alt || block.caption || ''"
-                (error)="handleImageError()"
-              />
+              <img [src]="block.url || ''" [alt]="block.alt || 'Imagen sin descripción'" class="img-fluid"
+                   [attr.aria-label]="block.alt || block.caption || ''" (error)="handleImageError()"/>
               <figcaption *ngIf="block.captionHtml" class="text-muted" [innerHTML]="block.captionHtml"></figcaption>
-              <figcaption *ngIf="!block.alt" class="text-danger">Falta texto alternativo (alt) para SEO y accesibilidad.</figcaption>
+              <figcaption *ngIf="!block.alt" class="text-danger">Falta texto alternativo (alt).</figcaption>
             </figure>
 
             <!-- CITA -->
@@ -157,19 +132,18 @@
                 {{ block.textLink || '— Enlace sin texto —' }}
               </a>
               <small *ngIf="block.textLink && isGenericAnchor(block.textLink)" class="text-danger">
-                Evita textos genéricos como "clic aquí" o "leer más" para SEO.
+                Evita textos genéricos como "clic aquí" o "leer más".
               </small>
             </p>
 
             <!-- Tipo desconocido -->
-            <pre *ngSwitchDefault class="bg-light p-2">
-{{ block | json }}
-            </pre>
+            <pre *ngSwitchDefault class="bg-light p-2">{{ block | json }}</pre>
+
           </ng-container>
         </ng-container>
       </ng-container>
 
-      <!-- 2) Fallback: pintar HTML del CKEditor tal cual -->
+      <!-- Fallback: HTML crudo del editor -->
       <ng-template #rawHtml>
         <div class="ck-content" [innerHTML]="data.bodyHtml"></div>
       </ng-template>
