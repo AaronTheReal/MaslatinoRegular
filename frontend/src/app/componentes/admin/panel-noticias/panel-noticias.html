@@ -83,7 +83,7 @@
               <span *ngIf="noticiaForm.get('slug')?.errors?.['pattern']">Solo a–z, 0–9 y guiones medios (-).</span>
               <span *ngIf="noticiaForm.get('slug')?.errors?.['slugLength']">Debe tener 3–6 palabras.</span>
               <span *ngIf="noticiaForm.get('slug')?.errors?.['slugContainsKeyphrase']">Incluye la keyword.</span>
-              <span *ngIf="noticiaForm.get('slug')?.errors?.['noStopWords']">Evita (“el”, “la”, “de”...) en el slug.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['noStopWords']">Evita (“el”, “la”, “de”...)   en el slug.</span>
               <span *ngIf="noticiaForm.get('slug')?.errors?.['noDates']">No incluyas fechas/años.</span>
               <span *ngIf="noticiaForm.get('slug')?.errors?.['noAccentsSymbols']">Sin tildes/acentos/símbolos.</span>
               <span *ngIf="noticiaForm.get('slug')?.errors?.['slugUnique']">Este slug ya existe.</span>
