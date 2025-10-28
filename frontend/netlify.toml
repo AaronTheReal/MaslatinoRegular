@@ -1,4 +1,4 @@
 [build]
   base = "frontend"
-  command = "npm run serve:ssr:frontend"
+  command = "npm ci && npx --no-install ng build"
   publish = "dist/nombre-proyecto" 
