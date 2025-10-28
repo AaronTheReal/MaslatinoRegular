@@ -16,7 +16,8 @@ export interface CategoriaPayload {
 
 @Injectable({ providedIn: 'root' })
 export class CategoriaService {
-  private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  //private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 

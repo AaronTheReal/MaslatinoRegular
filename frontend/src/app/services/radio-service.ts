@@ -21,8 +21,9 @@ export interface RadioData {
 
 @Injectable({ providedIn: 'root' })
 export class RadioService {
-   private baseUrl = 'http://localhost:3000/aaron/maslatino'; // mismo estilo que el tuyo
+   //private baseUrl = 'http://localhost:3000/aaron/maslatino'; // mismo estilo que el tuyo
    //private baseUrl = 'https://maslatino.onrender.com/aaron/maslatino'; // Ajusta si tu backend cambia
+  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 
