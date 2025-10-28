@@ -1,120 +1,246 @@
 <!-- editar-noticias.html -->
-<div class="container my-4">
-  <div class="row">
-    <!-- Formulario -->
-    <div class="col-12 col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h2 class="card-title text-center mb-4">Editar Noticia</h2>
-          <form [formGroup]="noticiaForm" (ngSubmit)="onSubmit()">
-            <!-- Título -->
+<div class="container my-4 studio">
+
+  <!-- ===== Toolbar ===== -->
+  <div class="studio-toolbar">
+    <div class="left">
+      <h2 class="m-0">Editar Noticia</h2>
+    </div>
+    <div class="right">
+      <div class="btn-group">
+        <button type="button" class="btn btn-outline-secondary"
+                (click)="seoEssentialsOpen = !seoEssentialsOpen"
+                [attr.aria-expanded]="seoEssentialsOpen">SEO Essentials</button>
+
+        <button type="button" class="btn btn-outline-secondary" (click)="cycleDock()">
+          Vista previa: {{ dockMode === 'hidden' ? 'Oculta' : dockMode === 'right' ? 'Derecha' : 'Abajo' }}
+        </button>
+
+        <button type="button" class="btn btn-outline-secondary"
+                (click)="inspectorOpen = !inspectorOpen">
+          Inspector SEO
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FORMULARIO GLOBAL ===== -->
+  <form [formGroup]="noticiaForm" (ngSubmit)="onSubmit()">
+
+    <!-- ===== SEO Essentials ===== -->
+    <div class="seo-essentials card shadow-sm" [class.open]="seoEssentialsOpen"
+         [style.height.px]="seoEssentialsOpen ? null : 0">
+      <div class="card-body">
+        <div class="row g-3">
+
+          <!-- Focus keyphrase -->
+          <div class="col-12 col-md-4">
+            <label class="form-label">Palabra clave principal <span class="required">*</span></label>
+            <input type="text" class="form-control" formControlName="focusKeyphrase"
+                   placeholder="Ej: eventos latinos" />
+            <small class="text-muted d-block">Úsala en título, slug, meta, extracto, alt y cuerpo.</small>
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('focusKeyphrase')?.touched && noticiaForm.get('focusKeyphrase')?.invalid">
+              <span *ngIf="noticiaForm.get('focusKeyphrase')?.errors?.['required']">Obligatoria.</span>
+              <span *ngIf="noticiaForm.get('focusKeyphrase')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+            </div>
+          </div>
+
+          <!-- Título -->
+          <div class="col-12 col-md-4">
+            <label class="form-label">Título <span class="required">*</span></label>
+            <input type="text" class="form-control" formControlName="title"
+                   placeholder="Ej: Eventos Latinos Boston 2025" />
+            <small class="text-muted">{{ noticiaForm.get('title')?.value?.length || 0 }} / 60</small>
+            <div class="text-warning small" *ngIf="titleWarning">{{ titleWarning }}</div>
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('title')?.touched && noticiaForm.get('title')?.invalid">
+              <span *ngIf="noticiaForm.get('title')?.errors?.['minlength']">Ideal 50–60 chars (≥50).</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['maxlength']">Ideal 50–60 chars (≤60).</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['titleContainsKeyphrase']">
+                La keyword debe estar cerca del inicio.</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['titleCase']">
+                Usa Mayúscula Inicial en palabras principales.</span>
+              <span *ngIf="noticiaForm.get('title')?.errors?.['noSpecialChars']">
+                Evita signos “¡ ! / ?”.</span>
+            </div>
+            <div class="text-warning small" *ngIf="titleRepetitionWarning">{{ titleRepetitionWarning }}</div>
+          </div>
+
+          <!-- Slug -->
+          <div class="col-12 col-md-4">
+            <label class="form-label">Slug <span class="required">*</span></label>
+            <input type="text" class="form-control" formControlName="slug"
+                   placeholder="eventos-latinos-boston" />
+            <small class="text-muted d-block">Canonical: {{ canonicalUrl }}</small>
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('slug')?.touched && noticiaForm.get('slug')?.invalid">
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['required']">Obligatorio.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['pattern']">Solo a–z, 0–9 y guiones medios (-).</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['slugLength']">Debe tener 3–6 palabras.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['slugContainsKeyphrase']">Incluye la keyword.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['noStopWords']">Evita (“el”, “la”, “de”...).</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['noDates']">No incluyas fechas/años.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['noAccentsSymbols']">Sin tildes/acentos/símbolos.</span>
+              <span *ngIf="noticiaForm.get('slug')?.errors?.['slugUnique']">Este slug ya existe.</span>
+            </div>
+          </div>
+
+          <!-- Meta Description -->
+          <div class="col-12 col-lg-8" formGroupName="meta">
+            <label class="form-label">Meta Description <span class="required">*</span></label>
+            <textarea rows="2" class="form-control" formControlName="description"
+                      placeholder="Descripción para motores de búsqueda (120–160, 1 vez la keyword)"></textarea>
+            <small class="text-muted">{{ noticiaForm.get('meta.description')?.value?.length || 0 }} / 160</small>
+            <div class="text-warning small" *ngIf="metaDescWarning">{{ metaDescWarning }}</div>
+            <div class="text-danger small mt-1"
+                *ngIf="noticiaForm.get('meta.description')?.touched && noticiaForm.get('meta.description')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['required']">Obligatoria.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['minlength']">Mínimo 120 caracteres.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['maxlength']">Máximo 160 caracteres.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['keyphraseOnce']">La keyword debe aparecer 1 vez.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['noDoubleQuotes']">Sin comillas dobles.</span>
+              <span *ngIf="noticiaForm.get('meta.description')?.errors?.['naturalLanguage']">Lenguaje natural.</span>
+            </div>
+          </div>
+
+          <!-- Imagen destacada -->
+          <div class="col-12 col-lg-4" formGroupName="meta">
+            <label class="form-label">Imagen Destacada (URL) <span class="required">*</span></label>
+            <input type="text" class="form-control" formControlName="image"
+                   placeholder="https://.../archivo-seo.webp"
+                   (change)="metaImageWarning=''"
+                   (blur)="metaImageWarning=''" />
+            <small class="text-muted d-block">https, .jpg/.png/.webp, nombre de archivo con guiones y keyword.</small>
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('meta.image')?.touched && noticiaForm.get('meta.image')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.image')?.errors?.['required']">Obligatoria.</span>
+              <span *ngIf="noticiaForm.get('meta.image')?.errors?.['pattern']">Debe ser URL https y .jpg/.png/.webp.</span>
+              <span *ngIf="noticiaForm.get('meta.image')?.errors?.['imageFilename']">Nombre de archivo no optimizado.</span>
+            </div>
+            <img [src]="noticiaForm.get('meta.image')?.value || ''" (load)="onMetaImageLoad($event)" alt="" style="display:none" />
+            <div class="text-warning small" *ngIf="metaImageWarning">{{ metaImageWarning }}</div>
+          </div>
+
+          <!-- Alt global -->
+          <div class="col-12 col-lg-6" formGroupName="meta">
+            <label for="imageAltGlobal" class="form-label">ALT global imagen <span class="required">*</span></label>
+            <input id="imageAltGlobal" type="text" class="form-control" formControlName="imageAltGlobal"
+                   placeholder="keyword-con-guiones ..." />
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('meta.imageAltGlobal')?.touched && noticiaForm.get('meta.imageAltGlobal')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.imageAltGlobal')?.errors?.['required']">Obligatorio.</span>
+              <span *ngIf="noticiaForm.get('meta.imageAltGlobal')?.errors?.['minlength']">Mínimo 8 caracteres.</span>
+              <span *ngIf="noticiaForm.get('meta.imageAltGlobal')?.errors?.['altKeyphraseHyphen']">Debe incluir la keyword-con-guiones.</span>
+            </div>
+          </div>
+
+          <!-- Canonical opcional -->
+          <div class="col-12 col-lg-6" formGroupName="meta">
+            <label for="canonical" class="form-label">Canonical (opcional)</label>
+            <input id="canonical" type="text" class="form-control" formControlName="canonical"
+                   placeholder="https://..." />
+            <div class="text-danger small mt-1"
+                 *ngIf="noticiaForm.get('meta.canonical')?.touched && noticiaForm.get('meta.canonical')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.canonical')?.errors?.['pattern']">URL inválida.</span>
+            </div>
+          </div>
+
+          <!-- Pie de foto + link (opcionales) -->
+          <div class="col-12" formGroupName="meta">
+            <label for="imageCaption" class="form-label">Pie de foto (opcional)</label>
+            <textarea id="imageCaption" class="form-control" formControlName="imageCaption" rows="2"
+                      placeholder="Ej.: Concierto en el City Hall. Foto: Juan Pérez"></textarea>
+            <small class="text-muted">{{ noticiaForm.get('meta.imageCaption')?.value?.length || 0 }} / 140</small>
+            <div class="text-danger small"
+                 *ngIf="noticiaForm.get('meta.imageCaption')?.touched && noticiaForm.get('meta.imageCaption')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.imageCaption')?.errors?.['maxlength']">Máximo 140 caracteres.</span>
+            </div>
+
+            <label for="imageCaptionUrl" class="form-label mt-2">Enlace del pie (opcional)</label>
+            <input id="imageCaptionUrl" type="url" class="form-control" formControlName="imageCaptionUrl"
+                   placeholder="https://autor-o-fuente.com/credito" />
+            <div class="text-danger small"
+                 *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.touched && noticiaForm.get('meta.imageCaptionUrl')?.invalid">
+              <span *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.errors?.['pattern']">Debe ser una URL válida.</span>
+              <span *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.errors?.['maxlength']">Máximo 300 caracteres.</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Avisos rápidos -->
+        <div class="row mt-2 small">
+          <div class="col text-warning" *ngIf="titleWarning">{{ titleWarning }}</div>
+          <div class="col text-warning" *ngIf="metaDescWarning">{{ metaDescWarning }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Área de trabajo / Editor ===== -->
+    <div class="studio-wrap" [class.dock-right]="dockMode === 'right'" [class.dock-bottom]="dockMode === 'bottom'">
+
+      <!-- Editor -->
+      <div class="pane editor" [style.flex-basis.%]="dockMode === 'right' ? splitRatio*100 : 100">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+
+            <!-- Extracto redes -->
             <div class="form-group mb-3">
-              <label for="title">Título <span class="required">*</span> (Recomendado: 50-60 caracteres para SEO)</label>
-              <input id="title" type="text" class="form-control" formControlName="title" placeholder="Título de la noticia" />
-              <small class="text-muted">{{ noticiaForm.get('title')?.value?.length || 0 }} / 60</small>
-              <div *ngIf="noticiaForm.get('title')?.touched && noticiaForm.get('title')?.invalid" class="text-danger">
-                <small *ngIf="noticiaForm.get('title')?.errors?.['required']">El título es obligatorio.</small>
-                <small *ngIf="noticiaForm.get('title')?.errors?.['maxlength']">Máx 60 caracteres.</small>
-                <small *ngIf="noticiaForm.get('title')?.errors?.['minlength']">Mín 50 caracteres para óptimo SEO.</small>
-              </div>
-              <div *ngIf="titleWarning" class="text-warning mt-1">
-                <small>{{ titleWarning }}</small>
+              <label for="extracto">Extracto (redes) <span class="required">*</span> (150–300, keyword 1 vez)</label>
+              <textarea id="extracto" class="form-control" formControlName="extracto" rows="2"></textarea>
+              <small class="text-muted">{{ noticiaForm.get('extracto')?.value?.length || 0 }} / 300</small>
+              <div class="text-danger small mt-1"
+                   *ngIf="noticiaForm.get('extracto')?.touched && noticiaForm.get('extracto')?.invalid">
+                <span *ngIf="noticiaForm.get('extracto')?.errors?.['required']">Obligatorio. </span>
+                <span *ngIf="noticiaForm.get('extracto')?.errors?.['minlength']">Mínimo 150. </span>
+                <span *ngIf="noticiaForm.get('extracto')?.errors?.['maxlength']">Máximo 300. </span>
+                <span *ngIf="noticiaForm.get('extracto')?.errors?.['keyphraseOnce']">Keyword 1 vez. </span>
+                <span *ngIf="noticiaForm.get('extracto')?.errors?.['noDoubleQuotes']">Sin comillas dobles. </span>
+                <span *ngIf="noticiaForm.get('extracto')?.errors?.['naturalLanguage']">Lenguaje natural. </span>
               </div>
             </div>
 
-            <!-- Slug -->
+            <!-- Summary -->
             <div class="form-group mb-3">
-              <label for="slug">Slug (URL amigable) <span class="required">*</span></label>
-              <input id="slug" type="text" class="form-control" formControlName="slug" placeholder="Auto-generado del título" />
-              <div *ngIf="noticiaForm.get('slug')?.touched && noticiaForm.get('slug')?.invalid" class="text-danger">
-                <small *ngIf="noticiaForm.get('slug')?.errors?.['required']">El slug es obligatorio.</small>
-                <small *ngIf="noticiaForm.get('slug')?.errors?.['pattern']">Solo minúsculas y guiones (sin tildes ni símbolos).</small>
-                <small *ngIf="noticiaForm.get('slug')?.errors?.['slugUnique']">El slug ya existe. Elige otro.</small>
-              </div>
-              <small class="text-muted">Canonical sugerida: {{ canonicalUrl }}</small>
-            </div>
-
-            <!-- Resumen -->
-            <div class="form-group mb-3">
-              <label for="summary">Resumen (fallback para meta description, 150–160 chars)</label>
-              <textarea id="summary" class="form-control" formControlName="summary" rows="2" placeholder="Breve resumen (opcional)"></textarea>
+              <label for="summary">Resumen BLOG (fallback meta, 150–160)</label>
+              <textarea id="summary" class="form-control" formControlName="summary" rows="2"></textarea>
               <small class="text-muted">{{ noticiaForm.get('summary')?.value?.length || 0 }} / 160</small>
-              <div *ngIf="noticiaForm.get('summary')?.touched && noticiaForm.get('summary')?.invalid" class="text-danger">
-                <small *ngIf="noticiaForm.get('summary')?.errors?.['maxlength']">Máx 160 caracteres.</small>
-                <small *ngIf="noticiaForm.get('summary')?.errors?.['minlength']">Mín 150 caracteres.</small>
-              </div>
             </div>
 
-            <!-- Meta -->
-            <div class="form-group mb-3" formGroupName="meta">
-              <label for="metaDescription">Meta Description <span class="required">*</span> (150–160)</label>
-              <textarea id="metaDescription" class="form-control" formControlName="description" rows="2" placeholder="Descripción para motores de búsqueda"></textarea>
-              <small class="text-muted">{{ noticiaForm.get('meta.description')?.value?.length || 0 }} / 160</small>
-              <div *ngIf="noticiaForm.get('meta.description')?.touched && noticiaForm.get('meta.description')?.invalid" class="text-danger">
-                <small *ngIf="noticiaForm.get('meta.description')?.errors?.['required']">Obligatorio para SEO.</small>
-                <small *ngIf="noticiaForm.get('meta.description')?.errors?.['maxlength']">Máx 160 caracteres.</small>
-                <small *ngIf="noticiaForm.get('meta.description')?.errors?.['minlength']">Mín 150 caracteres.</small>
-              </div>
-              <div *ngIf="metaDescWarning" class="text-warning mt-1">
-                <small>{{ metaDescWarning }}</small>
-              </div>
-            </div>
-
-            <div class="form-group mb-3" formGroupName="meta">
-              <label for="metaImage">Imagen Destacada (URL) <span class="required">*</span> (≥1200×630)</label>
-              <input id="metaImage" type="text" class="form-control" formControlName="image" placeholder="https://..." />
-              <div *ngIf="noticiaForm.get('meta.image')?.touched && noticiaForm.get('meta.image')?.invalid" class="text-danger">
-                <small *ngIf="noticiaForm.get('meta.image')?.errors?.['required']">Obligatorio.</small>
-                <small *ngIf="noticiaForm.get('meta.image')?.errors?.['pattern']">Debe ser https:// y .jpg/.png/.webp.</small>
-              </div>
-              <div *ngIf="metaImageWarning" class="text-warning mt-1">
-                <small>{{ metaImageWarning }}</small>
-              </div>
-              <div *ngIf="noticiaForm.get('meta.image')?.valid && noticiaForm.get('meta.image')?.value" class="mt-2 text-center">
-                <img [src]="noticiaForm.get('meta.image')?.value" alt="Preview" style="max-width: 100%; height: auto" (load)="onMetaImageLoad($event)" />
-              </div>
-            </div>
-
-            <div class="form-group mb-3" formGroupName="meta">
-              <label for="canonical">Canonical URL (opcional)</label>
-              <input id="canonical" type="text" class="form-control" formControlName="canonical" placeholder="https://..." />
-              <div *ngIf="noticiaForm.get('meta.canonical')?.touched && noticiaForm.get('meta.canonical')?.invalid" class="text-danger">
-                <small *ngIf="noticiaForm.get('meta.canonical')?.errors?.['pattern']">Debe ser una URL válida.</small>
-              </div>
-            </div>
-
+            <!-- Meta extra -->
             <div class="form-group mb-3" formGroupName="meta">
               <label for="ogTitle">OG/Twitter Title</label>
-              <input id="ogTitle" type="text" class="form-control" formControlName="ogTitle" placeholder="(por defecto = título)" />
+              <input id="ogTitle" type="text" class="form-control" formControlName="ogTitle"/>
             </div>
 
             <div class="form-group mb-3" formGroupName="meta">
-              <label for="ogDescription">OG/Twitter Description</label>
-              <textarea id="ogDescription" class="form-control" formControlName="ogDescription" rows="2" placeholder="(por defecto = meta description)"></textarea>
-            </div>
-
-            <div class="form-group mb-3" formGroupName="meta">
-              <label for="imageAltGlobal">Alt Text para Imagen Destacada</label>
-              <input id="imageAltGlobal" type="text" class="form-control" formControlName="imageAltGlobal" placeholder="Descripción alternativa" />
-            </div>
-
-            <div class="form-group mb-3" formGroupName="meta">
-              <label for="twitterCard">Twitter Card</label>
-              <input id="twitterCard" type="text" class="form-control" formControlName="twitterCard" placeholder="summary_large_image" />
+              <label for="ogDescription">OG/Twitter Description (máx 300)</label>
+              <textarea id="ogDescription" class="form-control" formControlName="ogDescription" rows="2"></textarea>
+              <div class="text-danger small"
+                   *ngIf="noticiaForm.get('meta.ogDescription')?.touched && noticiaForm.get('meta.ogDescription')?.invalid">
+                <span *ngIf="noticiaForm.get('meta.ogDescription')?.errors?.['maxlength']">Máx 300 caracteres.</span>
+              </div>
             </div>
 
             <!-- Tags -->
             <div class="form-group mb-3">
-              <label>Tags (palabras clave)</label>
+              <label>Tags (1–5)</label>
               <div formArrayName="tags">
-                <div *ngFor="let tag of tags.controls; let i = index" class="d-flex mb-2 gap-2">
-                  <input [formControlName]="i" type="text" class="form-control" placeholder="Tag, e.g. noticias, cine" />
+                <div *ngFor="let tagCtrl of tags.controls; let i = index" class="d-flex mb-2 gap-2">
+                  <input [formControlName]="i" type="text" class="form-control" placeholder="ej. eventos"/>
                   <button type="button" class="btn btn-sm btn-danger" (click)="removeTag(i)">Eliminar</button>
                 </div>
               </div>
-              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addTag()">+ Añadir Tag</button>
-              <div *ngIf="keywordDensityWarnings.length > 0" class="text-warning mt-2">
-                <small *ngFor="let warning of keywordDensityWarnings">{{ warning }}</small>
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                      (click)="addTag()" [disabled]="tags.length >= 5">+ Añadir Tag</button>
+              <div class="text-danger small mt-1" *ngIf="tags?.touched && tags?.invalid">
+                <span *ngIf="tags?.errors?.['minlength']">Mínimo 1 tag.</span>
+                <span *ngIf="tags?.errors?.['maxlength']">Máximo 5 tags.</span>
+              </div>
+
+              <div *ngIf="keywordDensityWarnings.length > 0" class="text-warning mt-2 small">
+                <div *ngFor="let w of keywordDensityWarnings">{{ w }}</div>
               </div>
             </div>
 
@@ -127,293 +253,186 @@
                 bindLabel="name"
                 bindValue="_id"
                 [multiple]="true"
-                [closeOnSelect]="false"
-                placeholder="Selecciona categorías"
-              >
+                [closeOnSelect]="false">
               </ng-select>
-              <div *ngIf="noticiaForm.get('categories')?.touched && noticiaForm.get('categories')?.invalid" class="text-danger">
-                <small *ngIf="noticiaForm.get('categories')?.errors?.['required']">Al menos una categoría es obligatoria.</small>
+
+              <div class="text-danger small mt-1"
+                   *ngIf="noticiaForm.get('categories')?.touched && noticiaForm.get('categories')?.invalid">
+                Debes elegir al menos 1 categoría.
               </div>
             </div>
 
             <!-- Ubicación -->
             <div formGroupName="location" class="form-group mb-3">
-              <label>Ubicación (opcional)</label>
+              <label>Ubicación (Local SEO)</label>
               <div class="d-flex flex-wrap gap-2">
                 <input type="text" class="form-control flex-fill" formControlName="country" placeholder="País" />
                 <input type="text" class="form-control flex-fill" formControlName="region" placeholder="Región/Estado" />
                 <input type="text" class="form-control flex-fill" formControlName="city" placeholder="Ciudad" />
               </div>
-              <div *ngIf="localSeoSuggestion" class="text-info mt-1">
-                <small>{{ localSeoSuggestion }}</small>
-              </div>
+              <div *ngIf="localSeoSuggestion" class="text-info mt-1 small">{{ localSeoSuggestion }}</div>
             </div>
 
-            <!-- Estado y Fecha de publicación -->
+            <!-- Estado y Fecha -->
             <div class="form-group mb-4 d-flex flex-wrap gap-3 align-items-end">
               <div class="flex-fill">
                 <label for="state">Estado</label>
                 <select id="state" class="form-control" formControlName="state">
                   <option value="draft">Borrador</option>
+                  <option value="review">Revisión</option>
                   <option value="published">Publicado</option>
                 </select>
               </div>
               <div class="flex-fill">
-                <label for="publishAt">Fecha de publicación</label>
+                <label for="publishAt">Fecha de publicación (Frescura SEO)</label>
                 <input id="publishAt" type="datetime-local" class="form-control" formControlName="publishAt" />
-                <div *ngIf="publishAtError" class="text-danger mt-1">
-                  <small>{{ publishAtError }}</small>
-                </div>
+                <div *ngIf="publishAtError" class="text-danger mt-1 small">{{ publishAtError }}</div>
               </div>
             </div>
 
-            <!-- Métricas -->
-            <div class="card bg-light mb-4 p-3">
-              <h5>Métricas de Contenido</h5>
-              <ul class="list-unstyled">
-                <li>Palabras totales: {{ wordCount }}</li>
-                <li>Tiempo de lectura estimado: ~{{ readingTime }} min</li>
-                <li>Imágenes en cuerpo: {{ imageCount }}</li>
-                <li>Encabezados H2/H3: {{ headerCount }}</li>
-                <li>Legibilidad (Flesch approx.): {{ fleschScore }} (objetivo 60–70)</li>
-              </ul>
-              <div *ngIf="paragraphWarnings.length > 0" class="text-warning">
-                <small *ngFor="let warning of paragraphWarnings">{{ warning }}</small>
-              </div>
-              <div *ngIf="headerSuggestion" class="text-info">
-                <small>{{ headerSuggestion }}</small>
-              </div>
-              <div *ngIf="titleRepetitionWarning" class="text-warning">
-                <small>{{ titleRepetitionWarning }}</small>
-              </div>
-              <div *ngIf="sourcesSuggestion" class="text-info">
-                <small>{{ sourcesSuggestion }}</small>
-              </div>
-            </div>
-
-            <!-- Contenido -->
-            <div class="form-group mb-4">
+            <!-- BODY -->
+            <div class="form-group mb-3">
               <label>Contenido</label>
-              <div class="btn-group flex-wrap mb-2" role="group">
-                <button type="button" class="btn btn-outline-primary" (click)="addBlock('text')">+ Texto</button>
-                <button type="button" class="btn btn-outline-primary" (click)="addBlock('image')">+ Imagen</button>
-                <button type="button" class="btn btn-outline-primary" (click)="addBlock('list')">+ Lista</button>
-                <button type="button" class="btn btn-outline-primary" (click)="addBlock('quote')">+ Cita</button>
-                <button type="button" class="btn btn-outline-primary" (click)="addBlock('link')">+ Enlace</button>
-                <button type="button" class="btn btn-outline-primary" (click)="addBlock('credit')">+ Crédito de Foto</button>
+              <ng-container *ngIf="isBrowser && Editor; else fallbackWhileLoading">
+                <ckeditor [editor]="Editor" formControlName="body" [config]="editorConfig" (change)="onBodyChange()"></ckeditor>
+              </ng-container>
+              <ng-template #fallbackWhileLoading>
+                <textarea class="form-control" formControlName="body" rows="10"
+                          (input)="onBodyChange()" placeholder="Escribe aquí tu noticia si no ves el editor aún..."></textarea>
+              </ng-template>
+
+              <div class="text-danger mt-2 small"
+                   *ngIf="noticiaForm.get('body')?.touched && noticiaForm.get('body')?.invalid">
+                <span *ngIf="noticiaForm.get('body')?.errors?.['minWords']">≥300 palabras. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['minHeaders']">Si >400, ≥1 H2. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['keyphraseFirstPara']">Keyword en primeras 2 frases. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['keyphraseH2']">Keyword en algún H2. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['keyphraseConclusion']">Keyword en la conclusión. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['keyphraseDensity']">Densidad 0.5–2%. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['links']">1–3 externos, 2–3 internos, máx 7. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['uniqueImages']">Imágenes únicas. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['altKeyphraseHyphen']">Alt incluye keyword-con-guiones. </span>
               </div>
             </div>
 
-            <!-- Alertas -->
-            <div *ngIf="content.errors?.['multipleH1']" class="text-danger mb-3">
-              <small>No se permite ningún H1 en el contenido para estructura SEO óptima.</small>
+            <!-- Métricas compactas -->
+            <div class="card bg-light mb-4 p-3">
+              <h5 class="mb-2">Métricas de Contenido</h5>
+              <ul class="list-unstyled small mb-0">
+                <li>Palabras: {{ wordCount }} (Óptimo 600–1000, mín 300)</li>
+                <li>Lectura: ~{{ readingTime }} min</li>
+                <li>Imágenes en cuerpo: {{ imageCount }}</li>
+                <li>H2/H3: {{ headerCount }}</li>
+                <li>Legibilidad (Flesch): {{ fleschScore }} (Objetivo 60–70)</li>
+              </ul>
+              <div *ngIf="paragraphWarnings.length > 0" class="text-warning small mt-2">
+                <div *ngFor="let w of paragraphWarnings">{{ w }}</div>
+              </div>
+              <div *ngIf="headerSuggestion" class="text-info small">{{ headerSuggestion }}</div>
+              <div *ngIf="titleRepetitionWarning" class="text-warning small">{{ titleRepetitionWarning }}</div>
+              <div *ngIf="sourcesSuggestion" class="text-info small">{{ sourcesSuggestion }}</div>
             </div>
 
-            <!-- Bloques -->
-            <div class="content-blocks-preview mb-4">
-              <label>Bloques agregados:</label>
-              <div *ngIf="content.length === 0" class="text-muted mb-2">
-                Aún no hay bloques. Usa “+ Texto”, “+ Imagen”, etc., para agregarlos.
-              </div>
-
-              <div *ngFor="let _ of content.controls; let i = index" [formGroup]="getBlock(i)" class="border rounded mb-2">
-                <div class="d-flex justify-content-between align-items-center p-2 bg-light">
-                  <div (click)="toggleBlock(i)" style="cursor: pointer;">
-                    <strong>Bloque {{ i + 1 }}</strong>
-                    <small class="text-muted">({{ getBlock(i).get('type')?.value }})</small>
-                  </div>
-                  <div>
-                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" (click)="toggleBlock(i)">
-                      {{ blockOpenState[i] ? 'Ocultar' : 'Mostrar' }}
-                    </button>
-                    <button type="button" class="btn btn-sm btn-danger" (click)="removeBlock(i)">Eliminar</button>
-                  </div>
-                </div>
-
-                <div *ngIf="blockOpenState[i]" class="p-3">
-                  <ng-container [ngSwitch]="getBlock(i).get('type')?.value">
-                    <!-- Texto -->
-                    <div *ngSwitchCase="'text'">
-                      <div class="form-group mb-2">
-                        <label>Texto</label>
-                        <textarea class="form-control" formControlName="text" rows="3" placeholder="Escribe el texto..." (paste)="onPaste($event)"></textarea>
-                        <div *ngIf="getBlock(i).get('text')?.touched && getBlock(i).get('text')?.invalid" class="text-danger">
-                          <small *ngIf="getBlock(i).get('text')?.errors?.['required']">El texto es obligatorio.</small>
-                        </div>
-                      </div>
-                      <div class="form-group mb-2 d-flex gap-2 align-items-center">
-                        <label class="mb-0 me-2">Etiqueta:</label>
-                        <select class="form-select w-auto" formControlName="tag">
-                          <option value="p">Párrafo</option>
-                          <option value="h2">H2</option>
-                          <option value="h3">H3</option>
-                          <option value="h4">H4</option>
-                          <option value="h5">H5</option>
-                          <option value="h6">H6</option>
-                          <option value="span">Span</option>
-                        </select>
-                      </div>
-                      <div formGroupName="style" class="form-group mb-2 d-flex flex-wrap gap-2">
-                        <div class="flex-fill">
-                          <label class="form-label">Tamaño de fuente</label>
-                          <input type="text" class="form-control" formControlName="fontSize" placeholder="16px o 1rem" />
-                        </div>
-                        <div class="flex-fill">
-                          <label class="form-label">Peso de fuente</label>
-                          <input type="text" class="form-control" formControlName="fontWeight" placeholder="bold o 400" />
-                        </div>
-                        <div class="flex-fill">
-                          <label class="form-label">Familia de fuente</label>
-                          <input type="text" class="form-control" formControlName="fontFamily" placeholder="Arial" />
-                        </div>
-                        <div class="flex-fill">
-                          <label class="form-label">Alineación</label>
-                          <input type="text" class="form-control" formControlName="textAlign" placeholder="left/center/right" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Imagen -->
-                    <div *ngSwitchCase="'image'">
-                      <div class="form-group mb-2">
-                        <label>URL de la imagen</label>
-                        <input type="text" class="form-control" formControlName="url" placeholder="https://..." />
-                        <div *ngIf="getBlock(i).get('url')?.touched && getBlock(i).get('url')?.invalid" class="text-danger">
-                          <small *ngIf="getBlock(i).get('url')?.errors?.['required']">La URL es obligatoria.</small>
-                          <small *ngIf="getBlock(i).get('url')?.errors?.['pattern']">Debe ser https:// con .jpg/.png/.webp.</small>
-                        </div>
-                      </div>
-                      <div class="form-group mb-2">
-                        <label>Texto alternativo (alt)</label>
-                        <input type="text" class="form-control" formControlName="alt" placeholder="Descripción de la imagen" />
-                        <div *ngIf="getBlock(i).get('alt')?.touched && getBlock(i).get('alt')?.invalid" class="text-danger">
-                          <small *ngIf="getBlock(i).get('alt')?.errors?.['required']">Alt text obligatorio.</small>
-                          <small *ngIf="getBlock(i).get('alt')?.errors?.['minlength']">Mín. 8 caracteres.</small>
-                        </div>
-                      </div>
-                      <div class="form-group mb-2">
-                        <label>Pie de foto (caption)</label>
-                        <input type="text" class="form-control" formControlName="caption" placeholder="Pie de foto (opcional)" />
-                      </div>
-                      <div *ngIf="getBlock(i).get('url')?.valid && getBlock(i).get('url')?.value" class="mt-2 text-center">
-                        <img [src]="getBlock(i).get('url')?.value" alt="Preview" style="max-width: 100%; height: auto" />
-                      </div>
-                    </div>
-
-                    <!-- Lista -->
-                    <div *ngSwitchCase="'list'">
-                      <div class="form-group mb-2 d-flex align-items-center gap-2">
-                        <label class="mb-0">Ordenada?</label>
-                        <input type="checkbox" formControlName="ordered" />
-                      </div>
-                      <div formArrayName="items">
-                        <label>Items de la lista (máx. 7 recomendados)</label>
-                        <div *ngFor="let itemCtrl of getListItems(i).controls; let j = index" class="d-flex mb-2 gap-2">
-                          <input [formControlName]="j" type="text" class="form-control" placeholder="Texto del ítem" />
-                          <button type="button" class="btn btn-sm btn-danger" (click)="removeListItem(i, j)" [disabled]="getListItems(i).controls.length <= 1">
-                            Eliminar
-                          </button>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="addListItem(i)" [disabled]="getListItems(i).length >= 7">
-                          + Añadir ítem
-                        </button>
-                        <div *ngIf="getListItems(i).invalid && getListItems(i).touched" class="text-danger mt-1">
-                          <small>Cada ítem es obligatorio.</small>
-                        </div>
-                      </div>
-                      <div *ngIf="listSuggestion" class="text-info mt-1">
-                        <small>{{ listSuggestion }}</small>
-                      </div>
-                    </div>
-
-                    <!-- Cita -->
-                    <div *ngSwitchCase="'quote'">
-                      <div class="form-group mb-2">
-                        <label>Cita</label>
-                        <textarea class="form-control" formControlName="quote" rows="2" placeholder="Texto de la cita"></textarea>
-                        <div *ngIf="getBlock(i).get('quote')?.touched && getBlock(i).get('quote')?.invalid" class="text-danger">
-                          <small>La cita es obligatoria.</small>
-                        </div>
-                        <div *ngIf="quoteWarning" class="text-warning mt-1">
-                          <small>Si >280 chars, considera convertir en párrafo + atribución.</small>
-                        </div>
-                      </div>
-                      <div class="form-group mb-2">
-                        <label>Autor / Fuente (opcional)</label>
-                        <input type="text" class="form-control" formControlName="authorQuote" placeholder="Autor o fuente" />
-                      </div>
-                    </div>
-
-                    <!-- Enlace -->
-                    <div *ngSwitchCase="'link'">
-                      <div class="form-group mb-2">
-                        <label>Texto del enlace <span class="required">*</span> (descriptivo, evita 'clic aquí')</label>
-                        <input type="text" class="form-control" formControlName="textLink" placeholder="Texto visible" />
-                        <div *ngIf="getBlock(i).get('textLink')?.touched && getBlock(i).get('textLink')?.invalid" class="text-danger">
-                          <small *ngIf="getBlock(i).get('textLink')?.errors?.['required']">El texto del enlace es obligatorio.</small>
-                          <small *ngIf="getBlock(i).get('textLink')?.errors?.['genericAnchor']">Evita ‘clic aquí’.</small>
-                        </div>
-                      </div>
-                      <div class="form-group mb-2">
-                        <label>URL (href) <span class="required">*</span></label>
-                        <input type="text" class="form-control" formControlName="href" placeholder="https://..." (blur)="cleanUtm(i)" />
-                        <div *ngIf="getBlock(i).get('href')?.touched && getBlock(i).get('href')?.invalid" class="text-danger">
-                          <small *ngIf="getBlock(i).get('href')?.errors?.['required']">La URL es obligatoria.</small>
-                          <small *ngIf="getBlock(i).get('href')?.errors?.['pattern']">Debe ser https:// (no http://).</small>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Crédito de Foto -->
-                    <div *ngSwitchCase="'credit'">
-                      <div class="form-group mb-2">
-                        <label>Crédito / Fuente de la Imagen</label>
-                        <input type="text" class="form-control" formControlName="creditText" placeholder="e.g. Foto cortesía de Unsplash / Autor" />
-                        <div *ngIf="getBlock(i).get('creditText')?.touched && getBlock(i).get('creditText')?.invalid" class="text-danger">
-                          <small *ngIf="getBlock(i).get('creditText')?.errors?.['required']">El crédito es obligatorio.</small>
-                        </div>
-                      </div>
-                    </div>
-                  </ng-container>
-                </div>
-              </div>
-            </div>
-
-            <!-- Checklist para Publicar -->
-            <div *ngIf="showChecklist" class="card bg-warning-subtle mb-4 p-3">
-              <h5>Checklist para Publicar</h5>
-              <ul class="list-unstyled">
-                <li [class.text-success]="checklist.title" [class.text-danger]="!checklist.title">Título 50–60 chars</li>
-                <li [class.text-success]="checklist.description" [class.text-danger]="!checklist.description">Description 150–160 chars</li>
-                <li [class.text-success]="checklist.slug" [class.text-danger]="!checklist.slug">Slug válido y único</li>
-                <li [class.text-success]="checklist.headers" [class.text-danger]="!checklist.headers">Al menos 1 H2 (sin h1 en bloques)</li>
-                <li [class.text-success]="checklist.links" [class.text-danger]="!checklist.links">Enlaces https y anclas descriptivas</li>
-                <li [class.text-success]="checklist.publishAt" [class.text-danger]="!checklist.publishAt">publishAt correcto (no >24h futuro)</li>
-                <li [class.text-success]="checklist.noUtm" [class.text-danger]="!checklist.noUtm">Sin UTM innecesarias</li>
-                <li [class.text-success]="checklist.sources" [class.text-danger]="!checklist.sources">“Fuentes” con nombres claros y https</li>
+            <!-- Checklist SEO -->
+            <div *ngIf="showChecklist" class="card bg-light mb-4 p-3">
+              <h5 class="mb-2">Checklist SEO</h5>
+              <ul class="list-unstyled small mb-0">
+                <li [class.text-success]="checklist.title" [class.text-danger]="!checklist.title">Título: {{ checklist.title ? '✓' : '✗ 50–60 + keyword' }}</li>
+                <li [class.text-success]="checklist.description" [class.text-danger]="!checklist.description">Meta: {{ checklist.description ? '✓' : '✗ 120–160 + keyword' }}</li>
+                <li [class.text-success]="checklist.slug" [class.text-danger]="!checklist.slug">Slug: {{ checklist.slug ? '✓' : '✗ 3–6 palabras' }}</li>
+                <li [class.text-success]="checklist.headers" [class.text-danger]="!checklist.headers">Encabezados: {{ checklist.headers ? '✓' : '✗ ≥1 H2 si >400' }}</li>
+                <li [class.text-success]="checklist.image" [class.text-danger]="!checklist.image">Imagen: {{ checklist.image ? '✓' : '✗ Tamaño/ratio/alt' }}</li>
+                <li [class.text-success]="checklist.publishAt" [class.text-danger]="!checklist.publishAt">Publicación: {{ checklist.publishAt ? '✓' : '✗ Requerida' }}</li>
+                <li [class.text-success]="checklist.sources" [class.text-danger]="!checklist.sources">Fuentes: {{ checklist.sources ? '✓' : '✗ 1–3 confiables' }}</li>
+                <li [class.text-success]="checklist.focusKeyphrase" [class.text-danger]="!checklist.focusKeyphrase">Keyword: {{ checklist.focusKeyphrase ? '✓' : '✗ Optimizada' }}</li>
+                <li [class.text-success]="checklist.imageAltGlobal" [class.text-danger]="!checklist.imageAltGlobal">Alt global: {{ checklist.imageAltGlobal ? '✓' : '✗ keyword-con-guiones' }}</li>
+                <li [class.text-success]="checklist.wordCount" [class.text-danger]="!checklist.wordCount">Palabras: {{ checklist.wordCount ? '✓' : '✗ ≥300' }}</li>
+                <li [class.text-success]="checklist.extracto" [class.text-danger]="!checklist.extracto">Extracto: {{ checklist.extracto ? '✓' : '✗ 150–300 keyword 1 vez' }}</li>
+                <li [class.text-success]="checklist.categories" [class.text-danger]="!checklist.categories">Categorías: {{ checklist.categories ? '✓' : '✗ ≥1' }}</li>
+                <li [class.text-success]="checklist.tags" [class.text-danger]="!checklist.tags">Etiquetas: {{ checklist.tags ? '✓' : '✗ 1–5' }}</li>
               </ul>
             </div>
 
-            <!-- Guardar / Eliminar -->
-            <div class="form-group text-center d-flex gap-2 justify-content-center">
-              <button type="submit" class="btn btn-success px-5" [disabled]="isSubmitting" [attr.title]="publishTooltip">
-                {{ noticiaForm.get('state')?.value === 'published' ? 'Publicar Cambios' : 'Guardar Cambios' }}
+            <!-- Botón -->
+            <div class="text-center">
+              <button type="submit" class="btn btn-success px-5" [disabled]="isSubmitting" [title]="publishTooltip">
+                {{ isSubmitting ? 'Guardando...' : 'Guardar Cambios' }}
               </button>
-              <button type="button" class="btn btn-danger px-5" (click)="onDelete()" [disabled]="isSubmitting">Eliminar Noticia</button>
+              <button type="button" class="btn btn-danger px-5 ms-2" (click)="onDelete()" [disabled]="isSubmitting">Eliminar Noticia</button>
             </div>
-          </form>
-        </div>
-      </div>
-    </div>
 
-    <!-- Vista previa -->
-    <div class="col-12 col-md-6">
-      <div class="card shadow-sm h-100">
-        <div class="card-body">
-          <h2 class="card-title text-center mb-4">Vista previa</h2>
-          <app-vista-previa [data]="previewData"></app-vista-previa>
+          </div>
+        </div>
+      </div>
+
+      <!-- Divisor -->
+      <div class="gutter" *ngIf="dockMode === 'right'" (mousedown)="onGutterDown($event)">
+        <span class="gutter-handle" aria-hidden="true">⋮⋮</span>
+      </div>
+
+      <!-- Vista previa -->
+      <div class="pane preview" *ngIf="dockMode !== 'hidden'"
+           [style.flex-basis.%]="dockMode === 'right' ? (100 - splitRatio*100) : null">
+        <div class="card shadow-sm h-100">
+          <div class="card-body">
+            <h2 class="card-title mb-3">Vista Previa</h2>
+            <app-vista-previa [data]="previewData"></app-vista-previa>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+  <!-- ===== Inspector SEO (drop-up) ===== -->
+  <div class="inspector" [class.open]="inspectorOpen" role="dialog" aria-label="Inspector SEO">
+    <div class="inspector-inner">
+      <div class="inspector-header">
+        <strong>Inspector SEO & Métricas</strong>
+        <div class="spacer"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="inspectorOpen = false">Cerrar</button>
+      </div>
+      <div class="inspector-content">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <div class="card p-3 bg-light h-100">
+              <h6 class="mb-2">Métricas</h6>
+              <ul class="mb-0 small">
+                <li>Palabras: {{ wordCount }} (mín 300)</li>
+                <li>Lectura: ~{{ readingTime }} min</li>
+                <li>Imágenes: {{ imageCount }}</li>
+                <li>H2/H3: {{ headerCount }}</li>
+                <li>Flesch: {{ fleschScore }}</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="card p-3 bg-light h-100">
+              <h6 class="mb-2">Checklist</h6>
+              <ul class="mb-0 small">
+                <li [class.text-success]="checklist.title" [class.text-danger]="!checklist.title">Título</li>
+                <li [class.text-success]="checklist.description" [class.text-danger]="!checklist.description">Meta desc.</li>
+                <li [class.text-success]="checklist.slug" [class.text-danger]="!checklist.slug">Slug</li>
+                <li [class.text-success]="checklist.wordCount" [class.text-danger]="!checklist.wordCount">≥ 300 palabras</li>
+                <li [class.text-success]="checklist.headers" [class.text-danger]="!checklist.headers">H2 si > 400</li>
+                <li [class.text-success]="checklist.image" [class.text-danger]="!checklist.image">Imagen destacada</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 small">
+          <div *ngIf="titleWarning" class="text-warning">{{ titleWarning }}</div>
+          <div *ngIf="metaDescWarning" class="text-warning">{{ metaDescWarning }}</div>
+          <div *ngIf="titleRepetitionWarning" class="text-warning">{{ titleRepetitionWarning }}</div>
+          <div *ngIf="localSeoSuggestion" class="text-info">{{ localSeoSuggestion }}</div>
+          <div *ngFor="let w of paragraphWarnings" class="text-warning">{{ w }}</div>
+          <div *ngFor="let w of keyphraseWarnings" class="text-warning">{{ w }}</div>
+          <div *ngFor="let w of keywordDensityWarnings" class="text-warning">{{ w }}</div>
         </div>
       </div>
     </div>
+    <button class="grabber" (click)="inspectorOpen = !inspectorOpen" aria-label="Abrir Inspector SEO"></button>
   </div>
+
 </div>

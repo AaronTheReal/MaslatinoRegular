@@ -1,63 +1,91 @@
 // editar-noticias.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, PLATFORM_ID, HostListener } from '@angular/core';
 import {
-  FormBuilder,
-  FormGroup,
-  FormArray,
-  Validators,
-  ValidatorFn,
-  AbstractControl,
-  ValidationErrors,
-  AsyncValidatorFn,
+  FormBuilder, FormGroup, FormArray, Validators, ValidatorFn,
+  AbstractControl, ValidationErrors, AsyncValidatorFn
 } from '@angular/forms';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import { ActivatedRoute, Router } from '@angular/router';
+
 import { NoticiasService } from '../../../../services/noticias-service';
 import { VistaPrevia } from '../vista-previa/vista-previa';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { CategoriaService, CategoriaPayload } from '../../../../services/categorias-service';
-import { DomSanitizer } from '@angular/platform-browser';
-import { marked } from 'marked';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { debounceTime, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
 import { Noticia } from '../../../../../models/noticia.model';
 
 @Component({
   selector: 'app-editar-noticias',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, VistaPrevia, FormsModule, NgSelectModule],
+  imports: [ReactiveFormsModule, CommonModule, VistaPrevia, FormsModule, NgSelectModule, CKEditorModule],
   templateUrl: './editar-noticias.html',
-  styleUrls: ['./editar-noticias.css'],
+  styleUrls: ['./editar-noticias.css']
 })
 export class EditarNoticias implements OnInit {
   noticiaForm: FormGroup;
   categoriasDisponibles: CategoriaPayload[] = [];
   previewDataObj: any;
-  blockOpenState: boolean[] = [];
+
+  // Métricas
   wordCount = 0;
   readingTime = 0;
   imageCount = 0;
   headerCount = 0;
   fleschScore = 0;
+
+  // Avisos
   titleWarning = '';
   metaDescWarning = '';
   metaImageWarning = '';
   publishAtError = '';
   paragraphWarnings: string[] = [];
   keywordDensityWarnings: string[] = [];
+  keyphraseWarnings: string[] = [];
   headerSuggestion = '';
   listSuggestion = '';
   quoteWarning = '';
   localSeoSuggestion = '';
   titleRepetitionWarning = '';
   sourcesSuggestion = '';
+
+  // Checklist / UI
   showChecklist = false;
   checklist: any = {};
   publishTooltip = '';
   isSubmitting = false;
   canonicalUrl = '';
-  id = '';
+
+  // SSR/ui
+  isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  public Editor: any = null;
+  private domain = 'yourdomain.com'; // TODO: cambia por tu dominio
+
+  // CKEditor config
+  public editorConfig: any = {
+    toolbar: ['heading','bold','italic','link','bulletedList','numberedList','blockQuote','undo','redo','insertTable'],
+    heading: {
+      options: [
+        { model:'paragraph', title:'Párrafo' },
+        { model:'heading2', view:'h2', title:'H2' },
+        { model:'heading3', view:'h3', title:'H3' }
+      ]
+    }
+  };
+
+  // Studio layout
+  dockMode: 'hidden' | 'right' | 'bottom' = 'right';
+  seoEssentialsOpen = true;
+  inspectorOpen = false;
+  splitRatio = 0.52;
+  private resizing = false;
+  private loadedNoticiaCats: CategoriaPayload[] = [];
+  private loadedNoticiaCatIds: string[] = [];
+  // routing/state
+  private id = '';
 
   constructor(
     private fb: FormBuilder,
@@ -67,40 +95,57 @@ export class EditarNoticias implements OnInit {
     private route: ActivatedRoute,
     private router: Router
   ) {
+
     this.noticiaForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60)]],
-      slug: [
-        '',
-        {
-          validators: [Validators.required, Validators.pattern(/^[a-z0-9-]+$/)],
-          asyncValidators: [this.slugUniqueValidator()],
-          updateOn: 'blur',
-        },
-      ],
+      focusKeyphrase: ['', [Validators.required, Validators.maxLength(50)]],
+      title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60),
+                   this.titleContainsKeyphraseValidator(), this.titleCaseValidator(), this.noSpecialCharsValidator()]],
+      slug: ['', {
+        validators: [
+          Validators.required,
+          Validators.pattern(/^[a-z0-9-]+$/),
+          this.slugLengthValidator(),
+          this.slugContainsKeyphraseValidator(),
+          this.noStopWordsValidator(),
+          this.noDatesValidator(),
+          this.noAccentsSymbolsValidator()
+        ],
+        asyncValidators: [this.slugUniqueValidator()],
+        updateOn: 'blur'
+      }],
+      extracto: ['', [Validators.required, Validators.minLength(150), Validators.maxLength(300),
+                      this.keyphraseOnceValidator(), this.noDoubleQuotesValidator(), this.naturalLanguageValidator()]],
       summary: ['', [Validators.minLength(150), Validators.maxLength(160)]],
-      tags: this.fb.array([]),
+      tags: this.fb.array([], [Validators.minLength(1), Validators.maxLength(5)]),
       categories: [[], Validators.required],
+
       location: this.fb.group({
         country: [''],
         region: [''],
-        city: [''],
+        city: ['']
       }),
+
       meta: this.fb.group({
-        description: ['', [Validators.required, Validators.minLength(150), Validators.maxLength(160)]],
-        image: ['', [Validators.required, Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i)]],
+        description: ['', [Validators.required, Validators.minLength(120), Validators.maxLength(160),
+                          this.keyphraseOnceValidator(), this.noDoubleQuotesValidator(), this.naturalLanguageValidator()]],
+        image: ['', [Validators.required, Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i), this.imageFilenameValidator()]],
+        imageAltGlobal: ['', [Validators.required, Validators.minLength(8), this.altKeyphraseHyphenValidator()]],
         canonical: ['', Validators.pattern(/^https?:\/\/.+/)],
         ogTitle: [''],
-        ogDescription: [''],
-        imageAltGlobal: [''],
-        twitterCard: ['summary_large_image'], // ahora guardado en backend
+        ogDescription: ['', [Validators.maxLength(300)]],
+        imageCaption: ['', [Validators.maxLength(140)]],
+        imageCaptionUrl: ['', [Validators.maxLength(300), Validators.pattern(/^https?:\/\/.+/)]],
       }),
-      state: ['draft'], // ahora guardado en backend
-      publishAt: [null], // ahora guardado en backend
-      content: this.fb.array([], [this.noH1Validator(), this.contentMinValidator()]),
+
+      state: ['draft'],
+      publishAt: [null],
+
+      // Body WYSIWYG
+      body: ['', [this.bodySeoValidator()]]
     });
 
-    // Auto-slug + avisos
-    this.noticiaForm.get('title')?.valueChanges.subscribe((title) => {
+    // title -> auto-slug + avisos
+    this.noticiaForm.get('title')?.valueChanges.subscribe(title => {
       if (title) {
         const slug = this.generateSlug(title);
         this.noticiaForm.get('slug')?.setValue(slug, { emitEvent: false });
@@ -109,105 +154,179 @@ export class EditarNoticias implements OnInit {
       this.updateTitleRepetition();
     });
 
-    this.noticiaForm.get('slug')?.valueChanges.subscribe((slug) => {
-      this.canonicalUrl = `https://yourdomain.com/${slug}`;
+    // slug -> canonical
+    this.noticiaForm.get('slug')?.valueChanges.subscribe(slug => {
+      this.canonicalUrl = `https://${this.domain}/${slug}`;
     });
 
+    // avisos dinámicos
     this.noticiaForm.get('meta.description')?.valueChanges.subscribe(() => this.updateMetaDescWarning());
-    this.noticiaForm.get('meta.image')?.valueChanges.subscribe(() => (this.metaImageWarning = ''));
+    this.noticiaForm.get('meta.image')?.valueChanges.subscribe(() => this.metaImageWarning = '');
     this.noticiaForm.get('publishAt')?.valueChanges.subscribe(() => this.validatePublishAt());
     this.noticiaForm.get('location.city')?.valueChanges.subscribe(() => this.updateLocalSeoSuggestion());
-    this.noticiaForm.get('state')?.valueChanges.subscribe((state) => {
-      this.showChecklist = state === 'published';
+    this.noticiaForm.get('state')?.valueChanges.subscribe(state => {
+      // mostramos checklist en review/published
+      this.showChecklist = state === 'review' || state === 'published';
       this.updatePublishTooltip();
+      this.noticiaForm.get('body')?.updateValueAndValidity();
     });
+
+    // reactualizar validaciones dependientes de la keyphrase
+    this.noticiaForm.get('focusKeyphrase')?.valueChanges.subscribe(() => {
+      this.noticiaForm.get('title')?.updateValueAndValidity();
+      this.noticiaForm.get('slug')?.updateValueAndValidity();
+      this.noticiaForm.get('meta.description')?.updateValueAndValidity();
+      this.noticiaForm.get('extracto')?.updateValueAndValidity();
+      this.noticiaForm.get('meta.imageAltGlobal')?.updateValueAndValidity();
+      this.noticiaForm.get('body')?.updateValueAndValidity();
+      this.updateSoftValidators();
+    });
+
   }
 
   ngOnInit(): void {
+    if (this.isBrowser) {
+      import('@ckeditor/ckeditor5-build-classic').then(m => {
+        this.Editor = m.default;
+      });
+    }
+
+    // vista previa y métricas reactivas
     this.previewDataObj = this.buildPreviewData();
-    this.noticiaForm.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+    this.noticiaForm.valueChanges.pipe(debounceTime(200)).subscribe(() => {
       this.previewDataObj = this.buildPreviewData();
-      this.updateMetrics();
+      this.updateMetricsFromHTML();
       this.updateSoftValidators();
       this.updateChecklist();
       this.updatePublishTooltip();
     });
 
+    // cargar cat e item
     this.loadCategories();
-
-    this.route.params.subscribe((params) => {
+    this.route.params.subscribe(params => {
       this.id = params['id'];
-      if (this.id) {
-        this.loadNoticia();
-      }
+      if (this.id) this.loadNoticia();
     });
   }
 
-  private loadNoticia() {
+    private loadNoticia() {
     this.noticiasService.getNoticiaById(this.id).subscribe((noticia) => {
-      if (noticia) {
-        this.patchForm(noticia);
-      } else {
-        console.error('Noticia no encontrada');
+      if (!noticia) return;
+
+      // --- mapear categorías a IDs y guardar objetos si vienen pobladas
+      const catsRaw: any[] = Array.isArray(noticia.categories) ? (noticia.categories as any[]) : [];
+      this.loadedNoticiaCats = catsRaw
+        .filter(c => c && (c._id || c.id || c.slug || c.name))
+        .map(c => ({
+          _id: String(c._id || ''),
+          name: String(c.name || ''),
+          slug: String(c.slug || ''),
+          color: c.color || undefined,
+        })) as CategoriaPayload[];
+
+      this.loadedNoticiaCatIds = catsRaw
+        .map(c => (typeof c === 'string' ? c : (c._id || c.id)))
+        .filter(Boolean)
+        .map(String);
+
+      const meta = (noticia as any).meta || {};
+      const location = (noticia as any).location || { country:'', region:'', city:'' };
+      const bodyHtml: string = (noticia as any).bodyHtml || this.blocksToHtml(noticia.content || []);
+
+      this.noticiaForm.patchValue({
+        focusKeyphrase: meta.focusKeyphrase || '',
+        title: noticia.title,
+        slug: noticia.slug,
+        extracto: (noticia as any).extracto || '',
+        summary: noticia.summary || '',
+        categories: this.loadedNoticiaCatIds,               // <<--- IDs
+        location,
+        meta: {
+          description: meta.description || '',
+          image: meta.image || '',
+          canonical: meta.canonical || '',
+          ogTitle: meta.ogTitle || noticia.title || '',
+          ogDescription: meta.ogDescription || meta.description || '',
+          imageAltGlobal: meta.imageAltGlobal || '',
+          imageCaption: meta.imageCaption || '',
+          imageCaptionUrl: meta.imageCaptionUrl || ''
+        },
+        state: (noticia as any).state || 'draft',
+        publishAt: this.formatDateForInput((noticia as any).publishAt || null),
+        body: bodyHtml
+      });
+
+      // tags
+      this.tags.clear();
+      if (Array.isArray(noticia.tags)) {
+        noticia.tags.forEach(tag => this.tags.push(this.fb.control(tag, Validators.required)));
       }
+
+      // Mergea las categorías de la noticia al catálogo si faltan
+      this.ensureSelectedCatsAreInItems();
+
+      // Métricas iniciales
+      this.updateMetricsFromHTML();
+      this.previewDataObj = this.buildPreviewData();
     });
   }
+  private ensureSelectedCatsAreInItems() {
+    if (!this.loadedNoticiaCatIds?.length) return;
 
-  private patchForm(noticia: Noticia) {
-    const noticiaExtended = noticia as Noticia & {
-      location?: { country?: string; region?: string; city?: string };
-      state?: string;
-      publishAt?: string | Date | null;
-      meta?: any;
-    };
+    const existentes = new Set((this.categoriasDisponibles || []).map(c => String(c._id)));
+    const faltantesIds = this.loadedNoticiaCatIds.filter(id => !existentes.has(String(id)));
 
-    this.noticiaForm.patchValue({
-      title: noticia.title,
-      slug: noticia.slug,
-      summary: noticia.summary || '',
-      categories: (noticia.categories as any) || [],
-      location: noticiaExtended.location ?? { country: '', region: '', city: '' },
-      meta: {
-        description: noticiaExtended.meta?.description || '',
-        image: noticiaExtended.meta?.image || '',
-        canonical: noticiaExtended.meta?.canonical || '',
-        ogTitle: noticiaExtended.meta?.ogTitle || noticia.title || '',
-        ogDescription: noticiaExtended.meta?.ogDescription || noticiaExtended.meta?.description || '',
-        imageAltGlobal: noticiaExtended.meta?.imageAltGlobal || '',
-        twitterCard: noticiaExtended.meta?.twitterCard || 'summary_large_image',
-      },
-      state: noticiaExtended.state ?? 'draft',
-      publishAt: this.formatDateForInput(noticiaExtended.publishAt ?? null),
-    });
+    if (faltantesIds.length === 0) return;
 
-    // Tags
-    this.tags.clear();
-    if (Array.isArray(noticia.tags)) {
-      noticia.tags.forEach((tag) => this.tags.push(this.fb.control(tag, Validators.required)));
+    // 1) Intenta completar desde los objetos que ya venían en la noticia (si había populate)
+    const desdePopulate = this.loadedNoticiaCats.filter(c => c?._id && faltantesIds.includes(String(c._id)));
+
+    // 2) Si aún faltan, intenta buscarlas por API
+    const idsQueSiguenFaltando = faltantesIds.filter(id => !desdePopulate.some(c => c._id === id));
+
+    if (desdePopulate.length) {
+      this.categoriasDisponibles = [...this.categoriasDisponibles, ...desdePopulate];
     }
 
-    // Bloques
-    this.content.clear();
-    this.blockOpenState = [];
-    (noticia.content || []).forEach((block: any) => {
-      const blockGroup = this.createBlockGroup(block.type);
-      // Ajuste: permitir h2/h3/h4... pero no h1
-      if (block.tag === 'h1') block.tag = 'p';
+    if (idsQueSiguenFaltando.length) {
+      // opcional: si tienes endpoint por IDs
+      this.categoriasService.getCategoriasByIds(idsQueSiguenFaltando).subscribe((rows) => {
+        if (Array.isArray(rows) && rows.length) {
+          const nuevos = rows.filter(r => r && r._id && !existentes.has(String(r._id)));
+          if (nuevos.length) {
+            this.categoriasDisponibles = [...this.categoriasDisponibles, ...nuevos];
+          }
+        }
+      });
+    }
+  }
 
-      blockGroup.patchValue(block);
 
-      if (block.type === 'list' && Array.isArray(block.items)) {
-        const items = blockGroup.get('items') as FormArray;
-        while (items.length) items.removeAt(0);
-        block.items.forEach((item: string) => items.push(this.fb.control(item, Validators.required)));
+  // convierte bloques a html básico (por si no hay bodyHtml en BD)
+  private blocksToHtml(blocks: any[]): string {
+    if (!Array.isArray(blocks)) return '';
+    const to = blocks.map(b => {
+      switch (b.type) {
+        case 'text': {
+          const tag = b.tag || 'p';
+          return `<${tag}>${(b.html || b.text || '')}</${tag}>`;
+        }
+        case 'image':
+          return `<figure><img src="${b.url || ''}" alt="${b.alt || ''}"/>${b.captionHtml ? `<figcaption>${b.captionHtml}</figcaption>`:''}</figure>`;
+        case 'quote':
+          return `<blockquote>${b.html || b.quote || ''}</blockquote>`;
+        case 'list': {
+          const tag = b.ordered ? 'ol' : 'ul';
+          const items = (b.itemsHtml || b.items || []).map((it: any) => `<li>${it || ''}</li>`).join('');
+          return `<${tag}>${items}</${tag}>`;
+        }
+        case 'link':
+          return `<p><a href="${b.href}" rel="noopener">${b.textLink || b.href}</a></p>`;
+        default:
+          return '';
       }
-
-      this.content.push(blockGroup);
-      this.blockOpenState.push(true);
-    });
-
-    this.updateMetrics();
-    this.previewDataObj = this.buildPreviewData();
+    }).join('\n');
+    return to;
   }
 
   private formatDateForInput(date: string | Date | null): string | null {
@@ -217,231 +336,448 @@ export class EditarNoticias implements OnInit {
     return d.toISOString().slice(0, 16);
   }
 
-  private generateSlug(title: string): string {
-    const normalized = title
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]+/g, '')
-      .replace(/\-\-+/g, '-')
-      .replace(/^-+/, '')
-      .replace(/-+$/, '');
-    return normalized;
+  // ===== Getters =====
+  get tags(): FormArray {
+    return this.noticiaForm.get('tags') as FormArray;
   }
 
-  private noH1Validator(): ValidatorFn {
+  // ===== Tags =====
+  addTag() {
+    if (this.tags.length < 5) this.tags.push(this.fb.control('', Validators.required));
+  }
+  removeTag(i: number) {
+    if (this.tags.length > 0) this.tags.removeAt(i);
+  }
+
+  // =============== VALIDADORES ===============
+  private titleContainsKeyphraseValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      const content = control as FormArray;
-      const h1Count = content.controls.filter((g) => g.get('tag')?.value === 'h1').length;
-      return h1Count > 0 ? { multipleH1: true } : null;
+      const title = (control.value || '').toLowerCase();
+      const focus = control.parent?.get('focusKeyphrase')?.value?.toLowerCase() || '';
+      if (focus && title) {
+        const startWords = title.split(/\s+/).slice(0, 5).join(' ');
+        if (!startWords.includes(focus)) return { titleContainsKeyphrase: true };
+      }
+      return null;
+    };
+  }
+  private titleCaseValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const title = (control.value || '') as string;
+      const words = title.split(/\s+/);
+      const majorWords = words.filter(w => w.length > 3);
+      const isTitleCase = majorWords.every(w => /^[A-ZÁÉÍÓÚÑ]/.test(w));
+      return isTitleCase ? null : { titleCase: true };
+    };
+  }
+  private noSpecialCharsValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const t = (control.value || '') as string;
+      return /[!¡/?]/.test(t) ? { noSpecialChars: true } : null;
     };
   }
 
-  private contentMinValidator(): ValidatorFn {
-    return (_control: AbstractControl): ValidationErrors | null => {
-      if (this.noticiaForm?.get('state')?.value !== 'published') return null;
-      const errors: any = {};
-      if (this.headerCount < 1 && this.wordCount > 400) errors.minHeaders = true;
-      return Object.keys(errors).length ? errors : null;
+  // Slug
+  private slugLengthValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '') as string;
+      const parts = slug.split('-').filter(Boolean);
+      return parts.length >= 3 && parts.length <= 6 ? null : { slugLength: true };
+    };
+  }
+  private slugContainsKeyphraseValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = String(control.value || '').toLowerCase();
+      const focus = this.getFocusFrom(control);
+      if (!focus) return null;
+
+      const keySlug = focus.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'-');
+      return slug.includes(keySlug) ? null : { slugContainsKeyphrase: true };
     };
   }
 
+  private noStopWordsValidator(): ValidatorFn {
+    const stop = ['el','la','de','por','con','a','en','y','o','un','una','los','las'];
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '') as string;
+      return slug.split('-').some(p => stop.includes(p)) ? { noStopWords: true } : null;
+    };
+  }
+  private noDatesValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '') as string;
+      return /\d{4}|\b\d{2}\b/.test(slug) ? { noDates: true } : null;
+    };
+  }
+  private noAccentsSymbolsValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const slug = (control.value || '') as string;
+      return /[^a-z0-9-]/.test(slug) ? { noAccentsSymbols: true } : null;
+    };
+  }
+  private rootOf(control: AbstractControl): FormGroup | null {
+    const r: any = control?.root;
+    // r puede no ser un FormGroup en fases tempranas; verificamos que tenga get()
+    return r && typeof r.get === 'function' ? (r as FormGroup) : null;
+  }
+  /** Devuelve el FormGroup raíz si está disponible y expone un lector seguro */
+  private rootFG(control: AbstractControl): FormGroup | null {
+    const r: any = control?.root;
+    return r && typeof r.get === 'function' ? (r as FormGroup) : null;
+  }
+
+  /** Focus keyphrase seguro desde el root */
+  private getFocusFrom(control: AbstractControl): string {
+    const root = this.rootFG(control);
+    const val = root?.get('focusKeyphrase')?.value ?? '';
+    return String(val).toLowerCase();
+  }
+
+  // Meta / Extracto
+  private keyphraseOnceValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const text = String(control.value || '').toLowerCase();
+      const focus = this.getFocusFrom(control);
+      if (!text || !focus) return null;
+
+      // match tolerante a espacios múltiples
+      const rx = new RegExp(focus.replace(/\s+/g, '\\s+'), 'g');
+      const count = (text.match(rx) || []).length;
+      return count === 1 ? null : { keyphraseOnce: true };
+    };
+  }
+
+
+  private noDoubleQuotesValidator(): ValidatorFn {
+    return (_: AbstractControl): ValidationErrors | null => {
+      return /"/.test(_.value || '') ? { noDoubleQuotes: true } : null;
+    };
+  }
+  private naturalLanguageValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const text = String(control.value || '');
+      if (!text) return null;
+
+      const focus = this.getFocusFrom(control);
+      if (focus && (text.split(focus).length - 1) > 1) return { naturalLanguage: true };
+      if (/\b(keywords?|seo|optimiza(?:do)?)\b/i.test(text)) return { naturalLanguage: true };
+      return null;
+    };
+  }
+
+
+
+  // Imagen
+  private imageFilenameValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const url = control.value || '';
+      try {
+        const filename = new URL(url).pathname.split('/').pop() || '';
+        return /^[a-z0-9-]+(\.jpg|\.png|\.webp)$/i.test(filename) ? null : { imageFilename: true };
+      } catch { return null; }
+    };
+  }
+private altKeyphraseHyphenValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const alt = String(control.value || '').toLowerCase();
+    const focus = this.getFocusFrom(control);
+    if (!focus) return null;
+
+    const hyphenKey = focus.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,'-');
+    return alt.includes(hyphenKey) ? null : { altKeyphraseHyphen: true };
+  };
+}
+
+
+private bodySeoValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    // Usa el propio control para el HTML
+    const html = String(control?.value || '');
+    // Lee estado y focus desde el root, si existen
+    const root = this.rootFG(control);
+    const state = root?.get('state')?.value;
+    const focus = String(root?.get('focusKeyphrase')?.value || '').toLowerCase();
+
+    // En SSR o sin DOMParser, salimos sin error
+    if (!this.isBrowser) return null;
+
+    const requireStrict = state === 'review' || state === 'published';
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const text = (doc.body.textContent || '').trim();
+    const words = text.split(/\s+/).filter(Boolean);
+    const wordCount = words.length;
+
+    const fullLower = text.toLowerCase();
+    const keyCount = focus ? (fullLower.split(focus).length - 1) : 0;
+    const density = wordCount ? (keyCount / wordCount) * 100 : 0;
+
+    const h2s = Array.from(doc.querySelectorAll('h2')).map(h => (h.textContent || '').toLowerCase());
+    const paragraphs = Array.from(doc.querySelectorAll('p')).map(p => (p.textContent || '').toLowerCase());
+
+    const links = Array.from(doc.querySelectorAll('a[href]')) as HTMLAnchorElement[];
+    const totalLinks = links.length;
+    const internal = links.filter(a => a.href.includes(this.domain)).length;
+    const external = totalLinks - internal;
+
+    const images = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
+    const srcs = images.map(i => i.src).filter(Boolean);
+    const uniqueImages = (new Set(srcs)).size === srcs.length;
+
+    const hyphenKey = focus.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,'-');
+    const altOk = !focus || images.every(img => (img.alt || '').toLowerCase().includes(hyphenKey));
+
+    const errors: any = {};
+    if (requireStrict) {
+      if (wordCount < 300) errors.minWords = true;
+      if (wordCount > 400 && h2s.length < 1) errors.minHeaders = true;
+
+      if (focus) {
+        const firstTwo = (paragraphs[0] || '').split(/[.!?]/).slice(0,2).join('.');
+        if (!firstTwo.includes(focus)) errors.keyphraseFirstPara = true;
+        if (!h2s.some(t => t.includes(focus))) errors.keyphraseH2 = true;
+        const lastPara = paragraphs[paragraphs.length - 1] || '';
+        if (lastPara && !lastPara.includes(focus)) errors.keyphraseConclusion = true;
+        if (density < 0.5 || density > 2) errors.keyphraseDensity = true;
+        if (!altOk) errors.altKeyphraseHyphen = true;
+      }
+
+      if (external < 1 || external > 3 || internal < 2 || internal > 3 || totalLinks > 7) errors.links = true;
+      if (!uniqueImages) errors.uniqueImages = true;
+    }
+    return Object.keys(errors).length ? errors : null;
+  };
+}
+
+
+  // Async validator slug único (ignora el actual id)
   private slugUniqueValidator(): AsyncValidatorFn {
     return (control: AbstractControl) => {
-      if (!control.value) return of(null);
-      return this.noticiasService.getNoticiaBySlug(control.value).pipe(
-        map((n: Noticia | null) => (n && (n as any)._id !== this.id ? { slugUnique: true } : null)),
+      const value = (control.value || '').trim();
+      if (!value) return of(null);
+      return this.noticiasService.getNoticiaBySlug(value).pipe(
+        map((noticia: Noticia | null) => {
+          if (!noticia) return null;
+          // si es el mismo registro, ok
+          // @ts-ignore
+          return (noticia._id && noticia._id === this.id) ? null : { slugUnique: true };
+        }),
         catchError(() => of(null))
       );
     };
   }
 
+  // =============== HELPERS / MÉTRICAS ===============
+  onBodyChange() {
+    this.updateMetricsFromHTML();
+    this.previewDataObj = this.buildPreviewData();
+  }
+
+  private updateMetricsFromHTML() {
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    const text = doc.body.textContent || '';
+    const words = text.split(/\s+/).filter(Boolean);
+    this.wordCount = words.length;
+    this.readingTime = Math.ceil(this.wordCount / 200);
+
+    this.headerCount = doc.querySelectorAll('h2, h3').length;
+    this.imageCount = doc.querySelectorAll('img[alt]').length;
+
+    const vowels = (text.match(/[aeiouáéíóúü]/gi) || []).length;
+    const sentences = (text.match(/[.!?]/g) || []).length || 1;
+    this.fleschScore = this.wordCount
+      ? Math.round(206.835 - 1.015 * (this.wordCount / sentences) - 84.6 * (vowels / this.wordCount))
+      : 0;
+
+    this.paragraphWarnings = [];
+    const paras = Array.from(doc.querySelectorAll('p')).map(p => p.textContent || '');
+    let shortStreak = 0;
+    paras.forEach((p, i) => {
+      const wc = (p.trim().split(/\s+/).filter(Boolean)).length;
+      if (wc > 120 || wc < 40) this.paragraphWarnings.push(`Párrafo ${i+1}: ${wc} palabras (objetivo 40–80).`);
+      if (wc < 20) {
+        shortStreak++;
+        if (shortStreak > 3) this.paragraphWarnings.push('Más de 3 párrafos muy cortos seguidos: considera unir.');
+      } else shortStreak = 0;
+    });
+    const avg = paras.length ? Math.round(this.wordCount / paras.length) : 0;
+    if (avg && (avg < 40 || avg > 80)) this.paragraphWarnings.push(`Media por párrafo: ${avg} (objetivo 40–80).`);
+
+    if (this.wordCount > 400 && this.headerCount < 1) this.headerSuggestion = 'Artículo >400 palabras requiere ≥1 H2.';
+    else this.headerSuggestion = '';
+
+    this.updateTitleRepetition();
+
+    const bodyLower = text.toLowerCase();
+    if (bodyLower.includes('fuentes:') || bodyLower.includes('sources:')) {
+      const hasLinks = Array.from(doc.querySelectorAll('a[href^="https://"]')).length > 0;
+      this.sourcesSuggestion = hasLinks ? '' : 'Si hay “Fuentes:”, exige lista de enlaces https con textos claros.';
+    } else this.sourcesSuggestion = '';
+  }
+
+  private updateSoftValidators() {
+    this.keywordDensityWarnings = [];
+    this.keyphraseWarnings = [];
+
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const text = (doc.body.textContent || '').toLowerCase();
+    const wc = text.split(/\s+/).filter(Boolean).length;
+
+    const keyphrase = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase();
+    if (keyphrase && wc > 0) {
+      const count = text.split(keyphrase).length - 1;
+      const density = (count / wc) * 100;
+      if (density > 2) this.keyphraseWarnings.push(`La palabra clave aparece al ${density.toFixed(1)}% - posible sobreoptimización (máx. 2%).`);
+      if (density < 0.5 && count > 0) this.keyphraseWarnings.push(`La palabra clave aparece al ${density.toFixed(1)}% - sugiere aumentar su uso (mín. 0.5%).`);
+    }
+
+    const firstPara = (doc.querySelector('p')?.textContent || '').toLowerCase();
+    const metaDesc = (this.noticiaForm.get('meta.description')?.value || '').toLowerCase();
+    if (keyphrase) {
+      if (!metaDesc.includes(keyphrase)) this.keyphraseWarnings.push(`La palabra clave "${keyphrase}" no está en la meta descripción.`);
+      if (!firstPara.includes(keyphrase)) this.keyphraseWarnings.push(`Sugiere incluir "${keyphrase}" en el primer párrafo.`);
+    }
+  }
+
+  private generateSlug(title: string): string {
+    return title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+      .replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, '');
+  }
+
   private buildPreviewData() {
     const raw = this.noticiaForm.value;
     const meta = raw.meta;
+    const html = String(raw.body || '');
+    const bodyHtml: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
+
     return {
       ...raw,
-      content: raw.content.map((block: any) => {
-        const base = { ...block, style: { ...(block.style || {}) } };
-        switch (block.type) {
-          case 'text':
-            return {
-              ...base,
-              html: this.sanitizer.bypassSecurityTrustHtml(marked.parse(block.text || '') as string),
-            };
-          case 'list':
-            return {
-              ...base,
-              itemsHtml: (block.items || []).map((item: string) =>
-                this.sanitizer.bypassSecurityTrustHtml(marked.parse(item) as string)
-              ),
-            };
-          case 'quote': {
-            const quoteHtml = marked.parse(`> ${block.quote || ''}`) as string;
-            return {
-              ...base,
-              html: this.sanitizer.bypassSecurityTrustHtml(quoteHtml),
-              style: { ...base.style, textAlign: 'center' },
-            };
-          }
-          case 'image': {
-            const captionHtml = block.caption ? (marked.parse(block.caption) as string) : '';
-            return { ...base, captionHtml: this.sanitizer.bypassSecurityTrustHtml(captionHtml) };
-          }
-          case 'credit':
-            return {
-              ...base,
-              html: this.sanitizer.bypassSecurityTrustHtml(marked.parse(block.creditText || '') as string),
-            };
-          default:
-            return base;
-        }
-      }),
+      bodyHtml,
+      content: this.parseHtmlToBlocks(html),
       meta: {
         ...meta,
         ogTitle: meta.ogTitle || raw.title,
-        ogDescription: meta.ogDescription || meta.description,
-        canonical: meta.canonical || `https://yourdomain.com/${raw.slug}`,
-        twitterCard: meta.twitterCard || 'summary_large_image',
-      },
+        ogDescription: meta.ogDescription || (raw.extracto || meta.description),
+        canonical: meta.canonical || `https://${this.domain}/${raw.slug}`
+      }
     };
   }
 
-  // Getters
-  get content(): FormArray {
-    return this.noticiaForm.get('content') as FormArray;
-  }
-  get tags(): FormArray {
-    return this.noticiaForm.get('tags') as FormArray;
+  get previewData() { return this.previewDataObj; }
+
+  private parseHtmlToBlocks(html: string) {
+    if (!this.isBrowser) return [];
+    const doc = new DOMParser().parseFromString(html || '', 'text/html');
+    const out: any[] = [];
+
+    const walk = (node: ChildNode) => {
+      if (!(node as HTMLElement).tagName) return;
+
+      const el = node as HTMLElement;
+      const tag = (el.tagName || '').toLowerCase();
+      const style = { textAlign: (el.style?.textAlign || '') as 'left'|'center'|'right' };
+
+      if (tag === 'h2' || tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span') {
+        out.push({ type:'text', tag, html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML), text: el.textContent || '', style });
+      } else if (tag === 'blockquote') {
+        out.push({ type:'quote', html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML), quote: el.textContent || '', style });
+      } else if (tag === 'img') {
+        out.push({ type:'image', url: el.getAttribute('src') || '', alt: el.getAttribute('alt') || '', captionHtml: null });
+      } else if (tag === 'figure') {
+        const img = el.querySelector('img'); const figcap = el.querySelector('figcaption');
+        out.push({ type:'image', url: img?.getAttribute('src') || '', alt: img?.getAttribute('alt') || '', captionHtml: figcap ? this.sanitizer.bypassSecurityTrustHtml(figcap.innerHTML) : null });
+      } else if (tag === 'ul' || tag === 'ol') {
+        const items = Array.from(el.querySelectorAll(':scope > li'));
+        out.push({ type:'list', ordered: tag === 'ol', items: items.map(li => (li.textContent || '').trim()), itemsHtml: items.map(li => this.sanitizer.bypassSecurityTrustHtml(li.innerHTML)), style });
+      } else if (tag === 'a') {
+        out.push({ type:'link', href: el.getAttribute('href') || '', textLink: el.textContent || '' });
+      }
+    };
+
+    Array.from(doc.body.children).forEach(walk);
+    return out;
   }
 
-  // Tags
-  addTag() {
-    this.tags.push(this.fb.control('', Validators.required));
+  private updateTitleWarning() {
+    const len = this.noticiaForm.get('title')?.value?.length || 0;
+    if ((len < 50 && len > 45) || (len > 60 && len < 65))
+      this.titleWarning = `Tu título tiene ${len} caracteres. Ideal: 50–60.`;
+    else this.titleWarning = '';
   }
-  removeTag(index: number) {
-    this.tags.removeAt(index);
+  private updateMetaDescWarning() {
+    const len = this.noticiaForm.get('meta.description')?.value?.length || 0;
+    if (len < 120 && len > 110) this.metaDescWarning = `Meta description con ${len} chars. Objetivo: 120–160.`;
+    else if (len > 160 && len < 170) this.metaDescWarning = 'Supera 160 chars. Acórtala.';
+    else this.metaDescWarning = '';
   }
-
-  // Bloques
-  getListItems(blockIndex: number): FormArray {
-    const blockGroup = this.content.at(blockIndex) as FormGroup;
-    const itemsControl = blockGroup.get('items');
-    return itemsControl instanceof FormArray ? itemsControl : this.fb.array([]);
+  private validatePublishAt() {
+    const state = this.noticiaForm.get('state')?.value;
+    if (state !== 'review' && state !== 'published') { this.publishAtError = ''; return; }
+    const raw = this.noticiaForm.get('publishAt')?.value;
+    const publishAt = raw ? new Date(raw) : null;
+    if (!publishAt) { this.publishAtError = 'Fecha de publicación requerida para revisión/publicación.'; return; }
+    const now = new Date();
+    const futureLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    this.publishAtError = publishAt > futureLimit ? 'Fecha no puede ser más de 24h en el futuro.' : '';
   }
-  getBlock(i: number): FormGroup {
-    return this.content.at(i) as FormGroup;
+  private updateLocalSeoSuggestion() {
+    const city = this.noticiaForm.get('location.city')?.value;
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
+    const text = new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
+    this.localSeoSuggestion = (city && !text.includes(city)) ? `Sugiere añadir mención a "${city}" en el primer 30% del texto.` : '';
   }
-
-  private createBlockGroup(type: string): FormGroup {
-    switch (type) {
-      case 'text':
-        return this.fb.group({
-          type: ['text'],
-          text: ['', Validators.required],
-          tag: ['p'],
-          style: this.fb.group({
-            fontSize: [''],
-            fontWeight: [''],
-            fontFamily: [''],
-            textAlign: ['left'],
-          }),
-        });
-      case 'image':
-        return this.fb.group({
-          type: ['image'],
-          url: ['', [Validators.required, Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i)]],
-          alt: ['', [Validators.required, Validators.minLength(8)]],
-          caption: [''],
-        });
-      case 'list':
-        return this.fb.group({
-          type: ['list'],
-          ordered: [false],
-          items: this.fb.array([this.fb.control('', Validators.required)]),
-        });
-      case 'quote':
-        return this.fb.group({
-          type: ['quote'],
-          quote: ['', Validators.required],
-          authorQuote: [''],
-          style: this.fb.group({
-            fontFamily: ['Arial, sans-serif'],
-            fontStyle: ['italic'],
-            textAlign: ['center'],
-          }),
-        });
-      case 'link':
-        return this.fb.group({
-          type: ['link'],
-          href: ['', [Validators.required, Validators.pattern(/^https:\/\/.+/)]],
-          textLink: ['', [Validators.required, this.noGenericAnchorValidator()]],
-        });
-      case 'credit':
-        return this.fb.group({
-          type: ['credit'],
-          creditText: ['', Validators.required],
-        });
-      default:
-        return this.fb.group({ type: [type], data: [''] });
-    }
+  private updateTitleRepetition() {
+    const title = (this.noticiaForm.get('title')?.value || '').toLowerCase();
+    const html = (this.noticiaForm.get('body')?.value || '').toString();
+    if (!this.isBrowser) return;
+    const firstPara = (new DOMParser().parseFromString(html, 'text/html').querySelector('p')?.textContent || '').toLowerCase();
+    this.titleRepetitionWarning = (title && firstPara.startsWith(title)) ? 'La primera frase repite el título: varíala para mejorar CTR.' : '';
   }
 
-  private noGenericAnchorValidator(): ValidatorFn {
-    const generics = ['clic aquí', 'aquí', 'leer más', 'click here', 'here', 'read more'];
-    return (control: AbstractControl): ValidationErrors | null => {
-      const value = (control.value || '').toLowerCase();
-      return generics.some((g) => value.includes(g)) ? { genericAnchor: true } : null;
+  private updateChecklist() {
+    this.checklist = {
+      title: this.noticiaForm.get('title')?.valid,
+      description: this.noticiaForm.get('meta.description')?.valid,
+      slug: this.noticiaForm.get('slug')?.valid,
+      headers: this.headerCount >= 1 || this.wordCount <= 400,
+      links: true,
+      image: this.noticiaForm.get('meta.image')?.valid,
+      publishAt: !this.publishAtError,
+      noUtm: true,
+      sources: !this.sourcesSuggestion,
+      focusKeyphrase: this.noticiaForm.get('focusKeyphrase')?.valid && this.noticiaForm.get('title')?.valid,
+      imageAltGlobal: this.noticiaForm.get('meta.imageAltGlobal')?.valid,
+      wordCount: this.wordCount >= 300,
+      extracto: this.noticiaForm.get('extracto')?.valid,
+      categories: this.noticiaForm.get('categories')?.valid,
+      tags: this.tags?.valid
     };
   }
-
-  addBlock(type: string) {
-    const blockGroup = this.createBlockGroup(type);
-    this.content.push(blockGroup);
-    this.blockOpenState.push(true);
-    this.content.updateValueAndValidity();
-  }
-
-  removeBlock(i: number) {
-    this.content.removeAt(i);
-    this.blockOpenState.splice(i, 1);
-    this.content.updateValueAndValidity();
-  }
-
-  toggleBlock(i: number) {
-    this.blockOpenState[i] = !this.blockOpenState[i];
-  }
-
-  addListItem(blockIndex: number) {
-    const items = this.getListItems(blockIndex);
-    if (items.length < 7) items.push(this.fb.control('', Validators.required));
-  }
-
-  removeListItem(blockIndex: number, itemIndex: number) {
-    const items = this.getListItems(blockIndex);
-    if (items.length > 1) items.removeAt(itemIndex);
-  }
-
-  cleanUtm(blockIndex: number) {
-    const hrefCtrl = this.getBlock(blockIndex).get('href');
-    if (!hrefCtrl) return;
-    const url = hrefCtrl.value;
-    if (url) {
-      try {
-        const urlObj = new URL(url);
-        ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach((p) =>
-          urlObj.searchParams.delete(p)
-        );
-        hrefCtrl.setValue(urlObj.toString());
-      } catch {}
-    }
-  }
-
-  onPaste(event: ClipboardEvent) {
-    event.preventDefault();
-    const text = event.clipboardData?.getData('text/plain');
-    document.execCommand('insertText', false, text || '');
+  private updatePublishTooltip() {
+    const state = this.noticiaForm.get('state')?.value;
+    if (state !== 'review' && state !== 'published') { this.publishTooltip = ''; return; }
+    const fails: string[] = [];
+    if (!this.checklist.title) fails.push('Título 50–60 + keyword');
+    if (!this.checklist.description) fails.push('Meta 120–160 + keyword');
+    if (!this.checklist.slug) fails.push('Slug válido/único');
+    if (!this.checklist.headers) fails.push('≥1 H2 si >400');
+    if (!this.checklist.image) fails.push('Imagen destacada OK');
+    if (!this.checklist.publishAt) fails.push('Fecha publicación válida');
+    if (!this.checklist.sources) fails.push('Fuentes claras');
+    if (!this.checklist.focusKeyphrase) fails.push('Keyword optimizada');
+    if (!this.checklist.imageAltGlobal) fails.push('Alt global ok');
+    if (!this.checklist.wordCount) fails.push('≥300 palabras');
+    if (!this.checklist.extracto) fails.push('Extracto 150–300 con keyword');
+    if (!this.checklist.categories) fails.push('≥1 categoría');
+    if (!this.checklist.tags) fails.push('1–5 etiquetas');
+    this.publishTooltip = fails.length ? 'Pendientes: ' + fails.join(', ') : '';
   }
 
   onMetaImageLoad(event: Event) {
@@ -455,291 +791,126 @@ export class EditarNoticias implements OnInit {
   }
 
   loadCategories() {
-    this.categoriasService.obtenerCategorias().subscribe((categories) => {
+    this.categoriasService.obtenerCategorias().subscribe(categories => {
       this.categoriasDisponibles = categories;
     });
   }
-
-  private updateMetrics() {
-    let totalWords = 0;
-    let paras: string[] = [];
-    this.imageCount = 0;
-    this.headerCount = 0;
-    let syllables = 0;
-    let sentences = 0;
-
-    this.content.controls.forEach((group) => {
-      const type = group.get('type')?.value;
-      if (type === 'text') {
-        const text = group.get('text')?.value || '';
-        const tag = group.get('tag')?.value;
-        const words = text.trim().split(/\s+/).filter(Boolean).length;
-        totalWords += words;
-        if (tag === 'p') paras.push(text);
-        else if (['h2', 'h3'].includes(tag)) this.headerCount++;
-        syllables += text.match(/[aeiouáéíóúü]/gi)?.length || 0;
-        sentences += text.match(/[.!?]/g)?.length || 1;
-      } else if (type === 'image') {
-        if (group.get('alt')?.value) this.imageCount++;
-      } else if (type === 'list') {
-        const items = group.get('items') as FormArray;
-        items.controls.forEach((item) => {
-          const t = (item.value || '') as string;
-          totalWords += t.trim().split(/\s+/).filter(Boolean).length;
-          syllables += t.match(/[aeiouáéíóúü]/gi)?.length || 0;
-          sentences += t.match(/[.!?]/g)?.length || 1;
-        });
-      } else if (type === 'quote') {
-        const quote = group.get('quote')?.value || '';
-        totalWords += quote.trim().split(/\s+/).filter(Boolean).length;
-        syllables += quote.match(/[aeiouáéíóúü]/gi)?.length || 0;
-        sentences += quote.match(/[.!?]/g)?.length || 1;
-        this.quoteWarning = quote.length > 280 ? 'Si >280 chars, considera convertir en párrafo + atribución.' : '';
-      }
-    });
-
-    this.wordCount = totalWords;
-    this.readingTime = Math.ceil(totalWords / 200);
-    this.fleschScore = totalWords
-      ? Math.round(206.835 - 1.015 * (totalWords / Math.max(1, sentences)) - 84.6 * (syllables / totalWords))
-      : 0;
-
-    this.paragraphWarnings = [];
-    let shortParaStreak = 0;
-    paras.forEach((p, i) => {
-      const words = p.trim().split(/\s+/).filter(Boolean).length;
-      if (words > 120) this.paragraphWarnings.push(`Párrafo ${i + 1} tiene ${words} palabras. Divide en 2–3.`);
-      if (words < 20) {
-        shortParaStreak++;
-        if (shortParaStreak > 3) this.paragraphWarnings.push('Más de 3 párrafos cortos seguidos. Considera unir algunos.');
-      } else shortParaStreak = 0;
-    });
-    const avgParaWords = paras.length ? totalWords / paras.length : 0;
-    if (avgParaWords < 40 || avgParaWords > 80) {
-      this.paragraphWarnings.push(`Media de palabras por párrafo: ${Math.round(avgParaWords)}. Objetivo 40-80.`);
-    }
-
-    if (this.wordCount > 400 && this.headerCount < 1) {
-      this.headerSuggestion = 'Artículo >400 palabras: requiere al menos un H2.';
-    } else if (
-      this.headerCount > 0 &&
-      this.content.controls.some((g) => g.get('type')?.value === 'list' && (g.get('items') as FormArray).length > 5)
-    ) {
-      this.headerSuggestion = 'Listas largas: sugiere H3 bajo un H2.';
-    } else {
-      this.headerSuggestion = '';
-    }
-
-    this.content.updateValueAndValidity();
-  }
-
-  private updateSoftValidators() {
-    this.keywordDensityWarnings = [];
-    if (this.wordCount > 0) {
-      this.tags.controls.forEach((tagCtrl) => {
-        const tag = (tagCtrl.value || '').toLowerCase();
-        if (tag) {
-          const count = this.getFullText().toLowerCase().split(tag).length - 1;
-          const density = (count / this.wordCount) * 100;
-          if (density > 3) {
-            this.keywordDensityWarnings.push(`Tag "${tag}" aparece al ${density.toFixed(1)}% - posible sobre-optimización.`);
-          }
-        }
-      });
-    }
-
-    this.updateTitleRepetition();
-
-    const fullText = this.getFullText().toLowerCase();
-    if (fullText.includes('fuentes:') || fullText.includes('sources:')) {
-      const hasListWithHttps = this.content.controls.some(
-        (g) => g.get('type')?.value === 'list' && (g.get('items') as FormArray)?.value?.some((it: string) => /^https:\/\/.+/.test(it))
-      );
-      this.sourcesSuggestion = hasListWithHttps ? '' : 'Si hay “Fuentes:”, exige lista de enlaces https con nombres claros.';
-    }
-
-    const hasOrdered = this.content.controls.some((g) => g.get('type')?.value === 'list' && g.get('ordered')?.value);
-    const hasUnordered = this.content.controls.some((g) => g.get('type')?.value === 'list' && !g.get('ordered')?.value);
-    this.listSuggestion = hasOrdered && hasUnordered ? 'Mezcla listas ordenadas/no ordenadas: sugiere separarlas.' : '';
-  }
-
-  private getFullText(): string {
-    let text = '';
-    this.content.controls.forEach((group) => {
-      const type = group.get('type')?.value;
-      if (type === 'text' || type === 'quote') {
-        text += (group.get('text')?.value || group.get('quote')?.value || '') + ' ';
-      } else if (type === 'list') {
-        const items = group.get('items') as FormArray;
-        items.controls.forEach((item) => (text += (item.value || '') + ' '));
-      }
-    });
-    return text.trim();
-  }
-
-  private updateTitleWarning() {
-    const len = this.noticiaForm.get('title')?.value?.length || 0;
-    if ((len < 50 && len > 45) || (len > 60 && len < 65)) {
-      this.titleWarning = `Tu título tiene ${len} caracteres. Objetivo 50–60.`;
-    } else this.titleWarning = '';
-  }
-
-  private updateMetaDescWarning() {
-    const len = this.noticiaForm.get('meta.description')?.value?.length || 0;
-    if (len < 150 && len > 140) this.metaDescWarning = `La descripción tiene ${len} caracteres. Sube a 150–160.`;
-    else if (len > 160 && len < 170) this.metaDescWarning = 'La descripción supera 160 caracteres. Acórtala.';
-    else this.metaDescWarning = '';
-  }
-
-  private validatePublishAt() {
-    if (this.noticiaForm.get('state')?.value !== 'published') return;
-    const publishAtRaw = this.noticiaForm.get('publishAt')?.value;
-    const publishAt = publishAtRaw ? new Date(publishAtRaw) : null;
-    if (!publishAt) {
-      this.publishAtError = 'Fecha de publicación requerida para publicar.';
-      return;
-    }
-    const now = new Date();
-    const futureLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    this.publishAtError =
-      publishAt > futureLimit ? 'Fecha no puede ser más de 24h en el futuro (usa "programada").' : '';
-  }
-
-  private updateLocalSeoSuggestion() {
-    const city = this.noticiaForm.get('location.city')?.value;
-    this.localSeoSuggestion =
-      city && !this.getFullText().includes((city || '').toString())
-        ? `Sugiere añadir mención a "${city}" en el primer 30% del texto para local SEO.`
-        : '';
-  }
-
-  private updateTitleRepetition() {
-    const title = (this.noticiaForm.get('title')?.value || '').toLowerCase();
-    const firstPara =
-      this.content.controls.find((g) => g.get('type')?.value === 'text' && g.get('tag')?.value === 'p')?.get('text')
-        ?.value?.toLowerCase() || '';
-    this.titleRepetitionWarning = title && firstPara.startsWith(title) ? 'La primera frase repite el título.' : '';
-  }
-
-  private updateChecklist() {
-    this.checklist = {
-      title: this.noticiaForm.get('title')?.valid,
-      description: this.noticiaForm.get('meta.description')?.valid,
-      slug: this.noticiaForm.get('slug')?.valid,
-      headers: this.headerCount >= 1 || this.wordCount <= 400,
-      links: this.content.controls.every((g) => g.get('type')?.value !== 'link' || g.valid),
-      publishAt: !this.publishAtError,
-      noUtm: true,
-      sources: !this.sourcesSuggestion,
-    };
-  }
-
-  private updatePublishTooltip() {
-    if (this.noticiaForm.get('state')?.value !== 'published') {
-      this.publishTooltip = '';
-      return;
-    }
-    const fails = [];
-    if (!this.checklist.title) fails.push('Título 50-60 chars');
-    if (!this.checklist.description) fails.push('Description 150-160 chars');
-    if (!this.checklist.slug) fails.push('Slug válido/único');
-    if (!this.checklist.headers) fails.push('Al menos 1 H2');
-    if (!this.checklist.links) fails.push('Enlaces https/descriptivos');
-    if (!this.checklist.publishAt) fails.push('publishAt correcto');
-    if (!this.checklist.sources) fails.push('Fuentes claras');
-    this.publishTooltip = fails.length ? 'Pendientes: ' + fails.join(', ') : '';
-  }
-
   onSubmit() {
     this.isSubmitting = true;
-    this.markAllTouched();
-    this.showChecklist = true;
 
-    if (
-      this.noticiaForm.invalid ||
-      (this.noticiaForm.get('state')?.value === 'published' && Object.values(this.checklist).some((v) => !v))
-    ) {
-      alert('Por favor, completa los campos requeridos y pasa el checklist SEO.');
+    // Mantén la UX: tocar todo para que salgan avisos
+    this.noticiaForm.markAllAsTouched();
+    this.noticiaForm.get('body')?.updateValueAndValidity();
+    this.validatePublishAt();
+    this.updateChecklist();
+
+    // Soft-required mínimos para permitir guardar
+    const hasTitle = !!(this.noticiaForm.get('title')?.value || '').toString().trim();
+    const hasSlug  = !!(this.noticiaForm.get('slug')?.value || '').toString().trim();
+    const hasMetaDesc = !!(this.noticiaForm.get('meta.description')?.value || '').toString().trim();
+    const hasMetaImg  = !!(this.noticiaForm.get('meta.image')?.value || '').toString().trim();
+
+    if (!hasTitle || !hasSlug || !hasMetaDesc || !hasMetaImg) {
+      alert('Faltan mínimos para guardar: título, slug, meta description e imagen destacada.');
       this.isSubmitting = false;
       return;
     }
 
+    // Importante: NO bloquear por invalid ni por checklist
+    // (dejamos los avisos y la checklist solo informativos)
     const data = this.prepareSubmitData();
+
     this.noticiasService.updateNoticia(this.id, data as any).subscribe({
-      next: (res: Noticia) => {
-        console.log('Noticia actualizada:', res);
+      next: () => {
         alert('Noticia actualizada exitosamente.');
         this.isSubmitting = false;
       },
       error: (err: any) => {
-        console.error('Error updating noticia:', err);
-        alert('Error al actualizar la noticia: ' + (err.message || 'Unknown error'));
+        alert('Error al actualizar la noticia: ' + (err?.message || 'Unknown error'));
         this.isSubmitting = false;
-      },
+      }
     });
   }
 
   onDelete() {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta noticia? Esta acción no se puede deshacer.')) return;
+    if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return;
     this.isSubmitting = true;
     this.noticiasService.deleteNoticia(this.id).subscribe({
       next: () => {
-        console.log('Noticia eliminada:', this.id);
         alert('Noticia eliminada exitosamente.');
         this.isSubmitting = false;
         this.router.navigate(['/noticias']);
       },
       error: (err: any) => {
-        console.error('Error deleting noticia:', err);
         alert('Error al eliminar la noticia: ' + (err.message || 'Unknown error'));
         this.isSubmitting = false;
       },
     });
   }
 
-  private markAllTouched() {
-    this.noticiaForm.markAllAsTouched();
-    this.content.controls.forEach((group, i) => {
-      if (group.get('type')?.value === 'list') {
-        this.getListItems(i).markAllAsTouched();
-      } else {
-        Object.values((group as FormGroup).controls).forEach((ctrl) => (ctrl as any).markAsTouched?.());
-      }
-    });
-    this.tags.markAllAsTouched();
-  }
-
   private prepareSubmitData() {
     const raw = this.noticiaForm.value;
     const categories: string[] = raw.categories;
 
-    // Enviar exactamente lo que backend espera (incluye meta extendido, state, publishAt y bloques, incluido credit)
-    const submitData = {
+    return {
       title: raw.title,
       slug: raw.slug,
       summary: raw.summary || '',
       tags: raw.tags || [],
       categories,
+      extracto: raw.extracto || '',
       location: raw.location || { country: '', region: '', city: '' },
       state: raw.state,
       publishAt: raw.publishAt ? new Date(raw.publishAt).toISOString() : null,
-      content: raw.content,
+      bodyHtml: String(raw.body || ''),
+      content: this.parseHtmlToBlocks(String(raw.body || '')), // por si quieres mantener ambos
       meta: {
         description: raw.meta.description,
         image: raw.meta.image,
-        canonical: raw.meta.canonical || `https://yourdomain.com/${raw.slug}`,
+        canonical: raw.meta.canonical || `https://${this.domain}/${raw.slug}`,
         ogTitle: raw.meta.ogTitle || raw.title,
-        ogDescription: raw.meta.ogDescription || raw.meta.description,
+        ogDescription: raw.meta.ogDescription || (raw.extracto || raw.meta.description),
         imageAltGlobal: raw.meta.imageAltGlobal || '',
-        twitterCard: raw.meta.twitterCard || 'summary_large_image',
-      },
+        imageCaption: raw.meta.imageCaption || '',
+        imageCaptionUrl: raw.meta.imageCaptionUrl || '',
+        twitterCard: 'summary_large_image'
+      }
     };
-
-    console.log('Submit Data (edit):', JSON.stringify(submitData, null, 2));
-    return submitData;
   }
 
-  get previewData() {
-    return this.previewDataObj;
+  // ======== Atajos y split ========
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent) {
+    const mod = e.ctrlKey || e.metaKey;
+    if (!mod) return;
+    if (e.key.toLowerCase() === 'p') { e.preventDefault(); this.cycleDock(); }
+    if (e.key.toLowerCase() === 'b') { e.preventDefault(); this.inspectorOpen = !this.inspectorOpen; }
+    if (e.key === ';') { e.preventDefault(); this.seoEssentialsOpen = !this.seoEssentialsOpen; }
+  }
+
+  cycleDock() {
+    this.dockMode = this.dockMode === 'hidden' ? 'right' : this.dockMode === 'right' ? 'bottom' : 'hidden';
+  }
+
+  onGutterDown(_: MouseEvent) {
+    if (this.dockMode !== 'right') return;
+    this.resizing = true;
+    document.body.classList.add('resizing');
+  }
+
+  @HostListener('window:mouseup')
+  onMouseUp() {
+    this.resizing = false;
+    document.body.classList.remove('resizing');
+  }
+
+  @HostListener('window:mousemove', ['$event'])
+  onMouseMove(e: MouseEvent) {
+    if (!this.resizing || this.dockMode !== 'right') return;
+    const wrap = document.querySelector('.studio-wrap') as HTMLElement;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    this.splitRatio = Math.min(0.8, Math.max(0.3, x / rect.width));
   }
 }
