@@ -18,7 +18,9 @@ export interface CreateUploadResponse {
 
 @Injectable({ providedIn: 'root' })
 export class MuxService {
-  private API_URL = 'http://localhost:3000/maslatino/mux'; // ajusta a tu backend
+  //private API_URL = 'http://localhost:3000/maslatino/mux'; // ajusta a tu backend
+    private API_URL = 'https://maslatinoregular.onrender.com/aaron/maslatino/mux';
+
   constructor(private http: HttpClient) {}
 
   createDirectUpload(body: CreateUploadBody): Observable<CreateUploadResponse> {
