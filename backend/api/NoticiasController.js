@@ -4,13 +4,16 @@ import Noticia from '../models/Noticias.js';
 import Category from '../models/Categorias.js';
 import User from '../models/Usuarios.js';
 import { recacheNoticia } from '../utils/prerender-service.js';
+import mongoose from 'mongoose';
 
 dotenv.config();
-// Helpers
-// Helpers (si ya los tienes definidos/importados, no dupliques)
+
+// Extract mongoose helpers in JS style
+const { Types, isValidObjectId } = mongoose;
+
+// ---------- Helpers ----------
 function generarSlug(texto = '') {
-  return texto
-    .toString()
+  return String(texto)
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
@@ -18,6 +21,7 @@ function generarSlug(texto = '') {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
+
 async function ensureUniqueSlug(baseSlug) {
   let slug = baseSlug;
   let i = 2;
@@ -28,10 +32,253 @@ async function ensureUniqueSlug(baseSlug) {
     slug = `${baseSlug}-${i++}`;
   }
 }
+
+function normTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  const cleaned = tags.map(t => String(t || '').trim()).filter(Boolean);
+  return Array.from(new Set(cleaned)).slice(0, 5);
+}
+
+// Resolve categories from IDs / slugs / names -> ObjectId[]
+async function resolveCategories(input) {
+  if (!Array.isArray(input) || input.length === 0) return [];
+
+  const idSet = new Set();
+  const lookup = []; // slugs or names to search in DB
+
+  for (const c of input) {
+    if (!c) continue;
+
+    if (typeof c === 'string') {
+      const s = c.trim();
+      if (!s) continue;
+      if (isValidObjectId ? isValidObjectId(s) : mongoose.isValidObjectId(s)) {
+        idSet.add(s);
+      } else {
+        lookup.push(s);
+      }
+      continue;
+    }
+
+    if (typeof c === 'object') {
+      const maybeId = c._id || c.id;
+      if (maybeId && (isValidObjectId ? isValidObjectId(String(maybeId)) : mongoose.isValidObjectId(String(maybeId)))) {
+        idSet.add(String(maybeId));
+      } else if (c.slug) {
+        lookup.push(String(c.slug));
+      } else if (c.name) {
+        lookup.push(String(c.name));
+      }
+    }
+  }
+
+  if (lookup.length) {
+    const extra = await Category.find(
+      { $or: [{ slug: { $in: lookup } }, { name: { $in: lookup } }] },
+      { _id: 1 }
+    ).lean();
+    for (const row of extra) idSet.add(String(row._id));
+  }
+
+  return Array.from(idSet).map(id => new Types.ObjectId(id));
+}
+
+// Build canonical if not provided
+function pickCanonical(publicBaseUrl, slug, req) {
+  if (publicBaseUrl) {
+    return `${publicBaseUrl.replace(/\/+$/, '')}/${slug}`;
+  }
+  // Fallback from request
+  try {
+    const proto = (req.headers['x-forwarded-proto'] || '').split(',')[0] || req.protocol || 'https';
+    const host = req.get ? req.get('host') : req.headers.host;
+    if (host) return `${proto}://${host}/${slug}`;
+  } catch (_) {}
+  return `https://yourdomain.com/${slug}`;
+}
+// ---- Helpers para normalizar blocks provenientes del front ----
+function toPlainHtml(val) {
+  if (val == null) return '';
+  if (typeof val === 'string') return val;
+  // Angular SafeHtml serializado: { changingThisBreaksApplicationSecurity: '...html...' }
+  if (typeof val === 'object' && Object.prototype.hasOwnProperty.call(val, 'changingThisBreaksApplicationSecurity')) {
+    return String(val.changingThisBreaksApplicationSecurity || '');
+  }
+  return String(val);
+}
+
+function normalizeBlock(b) {
+  const type = String((b && b.type) || 'text');
+  const tag  = String((b && b.tag)  || 'p');
+
+  const out = { type, tag };
+
+  if (type === 'list') {
+    const items = Array.isArray(b.items) ? b.items.map(x => String(x || '')) : [];
+    const itemsHtml = Array.isArray(b.itemsHtml) ? b.itemsHtml.map(toPlainHtml) : [];
+    out.items = items;
+    out.itemsHtml = itemsHtml;
+  } else if (type === 'image') {
+    out.url = String((b && b.url) || '');
+    out.alt = String((b && b.alt) || '');
+    if (b && b.captionHtml != null) out.captionHtml = toPlainHtml(b.captionHtml);
+  } else if (type === 'link') {
+    out.href = String((b && b.href) || '');
+    out.textLink = String((b && b.textLink) || '');
+  } else {
+    // text / quote / cualquier otro con html/text
+    out.html = toPlainHtml(b && b.html);
+    out.text = String((b && b.text) || '');
+  }
+
+  // style: aseguramos shape simple { textAlign: 'left'|'center'|'right'|'' }
+  const ta = b && b.style && b.style.textAlign ? String(b.style.textAlign) : '';
+  out.style = { textAlign: ['left','center','right'].includes(ta) ? ta : '' };
+
+  return out;
+}
+
+function normalizeContent(arr) {
+  if (!Array.isArray(arr)) return [];
+  return arr
+    .map(normalizeBlock)
+    // opcional: filtra bloques vacíos de texto
+    .filter(bl =>
+      bl.type === 'list' ? (bl.items && bl.items.length) :
+      bl.type === 'image' ? (bl.url && bl.url.length) :
+      bl.type === 'link'  ? (bl.href && bl.href.length) :
+      (bl.html && bl.html.trim().length) || (bl.text && bl.text.trim().length)
+    );
+}
 class noticiasController {
 
 
+  async updateNoticia(req, res) {
+    try {
+      const { id } = req.params;
+      const data = req.body || {};
 
+      // 1) Exists?
+      const existing = await Noticia.findById(id);
+      if (!existing) return res.status(404).json({ error: 'Noticia no encontrada' });
+
+      // 2) Title/slug
+      const title = String(data.title || existing.title || '').trim();
+      let incomingSlug = String(data.slug || '').trim();
+      if (!incomingSlug && title) incomingSlug = generarSlug(title);
+      if (!incomingSlug) return res.status(400).json({ error: 'slug es requerido (o título para generarlo)' });
+
+      let finalSlug = incomingSlug;
+      const slugChanged = incomingSlug !== existing.slug;
+      if (slugChanged) {
+        finalSlug = await ensureUniqueSlug(generarSlug(incomingSlug));
+      }
+
+      // 3) Required meta
+      const meta = data.meta || {};
+      const metaDescription = String(meta.description || '').trim();
+      const metaImage = String(meta.image || '').trim();
+      if (!title) return res.status(400).json({ error: 'title es obligatorio' });
+      if (!finalSlug) return res.status(400).json({ error: 'slug es obligatorio' });
+      if (!metaDescription) return res.status(400).json({ error: 'meta.description es obligatoria' });
+      if (!metaImage) return res.status(400).json({ error: 'meta.image es obligatoria' });
+
+      // 4) Optional fields (don’t block)
+      const summary  = String(data.summary || '').trim();
+      const extracto = String(data.extracto || '').trim();
+      const tags     = normTags(data.tags);
+
+      const location = (data.location && typeof data.location === 'object')
+        ? {
+            country: data.location.country || '',
+            region:  data.location.region || '',
+            city:    data.location.city || ''
+          }
+        : { country: '', region: '', city: '' };
+
+      const state = ['draft', 'review', 'published'].includes(data.state)
+        ? data.state
+        : (existing.state || 'draft');
+
+      const publishAt = data.publishAt ? new Date(data.publishAt) : (existing.publishAt || null);
+
+      // body/content
+      let bodyHtml = String(data.bodyHtml || data.body || '').trim();
+      // tidy nested <p><p>…</p></p> if your editor creates them
+      bodyHtml = bodyHtml.replace(/<p>\s*<p>/g, '<p>').replace(/<\/p>\s*<\/p>/g, '</p>');
+
+      const content = normalizeContent(Array.isArray(data.content) ? data.content : (existing.content || []));
+
+      // categories
+      const categories = await resolveCategories(data.categories || existing.categories || []);
+
+      // 5) Meta final
+      const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL;
+      const canonical = String(meta.canonical || pickCanonical(PUBLIC_BASE_URL, finalSlug, req));
+      const ogTitle = String(meta.ogTitle || title);
+      const ogDescription = String(meta.ogDescription || extracto || metaDescription);
+      const imageAltGlobal = String(meta.imageAltGlobal || '').trim();
+      const imageCaption = String(meta.imageCaption || '').trim();
+      const imageCaptionUrl = String(meta.imageCaptionUrl || '').trim();
+
+      const metaFinal = {
+        description: metaDescription,
+        image: metaImage,
+        canonical,
+        ogTitle,
+        ogDescription,
+        imageAltGlobal,
+        imageCaption,
+        imageCaptionUrl,
+        twitterCard: 'summary_large_image'
+      };
+
+      // 6) Update doc
+      const updateDoc = {
+        title,
+        slug: finalSlug,
+        summary,
+        extracto,
+        tags,
+        categories,
+        location,
+        state,
+        publishAt: publishAt || null,
+        bodyHtml,
+        content,
+        meta: metaFinal,
+        updatedAt: new Date()
+      };
+
+      // 7) Save
+      const updated = await Noticia.findByIdAndUpdate(id, updateDoc, {
+        new: true,
+        runValidators: true
+      })
+        .populate('categories', 'name slug color')
+        .lean();
+
+      if (!updated) return res.status(404).json({ error: 'Error al actualizar la noticia' });
+
+      // 8) Recache on publish / slug change
+      try {
+        if (state === 'published') {
+          await recacheNoticia(updated.slug);
+          if (slugChanged) {
+            // optionally invalidate old slug
+            await recacheNoticia(existing.slug).catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.warn('recacheNoticia warning:', e && e.message ? e.message : e);
+      }
+
+      return res.status(200).json(updated);
+    } catch (e) {
+      console.error('Error updating noticia:', e);
+      return res.status(500).json({ error: 'Error al actualizar la noticia' });
+    }
+  }
 async getNoticiasByArchive(req, res) {
   try {
     const { anio, mes } = req.params;
@@ -129,41 +376,7 @@ async getCategorias(req, res) {
     res.status(500).json({ error: 'Error al obtener categorías' });
   }
 }
- async updateNoticia(req, res) {
-    try {
-      const { id } = req.params;
-      const data = req.body;
-
-      // Validar que la noticia existe
-      const existingNoticia = await Noticia.findById(id);
-      if (!existingNoticia) {
-        return res.status(404).json({ error: 'Noticia no encontrada' });
-      }
-
-      // Actualizar la noticia
-      const updatedNoticia = await Noticia.findByIdAndUpdate(
-        id,
-        { ...data, updatedAt: new Date() },
-        { new: true, runValidators: true }
-      )
-        .populate('categories', 'name slug color')
-        .lean();
-
-      if (!updatedNoticia) {
-        return res.status(404).json({ error: 'Error al actualizar la noticia' });
-      }
-
-      // Trigger recache if published
-      if (data.state === 'published') {
-        await recacheNoticia(updatedNoticia.slug);
-      }
-
-      return res.status(200).json(updatedNoticia);
-    } catch (e) {
-      console.error('Error updating noticia:', e);
-      return res.status(500).json({ error: 'Error al actualizar la noticia' });
-    }
-  }
+ 
    async deleteNoticia(req, res) {
     try {
       const { id } = req.params;
