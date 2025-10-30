@@ -1,50 +1,87 @@
-<section class="ultimas-noticias-section">
-  <div class="ultimas-noticias-container">
-    <h2 class="titulo-seccion">EVENTOS</h2>
+<!-- ===== 7 ESFERAS - CÍRCULO ===== -->
+<section class="spheres-section">
+  <div class="spheres-container">
+    <h2 class="section-title">
+      LAS 7 ESFERAS<br />
+      QUE INFLUENCIAN EN NUESTRA VIDA
+    </h2>
 
-    <div class="ultimas-noticias-carousel-wrapper">
-      <div class="fade-left"></div>
-    
-      <swiper-container
-        slides-per-view="1.2"
-        centered-slides="true"
-        space-between="24"
-        pagination="true"
-        navigation="true"
-        class="ultimas-noticias-swiper"
-      >
-        <swiper-slide *ngFor="let item of items">
-          <div class="noticia-card">
-            <img
-              [src]="item.image || 'https://via.placeholder.com/300x200'"
-              alt="Imagen de {{ item.title }}"
-              class="noticia-imagen"
-            />
+    <div class="spheres-orbit-wrapper">
+      <div class="spheres-orbit">
 
-            <div class="noticia-contenido">
-              <p class="noticia-fecha">
-                {{ item.startAt | date: 'longDate' }}
-              </p>
-
-              <h3 class="noticia-titulo">
-                {{ item.title }}
-              </h3>
-
-              <p class="noticia-descripcion">
-                {{ item.excerpt }}
-              </p>
-
+        <!-- 1: ARTS / ENTERTAINMENT / SPORTS -->
+        <div class="sphere-node angle-0">
+          <div class="sphere-circle green">
+            <div class="sphere-label">
+              ARTS/<br />
+              ENTERTAINMENT/<br />
+              SPORTS
             </div>
           </div>
-        </swiper-slide>
-      </swiper-container>
-   
-      <div class="fade-right"></div>
+        </div>
+
+        <!-- 2: BUSINESS / FINANCE -->
+        <div class="sphere-node angle-50">
+          <div class="sphere-circle red">
+            <div class="sphere-label white-text">
+              BUSINESS /<br />
+              FINANCE
+            </div>
+          </div>
+        </div>
+
+        <!-- 3: FAMILY / COMMUNITY -->
+        <div class="sphere-node angle-100">
+          <div class="sphere-circle orange">
+            <div class="sphere-label">
+              FAMILY /<br />
+              COMMUNITY
+            </div>
+          </div>
+        </div>
+
+        <!-- 4: EDUCATION -->
+        <div class="sphere-node angle-150">
+          <div class="sphere-circle purple">
+            <div class="sphere-label white-text">
+              EDUCATION
+            </div>
+          </div>
+        </div>
+
+        <!-- 5: GOVERNMENT / RESOURCES -->
+        <div class="sphere-node angle-200">
+          <div class="sphere-circle purple">
+            <div class="sphere-label white-text">
+              GOVERNMENT /<br />
+              RESOURCES
+            </div>
+          </div>
+        </div>
+
+        <!-- 6: RELIGION -->
+        <div class="sphere-node angle-260">
+          <div class="sphere-circle red">
+            <div class="sphere-label white-text">
+              RELIGION
+            </div>
+          </div>
+        </div>
+
+        <!-- 7: HEALTH / FITNESS -->
+        <div class="sphere-node angle-320">
+          <div class="sphere-circle green">
+            <div class="sphere-label">
+              HEALTH /<br />
+              FITNESS
+            </div>
+          </div>
+        </div>
+
+ 
+
+      </div>
     </div>
   </div>
-
-       <div class="fila-inputs">
-      <a [routerLink]="['/eventos-show']"  class="boton-contacto">Ver más</a>
-     </div>
-
 </section>
+<!-- ===== /7 ESFERAS - CÍRCULO ===== -->
