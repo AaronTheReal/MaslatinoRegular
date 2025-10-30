@@ -1,19 +1,17 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, AfterViewInit, OnInit, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import Swiper from 'swiper';
 import { Navigation, Pagination } from 'swiper/modules';
 import { CalendarPCService, CalendarItemPC } from './../../../services/calendario-servicePC';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
-import { isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
-
 
 @Component({
   selector: 'app-eventos',
-  imports: [CommonModule,RouterModule],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './eventos.html',
   styleUrl: './eventos.css',
-  standalone: true,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class Eventos implements AfterViewInit, OnInit {
@@ -36,7 +34,7 @@ export class Eventos implements AfterViewInit, OnInit {
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
       new Swiper('.ultimas-noticias-swiper', {
-        modules: [Navigation, Pagination], // Pass modules here
+        modules: [Navigation, Pagination],
         slidesPerView: 1,
         centeredSlides: true,
         spaceBetween: 24,

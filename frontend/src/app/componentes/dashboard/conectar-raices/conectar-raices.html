@@ -1,16 +1,60 @@
-<section class="dashboard-hero">
-  <!-- Contenedor de texto -->
-  <div class="frase-container">
-    <div class="frase-dashboard">
-      <h1><span class="negro">CONECTATE</span></h1>
-      <h1><span class="negro">CON TUS</span></h1>
-      <h1><span class="morado">RAICES</span></h1>
-      <h1><span class="morado">LATINAS</span></h1>
-    </div>
-  </div>
+<!-- Contenedor principal del hero -->
+<main class="container">
+  <section class="content-wrapper">
+    <!-- Lado izquierdo: texto -->
+    <div class="text-section">
+      <h1 class="main-heading">
+        CONECTATE<br />
+        CON TUS<br />
+        <span class="highlight">RAÍCES<br />LATINAS</span>
+      </h1>
 
-  <!-- Imagen a la derecha -->
-  <div class="image-right-section">
-    <img src="assets/dashboardiconos/lapiz.png" alt="Raíces Latinas" class="image-right" />
-  </div>
-</section>
+      <p class="description">
+        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam
+        nonummy nibh euismod.
+      </p>
+    </div>
+
+    <!-- Lado derecho: grid de features -->
+    <div class="features-grid">
+      <!-- PODCAST -->
+      <div class="feature-card card-podcast">
+        <div class="card-content">
+          <!-- El micrófono 3D y las “controles” salen 100% de CSS (::before / ::after) -->
+        </div>
+      </div>
+
+      <!-- CALENDARIO / EVENTOS -->
+      <div class="feature-card card-calendar">
+        <div class="card-content">
+          <div class="calendar-icon"></div>
+        </div>
+      </div>
+
+      <!-- NEWS -->
+      <div class="feature-card card-news">
+        <div class="card-content">
+          <div class="news-icon"></div>
+        </div>
+      </div>
+
+      <!-- AUDIO / RADIO -->
+      <div class="feature-card card-audio">
+        <div class="card-content">
+          <div class="audio-icon"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <button
+    class="cta-button"
+    type="button"
+    (click)="onDescargarApp()"
+    aria-label="Descargar la app de Más Latino"
+  >
+    DESCARGA LA APP
+    <span class="button-tail"></span>
+  </button>
+</main>

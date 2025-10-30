@@ -1,54 +1,555 @@
-.dashboard-hero {
-  position: relative;
-  display: flex;
-  padding: 60px 80px;
-  height: 100vh; /* ocupa toda la pantalla */
-  overflow: hidden;
-}
-
-/* Contenedor del texto, alineado a la izquierda pero centrado verticalmente */
-.frase-container {
-  flex: 1;
-  display: flex;
-  justify-content: flex-start;  /* ⬅️ Alineado a la izquierda */
-  align-items: center;          /* ⬆️ Centrado verticalmente */
-}
-
-/* Texto alineado a la izquierda */
-.frase-dashboard {
-  text-align: left;
-}
-
-.frase-dashboard h1 {
-  font-size: 64px;
+/* Reset local del componente */
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Este componente asume que el body global es blanco,
+   pero igual definimos el fondo blanco aquí para aislarlo visualmente */
+:host {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  background: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: #000;
+  padding: 20px;
+}
+
+/* Contenedor global del bloque hero */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+}
+
+/* Wrapper que contiene texto (izq) + grid (der) */
+.content-wrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+  flex-wrap: nowrap;
+}
+
+.text-section {
+  flex: 1;
+  max-width: 450px;
+}
+
+.main-heading {
+  font-size: clamp(36px, 5vw, 64px);
   font-weight: 900;
-  font-family: 'Arial', sans-serif;
   line-height: 1.1;
+  color: #000;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  text-transform: uppercase;
 }
 
-.negro {
-  color: #000000;
+.highlight {
+  color: #8B5CF6; /* morado marca */
 }
 
-.morado {
-  color: #8f50f8;
+.description {
+  font-size: clamp(14px, 1.5vw, 18px);
+  line-height: 1.6;
+  color: #333;
+  max-width: 320px;
 }
 
-/* Imagen a la derecha, pegada */
-.image-right-section {
-  position: absolute;
-  top: 0;
-  right: 0;
+/* GRID de features con tarjetas flotantes tipo "icono 3D" */
+.features-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  max-width: 600px;
+  position: relative;
+}
+
+.feature-card {
+  aspect-ratio: 1;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  isolation: isolate; /* ayuda a que los pseudo-elementos luzcan bien */
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Colocación/calendario de cada card en la cuadricula */
+.card-podcast {
+  background: linear-gradient(135deg, #9D7BEE 0%, #7C5FD3 100%);
+  grid-column: 1;
+  grid-row: 1 / 3; /* ocupa 2 filas */
+}
+
+.card-calendar {
+  background: linear-gradient(135deg, #5DD6C3 0%, #3CB89F 100%);
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.card-news {
+  background: linear-gradient(135deg, #F9C06A 0%, #E8A844 100%);
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.card-audio {
+  background: linear-gradient(135deg, #FF7B7B 0%, #F55555 100%);
+  grid-column: 2;
+  grid-row: 2 / 4; /* ocupa 2 filas */
+}
+
+/* Contenido interno de cada tarjeta */
+.card-content {
+  width: 100%;
   height: 100%;
   display: flex;
-  align-items: flex-start;
-  z-index: 1;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  position: relative;
 }
 
-.image-right {
-  height: 100%;        /* Mantiene la altura completa del contenedor */
-  width: auto;         /* Permite que el ancho se escale según el alto */
-  max-width: none;     /* Evita que lo limite el contenedor */
-  object-fit: contain;
+/* ===== PODCAST ICON - micrófono 3D + barra de controles ===== */
+
+.card-podcast .card-content {
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 50px;
+}
+
+.card-podcast .card-content::before {
+  content: '';
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 90px;
+  background: linear-gradient(135deg, #B8A0F5 0%, #9B7FE8 100%);
+  border-radius: 35px 35px 15px 15px;
+  box-shadow:
+    inset -5px -5px 15px rgba(0, 0, 0, 0.15),
+    inset 5px 5px 15px rgba(255, 255, 255, 0.15),
+    0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.card-podcast .card-content::after {
+  content: '';
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 25px;
+  height: 35px;
+  background: linear-gradient(135deg, #C5B3F7 0%, #AE93F0 100%);
+  border-radius: 50% 50% 45% 45%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+/* barra "player" flotante en la card podcast */
+.card-podcast::before {
+  content: '';
+  position: absolute;
+  bottom: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 50px;
+  background: rgba(155, 127, 232, 0.3);
+  border-radius: 25px;
+  display: flex;
+  gap: 20px;
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.1),
+    0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.card-podcast::after {
+  content: '';
+  position: absolute;
+  bottom: 36.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 30px;
+  background:
+    radial-gradient(circle at 25% 50%, rgba(184, 160, 245, 0.5) 8px, transparent 8px),
+    radial-gradient(circle at 50% 50%, rgba(184, 160, 245, 0.5) 12px, transparent 12px),
+    radial-gradient(circle at 75% 50%, rgba(184, 160, 245, 0.5) 8px, transparent 8px);
+  filter: blur(0.5px);
+}
+
+/* ===== CALENDAR ICON - tarjetita con "puntos de día" ===== */
+
+.calendar-icon {
+  width: 75%;
+  height: 75%;
+  background: linear-gradient(135deg, #7FE6D8 0%, #5DD6C8 100%);
+  border-radius: 16px;
+  position: relative;
+  box-shadow:
+    inset -3px -3px 10px rgba(0, 0, 0, 0.1),
+    inset 3px 3px 10px rgba(255, 255, 255, 0.2),
+    0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-icon::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: 18%;
+  width: 15px;
+  height: 30px;
+  background: linear-gradient(135deg, #6DD4C4 0%, #4FC4B4 100%);
+  border-radius: 8px 8px 0 0;
+  box-shadow:
+    35px 0 0 0 #6DD4C4,
+    70px 0 0 0 #6DD4C4,
+    0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-icon::after {
+  content: '';
+  position: absolute;
+  top: 35%;
+  left: 15%;
+  right: 15%;
+  bottom: 15%;
+  background:
+    radial-gradient(circle at 17% 20%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 83% 20%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 17% 50%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 83% 50%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 17% 80%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
+    radial-gradient(circle at 83% 80%, rgba(255, 255, 255, 0.4) 10px, transparent 10px);
+}
+
+/* ===== NEWS ICON - "periódico 3D" ===== */
+
+.news-icon {
+  width: 90%;
+  height: 80%;
+  background: linear-gradient(135deg, #F5D89A 0%, #EFC570 100%);
+  border-radius: 12px;
+  position: relative;
+  transform: perspective(800px) rotateY(-20deg) rotateX(5deg);
+  box-shadow:
+    inset -5px -5px 15px rgba(0, 0, 0, 0.1),
+    inset 5px 5px 15px rgba(255, 255, 255, 0.2),
+    8px 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.news-icon::before {
+  content: 'NEWS';
+  position: absolute;
+  top: 18%;
+  left: 12%;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 1.5px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.news-icon::after {
+  content: '';
+  position: absolute;
+  bottom: 18%;
+  left: 12%;
+  right: 12%;
+  height: 45%;
+  background:
+    linear-gradient(to right,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.5) 48%,
+      transparent 48%,
+      transparent 52%,
+      rgba(255, 255, 255, 0.5) 52%,
+      rgba(255, 255, 255, 0.5) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.6) 0%,
+      rgba(255, 255, 255, 0.6) 18%,
+      transparent 18%,
+      transparent 22%,
+      rgba(255, 255, 255, 0.6) 22%,
+      rgba(255, 255, 255, 0.6) 40%,
+      transparent 40%,
+      transparent 44%,
+      rgba(255, 255, 255, 0.6) 44%,
+      rgba(255, 255, 255, 0.6) 62%,
+      transparent 62%,
+      transparent 66%,
+      rgba(255, 255, 255, 0.6) 66%,
+      rgba(255, 255, 255, 0.6) 84%
+    );
+  border-radius: 4px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== AUDIO ICON - "bocina" y ondas ===== */
+
+.audio-icon {
+  width: 70%;
+  height: 70%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.audio-icon::before {
+  content: '';
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle at 35% 35%, #FFB4B4 0%, #FF9090 50%, #FF7B7B 100%);
+  border-radius: 50%;
+  position: absolute;
+  box-shadow:
+    inset -5px -5px 15px rgba(0, 0, 0, 0.15),
+    inset 5px 5px 15px rgba(255, 255, 255, 0.2),
+    0 0 0 12px rgba(255, 255, 255, 0.2),
+    0 0 0 24px rgba(255, 255, 255, 0.1),
+    0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.audio-icon::after {
+  content: '';
+  position: absolute;
+  width: 35px;
+  height: 35px;
+  background: radial-gradient(circle at 40% 40%, #FFD4D4 0%, #FFA8A8 100%);
+  border-radius: 50%;
+  box-shadow:
+    inset -2px -2px 5px rgba(0, 0, 0, 0.1),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.3);
+}
+
+/* ondas / barras laterales simulando audio */
+.card-audio::before {
+  content: '';
+  position: absolute;
+  left: 15%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25%;
+  height: 60%;
+  background:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 45%,
+      rgba(255, 255, 255, 0.25) 50%,
+      transparent 55%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 20%,
+      rgba(255, 255, 255, 0.2) 25%,
+      transparent 30%,
+      transparent 70%,
+      rgba(255, 255, 255, 0.2) 75%,
+      transparent 80%
+    );
+  border-radius: 4px;
+}
+
+.card-audio::after {
+  content: '';
+  position: absolute;
+  right: 15%;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 25%;
+  height: 60%;
+  background:
+    linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 45%,
+      rgba(255, 255, 255, 0.25) 50%,
+      transparent 55%,
+      transparent 100%
+    ),
+    linear-gradient(
+      to right,
+      transparent 0%,
+      transparent 20%,
+      rgba(255, 255, 255, 0.2) 25%,
+      transparent 30%,
+      transparent 70%,
+      rgba(255, 255, 255, 0.2) 75%,
+      transparent 80%
+    );
+  border-radius: 4px;
+}
+
+/* ===== CTA DESCARGA LA APP ===== */
+
+.cta-button {
+  background: #1a1a1a;
+  color: #fff;
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: 700;
+  padding: 20px 55px;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  position: relative;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  margin-right: 40px;
+  line-height: 1.2;
+}
+
+.cta-button:hover {
+  background: #2a2a2a;
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
+}
+
+.cta-button:active {
+  transform: translateY(-1px);
+}
+
+.button-tail {
+  position: absolute;
+  right: -25px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 35px;
+  height: 35px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.button-tail::before {
+  content: '';
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.button-tail::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;
+  height: 12px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Responsive ===== */
+
+@media (max-width: 968px) {
+  .content-wrapper {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .text-section {
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .description {
+    margin: 0 auto;
+  }
+
+  .features-grid {
+    max-width: 500px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    gap: 40px;
+  }
+
+  .features-grid {
+    gap: 15px;
+    max-width: 400px;
+  }
+
+  .feature-card {
+    border-radius: 16px;
+  }
+
+  .card-content {
+    padding: 20px;
+  }
+
+  .cta-button {
+    padding: 16px 40px;
+    font-size: 16px;
+    margin-right: 30px;
+  }
+
+  .button-tail {
+    right: -20px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .button-tail::before {
+    width: 15px;
+    height: 15px;
+    right: 18px;
+  }
+
+  .button-tail::after {
+    width: 10px;
+    height: 10px;
+    right: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .features-grid {
+    max-width: 300px;
+  }
+
+  .main-heading {
+    font-size: 32px;
+  }
+
+  .description {
+    font-size: 14px;
+  }
 }
