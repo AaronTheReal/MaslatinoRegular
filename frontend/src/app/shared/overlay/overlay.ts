@@ -1,7 +1,8 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { isPlatformBrowser } from '@angular/common';
 
 type SectionKey = 'quienes' | 'categorias' | 'podcast' | 'locales' | 'contacto' | 'privacy' | 'todo';
 
@@ -50,6 +51,8 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
   filtered: Array<{ title: string; section: string; route?: string }> = [];
   recent = ['elecciones', 'mux streaming', 'angular ssr', 'mas latino'].slice(0, 4);
 
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+
   ngOnInit(): void {
     if (this.open) this.afterOpen();
   }
@@ -58,14 +61,17 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
     if (changes['open']?.currentValue) {
       this.afterOpen();
     } else if (changes['open'] && !changes['open'].currentValue) {
-      document.body.classList.remove('no-scroll');
+      if (isPlatformBrowser(this.platformId)) {
+        document.body.classList.remove('no-scroll');
+      }
     }
   }
 
   ngOnDestroy(): void {
-    document.body.classList.remove('no-scroll');
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.classList.remove('no-scroll');
+    }
   }
-
 
   private resetState() {
     this.query = '';
@@ -74,7 +80,6 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
     this.showResults = false;
     this.applyFilter();
   }
-
 
   // Keyboard handlers (ESC, arrows, enter)
   @HostListener('window:keydown', ['$event'])
@@ -139,28 +144,34 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
   close() {
     this.open = false;
     this.closed.emit();
-    document.body.classList.remove('no-scroll');
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.classList.remove('no-scroll');
+    }
   }
 
   private scrollResultIntoView() {
-    const id = `result-${this.highlightedIndex}`;
-    const el = document.getElementById(id);
-    el?.scrollIntoView({ block: 'nearest' });
+    if (isPlatformBrowser(this.platformId)) {
+      const id = `result-${this.highlightedIndex}`;
+      const el = document.getElementById(id);
+      el?.scrollIntoView({ block: 'nearest' });
+    }
   }
 
-  private justOpened = false;  // ⬅️ add
+  private justOpened = false;
 
   private afterOpen() {
-    document.body.classList.add('no-scroll');
-    this.justOpened = true;                 // ⬅️ add
-    setTimeout(() => { this.justOpened = false; }, 0); // ⬅️ add
+    if (isPlatformBrowser(this.platformId)) {
+      document.body.classList.add('no-scroll');
+    }
+    this.justOpened = true;
+    setTimeout(() => { this.justOpened = false; }, 0);
     setTimeout(() => this.searchInput?.nativeElement?.focus(), 0);
     this.resetState();
   }
 
   @HostListener('document:click', ['$event'])
   onDocClick(ev: MouseEvent) {
-    if (!this.open || this.justOpened) return;  // ⬅️ add guard
+    if (!this.open || this.justOpened) return;
     const panel = this.panelRef?.nativeElement;
     if (panel && !panel.contains(ev.target as Node)) this.close();
   }
