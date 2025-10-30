@@ -1,10 +1,9 @@
 {
   "name": "nombre-proyecto",
-  "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
     "build": "ng build",
+    "start": "ng serve",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "serve:ssr:frontend": "node dist/nombre-proyecto/server/server.mjs"
@@ -44,6 +43,7 @@
     "@angular/build": "^20.1.2",
     "@angular/cli": "^20.1.2",
     "@angular/compiler-cli": "^20.1.0",
+    "@netlify/angular-runtime": "^3.0.0",
     "@types/express": "^5.0.1",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^20.17.19",

@@ -1,4 +1,3 @@
 [build]
-  base = "frontend"
-  command = "npm ci && npx --no-install ng build"
-  publish = "dist/nombre-proyecto" 
+  command = "ng build"
+  publish = "dist/nombre-proyecto/browser"

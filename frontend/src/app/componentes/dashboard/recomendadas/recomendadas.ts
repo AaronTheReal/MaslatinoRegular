@@ -1,5 +1,5 @@
-import { Component, ChangeDetectionStrategy, inject, Renderer2, PLATFORM_ID } from '@angular/core';
-import { CommonModule, isPlatformServer, DatePipe } from '@angular/common';
+import { Component, ChangeDetectionStrategy, inject, Renderer2, PLATFORM_ID, Inject } from '@angular/core';
+import { CommonModule, isPlatformServer, DatePipe, DOCUMENT } from '@angular/common';
 import { NoticiasService } from '../../../services/noticias-service';
 import { Noticia } from '../../../../models/noticia.model';
 import { Observable, tap } from 'rxjs';
@@ -18,6 +18,7 @@ export class Recomendadas {
   private readonly noticiasService = inject(NoticiasService);
   private readonly renderer = inject(Renderer2);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly document = inject(DOCUMENT);
 
   // Trae exactamente 3 recomendadas
   readonly noticias$: Observable<Noticia[]> = this.noticiasService.getNoticiasRecomendadas(3).pipe(
@@ -37,7 +38,7 @@ export class Recomendadas {
         const script = this.renderer.createElement('script');
         this.renderer.setAttribute(script, 'type', 'application/ld+json');
         this.renderer.setProperty(script, 'textContent', JSON.stringify(itemList));
-        this.renderer.appendChild(document.head, script);
+        this.renderer.appendChild(this.document.head, script);
       }
     })
   );
