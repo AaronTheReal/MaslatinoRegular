@@ -35,11 +35,12 @@ class PodcastControllerPC {
     }
     // 🔹 Obtener los podcasts destacados para home (máximo 4)
     async obtenerPodcastsHome(req, res) {
-      console.log("si llega?");
     try {
         const podcasts = await PodcastDesktop.find({ featured: true })
         .sort({ order: 1 })
-        .limit(4);
+        .limit(5);
+        console.log("si llega?",podcasts);
+
         res.json(podcasts);
     } catch (error) {
         res.status(500).json({ mensaje: 'Error al obtener podcasts para home', error });

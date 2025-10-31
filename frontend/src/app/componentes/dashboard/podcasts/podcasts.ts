@@ -8,80 +8,89 @@ import { PodcastPCService, PodcastDesktopPayload } from './../../../services/pod
   standalone: true,
   imports: [CommonModule, RouterModule],
   template: `
-    <section class="podcast-section">
-      <!-- Header / título de bloque -->
-      <h2 class="podcast-headline">PODCAST</h2>
+    <main class="podcast-section">
 
-      <p class="podcast-intro">
-        Conéctate con tus raíces latinas. Voces reales. Historias reales. Hecho por nosotros.
-      </p>
+      <!-- PODCASTS BLOCK -->
+      <div class="podcast-container">
+        <h2 class="section-title">PODCAST</h2>
 
-      <!-- Estados de carga / error -->
-      <div class="status-wrapper" *ngIf="loading || errorMessage">
-        <div class="loader" *ngIf="loading">
-          <div class="spinner"></div>
-          <p class="loader-text">Cargando podcasts...</p>
-        </div>
+        <p class="section-subtitle">
+          Lorem ipsum dolor sit amet, consectetuer adipiscing elit,<br>
+          sed diam nonummy nibh euismod.
+        </p>
 
-        <div class="error-box" *ngIf="!loading && errorMessage">
-          <p class="error-text">{{ errorMessage }}</p>
-        </div>
-      </div>
-
-      <!-- Grid de podcasts -->
-      <div class="podcast-grid" *ngIf="!loading && !errorMessage">
-        @for (p of podcasts; track trackById) {
-          <!-- CARD -->
-          <div class="podcast-card-container">
-            <!-- Wrapper imagen/fondo -->
-            <div
-              class="podcast-image-wrapper"
-              [style.background-color]="getBgColor(p)"
-            >
-              <!-- cover -->
-              <img
-                class="podcast-image"
-                [src]="getCover(p)"
-                [alt]="getTitle(p)"
-                loading="lazy"
-              />
-
-              <!-- botón play flotante -->
-              <button
-                class="play-button"
-                type="button"
-                aria-label="Reproducir podcast"
-                (click)="onPlay(p)"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M8 5v14l11-7L8 5z" fill="currentColor" />
-                </svg>
-              </button>
-            </div>
-
-            <!-- título del podcast -->
-            <p class="podcast-card-title">
-              {{ getTitle(p) }}
-            </p>
+        <!-- Estado de carga / error -->
+        <div *ngIf="loading || errorMessage" style="color:#fff; text-align:center; margin-bottom:2rem;">
+          <div *ngIf="loading">
+            <p style="opacity:.8; font-size:0.9rem;">Cargando podcasts...</p>
           </div>
-        }
+          <div *ngIf="!loading && errorMessage">
+            <p style="color:#ff6b6b; font-weight:600;">{{ errorMessage }}</p>
+          </div>
+        </div>
+
+        <!-- Tarjetas dinámicas -->
+        <div class="podcast-cards" *ngIf="!loading && !errorMessage">
+          @for (p of podcastsLimited(); track trackById; let idx = $index) {
+            <div class="podcast-card" [ngClass]="getSizeClass(idx)">
+              <div class="card-container">
+                <div class="card-image-wrapper">
+                  <img
+                    class="card-image"
+                    [src]="getCover(p)"
+                    [alt]="getTitle(p)"
+                    loading="lazy"
+                  />
+                </div>
+
+                <button
+                  class="play-button"
+                  aria-label="Play podcast"
+                  type="button"
+                  (click)="onPlay(p)"
+                >
+                  <!-- SVG escalable según tamaño -->
+                  <svg
+                    [attr.width]="getPlaySize(idx)"
+                    [attr.height]="getPlaySize(idx)"
+                    [attr.viewBox]="getPlayViewBox(idx)"
+                    fill="none"
+                  >
+                    <circle
+                      [attr.cx]="getPlayRadius(idx)"
+                      [attr.cy]="getPlayRadius(idx)"
+                      [attr.r]="getPlayRadius(idx)"
+                      fill="rgba(255,255,255,0.3)"
+                    />
+                    <path
+                      [attr.d]="getPlayPath(idx)"
+                      fill="white"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <h3 class="card-title">
+                {{ getTitle(p) }}
+              </h3>
+            </div>
+          }
+        </div>
+
+        <!-- CTA -->
+        <button
+          class="cta-button"
+          [routerLink]="['/podcast-list']"
+          type="button"
+        >
+          ver más
+        </button>
       </div>
 
-      <!-- CTA "ver más" -->
-      <a
-        class="view-more-button"
-        [routerLink]="['/podcast-list']"
-        aria-label="Ver todos los podcasts"
-      >
-        ver más
-      </a>
-    </section>
+
+    </main>
+
+    <router-outlet />
   `,
   styleUrls: ['./podcasts.css'],
 })
@@ -107,6 +116,14 @@ export class Podcasts implements OnInit  {
     });
   }
 
+  /**
+   * Limitamos a 5 podcasts para que respete el layout visual Builder
+   * (small, medium, large, medium, small).
+   */
+  podcastsLimited(): PodcastDesktopPayload[] {
+    return this.podcasts.slice(0, 5);
+  }
+
   // trackBy para @for
   trackById = (_: number, p: PodcastDesktopPayload) =>
     (p as any)._id ?? (p as any).id ?? (p as any).slug ?? _;
@@ -130,31 +147,73 @@ export class Podcasts implements OnInit  {
     );
   }
 
-  // slug/id para deep link
-  getSlugOrId(p: PodcastDesktopPayload): string {
-    return (
-      (p as any).slug ??
-      (p as any)._id ??
-      (p as any).id ??
-      ''
-    );
-  }
-
-  // color de fondo detrás de la portada
-  // Builder.io usaba un color específico por card.
-  // Acá: si en tu backend ya guardas algo tipo "themeColor" / "backgroundColor", úsalo.
-  // Si no existe, caemos a un fallback neutro oscuro.
-  getBgColor(p: PodcastDesktopPayload): string {
-    return (
-      (p as any).backgroundColor ||
-      (p as any).themeColor ||
-      '#1a1a1a'
-    );
-  }
-
-  // Play: conecta con tu reproductor global
+  // acción play
   onPlay(p: PodcastDesktopPayload) {
-    // Aquí puedes despachar al player global, guardar "last played", etc.
+    // Aquí conectas con tu reproductor global / guardar "last played" / etc.
     console.log('▶️ Play:', this.getTitle(p), p);
+  }
+
+  /**
+   * Builder mostró distintos tamaños visuales de card:
+   * - small
+   * - medium
+   * - large
+   * - medium
+   * - small
+   * Mapeamos por índice.
+   */
+  getSizeClass(idx: number): string {
+    const map = ['podcast-card-small', 'podcast-card-medium', 'podcast-card-large', 'podcast-card-medium', 'podcast-card-small'];
+    return map[idx] || 'podcast-card-medium';
+  }
+
+  /**
+   * El botón Play en Builder cambiaba de tamaño (40,45,55).
+   * Aquí devolvemos medidas coherentes con el índice.
+   */
+  getPlaySize(idx: number): number {
+    switch (this.getSizeClass(idx)) {
+      case 'podcast-card-small':
+        return 40;
+      case 'podcast-card-large':
+        return 55;
+      default:
+        return 45;
+    }
+  }
+
+  /**
+   * Necesitamos viewBox y radios que correspondan a cada SVG.
+   * Builder usó:
+   *  - small: 40x40 r=20 path "M15 12L28 20L15 28V12Z"
+   *  - med:   45x45 r=22.5 path "M17 13L31 22.5L17 32V13Z"
+   *  - large: 55x55 r=27.5 path "M21 17L39 27.5L21 38V17Z"
+   */
+  getPlayViewBox(idx: number): string {
+    const sizeClass = this.getSizeClass(idx);
+    if (sizeClass === 'podcast-card-small') return '0 0 40 40';
+    if (sizeClass === 'podcast-card-large') return '0 0 55 55';
+    return '0 0 45 45'; // medium / default
+  }
+
+  getPlayRadius(idx: number): number {
+    const sizeClass = this.getSizeClass(idx);
+    if (sizeClass === 'podcast-card-small') return 20;
+    if (sizeClass === 'podcast-card-large') return 27.5;
+    return 22.5; // medium / default
+  }
+
+  getPlayPath(idx: number): string {
+    const sizeClass = this.getSizeClass(idx);
+    if (sizeClass === 'podcast-card-small') {
+      // small path
+      return 'M15 12L28 20L15 28V12Z';
+    }
+    if (sizeClass === 'podcast-card-large') {
+      // large path
+      return 'M21 17L39 27.5L21 38V17Z';
+    }
+    // medium path
+    return 'M17 13L31 22.5L17 32V13Z';
   }
 }
