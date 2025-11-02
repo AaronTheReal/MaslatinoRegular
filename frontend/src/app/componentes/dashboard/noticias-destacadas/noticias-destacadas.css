@@ -4,6 +4,9 @@
   padding: 64px 24px;
   background-color: #ffffff;
   font-family: 'Poppins', sans-serif;
+  z-index: 10; /* arriba */
+  position: relative;
+
 }
 /* 1) Quitar azul/subrayado del link en toda la sección */
 .seccion-news a.tarjeta,

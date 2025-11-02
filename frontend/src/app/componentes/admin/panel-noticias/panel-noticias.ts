@@ -836,4 +836,18 @@ export class PanelNoticias implements OnInit {
     const x = e.clientX - rect.left;
     this.splitRatio = Math.min(0.8, Math.max(0.3, x / rect.width));
   }
+    // === Helpers para categorías (chips en el UI) ===
+  getCategoryNameById(id: string): string {
+    const match = this.categoriasDisponibles.find(c => c._id === id);
+    return match ? match.name : '—';
+  }
+
+  removeCategory(id: string): void {
+    const current = this.noticiaForm.get('categories')?.value || [];
+    const next = current.filter((catId: string) => catId !== id);
+    this.noticiaForm.patchValue({ categories: next });
+    this.noticiaForm.get('categories')?.markAsTouched();
+    this.updateChecklist();
+    this.updatePublishTooltip();
+  }
 }

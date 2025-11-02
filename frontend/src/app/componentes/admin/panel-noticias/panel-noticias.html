@@ -253,23 +253,50 @@
               </div>
             </div>
 
-            <!-- Categorías -->
-            <div class="form-group mb-3">
-              <label for="categories">Categorías <span class="required">*</span></label>
-              <ng-select id="categories"
-                formControlName="categories"
-                [items]="categoriasDisponibles"
-                bindLabel="name"
-                bindValue="_id"
-                [multiple]="true"
-                [closeOnSelect]="false"
-                placeholder="Selecciona categorías">
-              </ng-select>
-              <div class="text-danger small mt-1"
-                   *ngIf="noticiaForm.get('categories')?.touched && noticiaForm.get('categories')?.invalid">
-                Debes elegir al menos 1 categoría.
-              </div>
-            </div>
+            
+<!-- Categorías -->
+<div class="form-group mb-3">
+  <label for="categories">Categorías <span class="required">*</span></label>
+
+  <!-- Chips seleccionadas arriba del control -->
+  <div class="selected-categories"
+       *ngIf="noticiaForm.get('categories')?.value?.length">
+    <strong>Elegidas:</strong>
+
+    <span
+      class="custom-tag"
+      *ngFor="let catId of noticiaForm.get('categories')?.value"
+    >
+      {{ getCategoryNameById(catId) }}
+      <span
+        class="tag-remove"
+        title="Quitar"
+        (click)="removeCategory(catId)"
+      >
+        ×
+      </span>
+    </span>
+  </div>
+
+  <!-- Control multiselect limpio (sin chips internos) -->
+  <ng-select
+    id="categories"
+    formControlName="categories"
+    [items]="categoriasDisponibles"
+    bindLabel="name"
+    bindValue="_id"
+    [multiple]="true"
+    [closeOnSelect]="false"
+    [clearable]="false"
+    placeholder=""
+  >
+  </ng-select>
+
+  <div class="text-danger small mt-1"
+       *ngIf="noticiaForm.get('categories')?.touched && noticiaForm.get('categories')?.invalid">
+    Debes elegir al menos 1 categoría.
+  </div>
+</div>
 
             <!-- Ubicación -->
             <div formGroupName="location" class="form-group mb-3">
