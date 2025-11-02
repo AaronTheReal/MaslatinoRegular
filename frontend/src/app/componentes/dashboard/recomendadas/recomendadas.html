@@ -1,21 +1,62 @@
-<section class="seccion-noticias">
-  <h2 class="titulo-seccion">RECOMMENDED FOR YOU</h2>
-
-  <div class="contenedor-tarjetas" *ngIf="noticias$ | async as noticias">
-    <div class="tarjeta" *ngFor="let noticia of noticias">
-      <img
-        [src]="noticia?.meta?.image || 'assets/default-news.jpg'"
-        [alt]="noticia?.title || ''"
-        class="imagen-tarjeta"
-      />
-      <div class="contenido-tarjeta">
-        <h3 class="titulo-noticia">{{ noticia?.title }}</h3>
-        <p class="fecha-noticia">{{ noticia?.createdAt | date: 'longDate' }}</p>
+<section class="experience-section">
+  <div class="container">
+    <div class="decorative-marker">
+      <svg width="234" height="244" viewBox="0 0 234 244" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g clip-path="url(#clip0_13_104)">
+          <path d="M137.56 90.151L-69.2935 -33.182C-77.0045 -37.779 -87.0175 -35.247 -91.6145 -27.536L-154.909 78.619C-159.506 86.33 -156.974 96.343 -149.262 100.941L57.5905 224.273C64.4905 228.387 73.2215 226.779 78.2785 220.873C79.0215 221.567 79.8435 222.196 80.7515 222.737L111.957 241.344C118.845 245.451 127.789 243.188 131.895 236.301L147.417 210.267L197.099 235.488C198.725 236.312 200.712 235.738 201.646 234.171L201.826 233.871L220.271 243.234C221.898 244.059 223.885 243.484 224.819 241.917L232.594 228.877C233.527 227.31 233.089 225.289 231.59 224.25L214.582 212.476L214.762 212.175C215.695 210.609 215.257 208.587 213.758 207.549L167.948 175.833L183.47 149.8C187.576 142.913 185.315 133.969 178.427 129.863L147.22 111.256C146.312 110.715 145.368 110.291 144.405 109.967C147.195 102.711 144.458 94.265 137.56 90.151Z" fill="black"/>
+        </g>
+        <defs>
+          <clipPath id="clip0_13_104">
+            <rect width="233.08" height="273.34" fill="white" transform="translate(0 -29.7299)"/>
+          </clipPath>
+        </defs>
+      </svg>
+    </div>
+    <div class="decorative-ribbon ribbon-red">
+      <svg class="ribbon-path" width="236" height="211" viewBox="0 0 236 211" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M-150.8 29.8869C-153.851 22.0319 -149.777 13.1929 -141.807 10.4569C-109.378 -0.676068 -86.7516 -2.79107 -69.5836 3.49893C-49.5936 10.8219 -40.6986 27.7949 -32.0966 44.2099C-22.2506 62.9999 -12.0686 82.4299 15.9394 96.3849C43.2674 110.001 61.1574 100.845 83.8084 89.2539C95.4724 83.2839 107.534 77.1119 121.39 74.1489C153.875 67.2019 185.344 77.9149 207.731 103.542C220.297 117.927 229.026 135.867 232.974 155.421C235.87 169.766 236.018 184.27 233.472 198.143C231.813 207.177 222.442 212.563 213.8 209.453C206.981 206.999 202.889 199.982 204.193 192.853C208.633 168.573 201.674 141.81 185.335 123.106C176.477 112.966 157.2 96.9009 127.608 103.229C117.589 105.371 107.761 110.401 97.3554 115.726C84.8274 122.137 71.8734 128.767 56.6044 131.581C38.5744 134.904 20.9344 132.097 2.67738 123.001C-13.6416 114.87 -26.8846 104.413 -37.8076 91.0329C-47.0956 79.6549 -53.1206 68.1569 -58.4366 58.0129C-66.2076 43.1849 -71.0306 34.6389 -79.8136 31.4209C-90.0626 27.6669 -107.246 30.0019 -132.129 38.5689C-139.669 41.1639 -147.913 37.3199 -150.8 29.8869Z" fill="#FF0200"/>
+      </svg>
+      <div class="ribbon-text">
+        <span style="transform: rotate(34.93deg);">S</span>
+        <span style="transform: rotate(22.22deg);">N</span>
+        <span style="transform: rotate(9.03deg);">O</span>
+        <span style="transform: rotate(-4.49deg);">T</span>
+        <span style="transform: rotate(-13.69deg);">I</span>
+        <span style="transform: rotate(-20.97deg);">C</span>
+        <span style="transform: rotate(-25.43deg);">I</span>
+        <span style="transform: rotate(-27.07deg);">A</span>
+        <span style="transform: rotate(-24.9deg);">S</span>
+        <span style="transform: rotate(-8.91deg);">W</span>
+        <span style="transform: rotate(2.76deg);">I</span>
+        <span style="transform: rotate(11.78deg);">T</span>
+        <span style="transform: rotate(24.1deg);">H</span>
+        <span style="transform: rotate(41.46deg);">F</span>
+        <span style="transform: rotate(50.02deg);">L</span>
+        <span style="transform: rotate(59.22deg);">A</span>
+        <span style="transform: rotate(67.65deg);">V</span>
+        <span style="transform: rotate(76.6deg);">O</span>
+        <span style="transform: rotate(85.69deg);">R</span>
+        <span style="transform: rotate(94.19deg);">S</span>
+      </div>
+    </div>
+    <div class="content-wrapper">
+      <div class="text-content">
+        <h2 class="main-heading">
+          Tu experiencia<br />
+          latina todo en uno
+        </h2>
+        <p class="description">
+          Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy<br />
+          nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi
+        </p>
+        <button class="cta-outlined-button">conócenos</button>
+      </div>
+      <div class="decorative-image">
+        <img
+          src="https://api.builder.io/api/v1/image/assets/TEMP/ba5a665fcfe5bc20a61c3afefdcc2ab99e13e3a2?width=506"
+          alt="Decorative badges"
+        />
       </div>
     </div>
   </div>
-         <div class="fila-inputs">
-      <a [routerLink]="['/recomendadas-show']"  class="boton-contacto">Ver más</a>
-     </div>
-
 </section>

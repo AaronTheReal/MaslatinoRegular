@@ -69,3 +69,331 @@ body.resizing *{ cursor:col-resize!important; }
 /* Extras ligeros heredados */
 .form-control { max-width: 100%; }
 .content-blocks-preview { background:#f8f9fa; padding:.75rem; border-radius:.25rem; }
+
+/* Estilos para categorías seleccionadas arriba */
+.selected-categories {
+  margin-bottom: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.selected-categories strong {
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+/* Cada tag (ovalito) */
+.custom-tag {
+  display: inline-flex;
+  align-items: center;
+  background: #eef5ff;
+  color: #333;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  border: 1px solid #ddd;
+  margin: 2px;
+}
+
+/* Icono de remover */
+.tag-remove {
+  cursor: pointer;
+  margin-left: 4px;
+  font-size: 16px;
+  color: #888;
+}
+
+.tag-remove:hover {
+  color: #333;
+}
+
+/* ---------- CONTENEDOR DEL NG-SELECT ---------- */
+.ng-select {
+  position: relative;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  min-height: 42px;
+  padding: 0 .5rem; /* ojo: ya no padding vertical aquí porque rompe el alineado interno */
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Forzamos que el contenedor interno tenga altura controlada */
+.ng-select .ng-select-container {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-height: 42px;
+  align-items: center;
+  padding-left: 0;
+  padding-right: 1.75rem; /* espacio para el caret */
+}
+
+/* Quitamos chips dentro del input (los renderiza .ng-value) */
+.ng-select .ng-value-container .ng-value {
+  display: none !important;
+}
+
+/* ---------- PLACEHOLDER ---------- */
+/* Placeholder centrado verticalmente y visible SIEMPRE */
+.ng-select .ng-placeholder {
+  position: absolute;
+  left: .5rem;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  color: #999;
+  pointer-events: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block !important;
+  font-weight: 400;
+  background: transparent;
+}
+
+/* Cuando el control tiene valor, mantenemos el placeholder gris clarito.
+   (si prefieres ocultarlo cuando ya hay categorías elegidas, cambia a display:none) */
+.ng-select.ng-has-value .ng-placeholder {
+  color: #bbb !important;
+  /* display: none;  <= usa esto si quieres que desaparezca por completo */
+}
+
+/* El input real que usa ng-select lo hacemos transparente y sin padding raro */
+.ng-select .ng-input > input {
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
+  height: 1.2em;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+/* Evitar salto de altura rara cuando escribes para filtrar */
+.ng-select .ng-input {
+  align-self: center;
+  padding-left: .5rem;
+  padding-right: 0;
+  min-width: 0;
+}
+
+/* ---------- CARET / ARROW ---------- */
+.ng-select .ng-arrow-wrapper {
+  position: absolute;
+  right: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ng-select .ng-arrow {
+  border-color: #666 transparent transparent transparent !important;
+  border-width: 5px 4px 0 4px !important;
+}
+
+/* ---------- DROPDOWN PANEL ---------- */
+.ng-dropdown-panel {
+  position: absolute !important;
+  background-color: #fff !important;        /* fondo sólido */
+  border: 1px solid #ccc !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12) !important;
+  z-index: 2000 !important;                 /* más alto que tu card/form */
+  opacity: 1 !important;
+  overflow: hidden;
+  padding: 4px 0;
+  max-height: 240px;
+  white-space: normal;
+}
+
+/* lista interna */
+.ng-dropdown-panel .ng-dropdown-panel-items {
+  max-height: 240px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+/* cada opción */
+.ng-option {
+  display: flex;
+  align-items: flex-start;
+  padding: .5rem .75rem;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  color: #333;
+  background-color: #fff !important;
+  cursor: pointer;
+  border: 0;
+}
+
+.ng-option:hover {
+  background-color: #f5f5f5 !important;
+}
+
+.ng-option.ng-option-selected {
+  background-color: #e9ecef !important;
+  font-weight: 500;
+  color: #000;
+}
+
+/* ---------- ESTADO FOCUS / HOVER DEL CONTROL ---------- */
+.ng-select.ng-select-focused .ng-select-container {
+  box-shadow: 0 0 0 2px rgba(0,123,255,.2) !important;
+  border-radius: 8px;
+}
+
+.ng-select.ng-select-focused {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 2px rgba(0,123,255,.2);
+}
+
+/* ---------- MARCA ROJA DE ERROR ---------- */
+/* Si el formControl está invalid+touched, Angular le mete clases ng-invalid ng-touched.
+   Forzamos borde rojo visual del wrapper */
+.ng-select.ng-invalid.ng-touched {
+  border-color: #d9534f !important;
+  box-shadow: 0 0 0 2px rgba(217,83,79,.15) !important;
+}
+
+/* =========================================================
+   EXTRA SCOPED REFINEMENTS FOR CATEGORIES FIELD ONLY
+   (Prevents future ng-select instances from inheriting styling
+   side effects we don't want everywhere.)
+   ========================================================= */
+
+/* Wrapper específico del multiselect categorías por id */
+#categories.ng-select {
+  position: relative;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  min-height: 42px;
+  padding: 0 .5rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+/* Contenedor interno */
+#categories.ng-select .ng-select-container {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-height: 42px;
+  height: 42px;
+  align-items: center;
+  padding-left: 0;
+  padding-right: 1.75rem;
+  display: flex;
+}
+
+/* Value container donde normalmente mete las pills */
+#categories.ng-select .ng-select-container .ng-value-container {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-height: 42px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  padding-left: .5rem;
+  padding-right: 0;
+  overflow: hidden;
+}
+
+/* Oculta las pills internas (Arte, Política, etc.) dentro del input */
+#categories.ng-select .ng-value-container .ng-value {
+  display: none !important;
+}
+
+/* Placeholder centrado vertical y siempre visible */
+#categories.ng-select .ng-placeholder {
+  position: absolute;
+  left: .5rem;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  padding: 0;
+  line-height: 1.2;
+  color: #999;
+  pointer-events: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: block !important;
+  font-weight: 400;
+  background: transparent;
+  font-size: 0.95rem;
+}
+
+/* Si ya hay categorías, bajar el contraste del placeholder en ese campo */
+#categories.ng-select.ng-has-value .ng-placeholder {
+  color: #bbb !important;
+  /* Si quisieras ocultarlo por completo cuando hay valores:
+     display: none !important;
+  */
+}
+
+/* Input de búsqueda interno limpio */
+#categories.ng-select .ng-input {
+  align-self: center;
+  padding-left: .5rem;
+  padding-right: 0;
+  min-width: 0;
+  line-height: 1.2;
+}
+#categories.ng-select .ng-input > input {
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
+  height: 1.2em;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  box-shadow: none;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+/* Flechita */
+#categories.ng-select .ng-arrow-wrapper {
+  position: absolute;
+  right: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+}
+#categories.ng-select .ng-arrow {
+  border-color: #666 transparent transparent transparent !important;
+  border-width: 5px 4px 0 4px !important;
+}
+
+/* Focus ring accesible */
+#categories.ng-select.ng-select-focused .ng-select-container,
+#categories.ng-select .ng-select-container:focus-within {
+  box-shadow: 0 0 0 2px rgba(0,123,255,.2) !important;
+  border-radius: 8px;
+}
+#categories.ng-select.ng-select-focused {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 2px rgba(0,123,255,.2);
+}
+
+/* Estado error en ese campo */
+#categories.ng-select.ng-invalid.ng-touched {
+  border-color: #d9534f !important;
+  box-shadow: 0 0 0 2px rgba(217,83,79,.15) !important;
+}
