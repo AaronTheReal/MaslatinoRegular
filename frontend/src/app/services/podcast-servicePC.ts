@@ -41,8 +41,8 @@ export interface PodcastDesktopPayload {
 
 @Injectable({ providedIn: 'root' })
 export class PodcastPCService {
-  private API_URL = 'http://localhost:3000/aaron/maslatino/podcasts-pc'; // ajusta según entorno
-  //private API_URL = 'https://maslatinoregular.onrender.com/aaron/maslatino/podcasts-pc';
+  //private API_URL = 'http://localhost:3000/aaron/maslatino/podcasts-pc'; // ajusta según entorno
+  private API_URL = 'https://maslatinoregular.onrender.com/aaron/maslatino/podcasts-pc';
 
   constructor(private http: HttpClient) {}
 
