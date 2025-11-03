@@ -1,7 +1,64 @@
-/* Hero wrapper con gradiente naranja/rojo */
+/* =========================
+   RESET / BASE SUAVE
+   ========================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --hero-grad-a: #f7941d;
+  --hero-grad-b: #f15a29;
+  --hero-text: #ffffff;
+  --hero-shadow: rgba(0, 0, 0, 0.2);
+  --badge-bg: #1a1a1a;
+  --badge-ring: #ffffff;
+  --badge-ring-accent: #f7941d;
+  --facebook: #1877f2;
+  --facebook-hover: #0d65d9;
+  --youtube: #ff0000;
+  --youtube-hover: #cc0000;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Botones base */
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Utilidad accesibilidad */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
+/* =========================
+   HERO BANNER
+   ========================= */
+/* Wrapper con gradiente */
 .hero-banner {
   position: relative;
-  background: linear-gradient(135deg, #f7941d 0%, #f15a29 50%, #f7941d 100%);
+  background: linear-gradient(135deg, var(--hero-grad-a) 0%, var(--hero-grad-b) 50%, var(--hero-grad-a) 100%);
   min-height: 450px;
   overflow: hidden;
   display: flex;
@@ -9,43 +66,40 @@
   justify-content: center;
   padding: 2rem;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: var(--hero-text);
 }
 
+/* Brillos radiales */
 .hero-banner::before {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(
-      ellipse at 20% 30%,
-      rgba(255, 255, 255, 0.15) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse at 80% 70%,
-      rgba(255, 200, 100, 0.2) 0%,
-      transparent 50%
-    );
+    radial-gradient(ellipse at 20% 30%, rgba(255,255,255,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(255,200,100,0.2) 0%, transparent 50%);
   pointer-events: none;
 }
 
-/* Badges decorativos */
+/* =========================
+   BADGES DECORATIVOS
+   ========================= */
 .decorative-badge {
   position: absolute;
   z-index: 2;
 }
 
+/* Arriba-derecha (sello) */
 .badge-top-right {
   top: 2rem;
   right: 2rem;
   width: 120px;
   height: 120px;
-  background: #1a1a1a;
+  background: var(--badge-bg);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4px solid #fff;
+  border: 4px solid var(--badge-ring);
   transform: rotate(-15deg);
 }
 
@@ -55,7 +109,7 @@
 
 .badge-text {
   display: block;
-  color: #fff;
+  color: var(--hero-text);
   font-weight: 700;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -63,17 +117,18 @@
   line-height: 1.2;
 }
 
+/* Abajo-izquierda (texto circular) */
 .badge-bottom-left {
   bottom: 2rem;
   left: 2rem;
   width: 140px;
   height: 140px;
-  background: #1a1a1a;
+  background: var(--badge-bg);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4px solid #f7941d;
+  border: 4px solid var(--badge-ring-accent);
 }
 
 .badge-content-circular {
@@ -92,7 +147,7 @@
   animation: rotate 20s linear infinite;
   font-size: 0.65rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--hero-text);
   text-transform: uppercase;
   letter-spacing: 2px;
 }
@@ -102,7 +157,9 @@
   to { transform: rotate(360deg); }
 }
 
-/* Contenido principal hero */
+/* =========================
+   CONTENIDO DEL HERO
+   ========================= */
 .hero-content {
   position: relative;
   z-index: 1;
@@ -125,22 +182,22 @@
   height: auto;
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 10px 30px var(--hero-shadow));
 }
 
-/* Bloque de texto/marca */
+/* Bloque de texto / marca */
 .text-content {
   flex: 1;
   position: relative;
   text-align: center;
   max-width: 600px;
-  color: #fff;
+  color: var(--hero-text);
 }
 
 /* Estrellitas decorativas */
 .sparkle {
   position: absolute;
-  background: #fff;
+  background: var(--hero-text);
   clip-path: polygon(
     50% 0%,
     61% 35%,
@@ -154,30 +211,21 @@
     39% 35%
   );
 }
-
 .sparkle-1 {
-  width: 24px;
-  height: 24px;
-  top: -10px;
-  right: 20%;
+  width: 24px; height: 24px;
+  top: -10px; right: 20%;
   opacity: 0.9;
   animation: twinkle 2s ease-in-out infinite;
 }
-
 .sparkle-2 {
-  width: 16px;
-  height: 16px;
-  top: 30%;
-  left: 10%;
+  width: 16px; height: 16px;
+  top: 30%; left: 10%;
   opacity: 0.7;
   animation: twinkle 2.5s ease-in-out infinite 0.5s;
 }
-
 .sparkle-3 {
-  width: 20px;
-  height: 20px;
-  bottom: 30%;
-  right: 15%;
+  width: 20px; height: 20px;
+  bottom: 30%; right: 15%;
   opacity: 0.8;
   animation: twinkle 3s ease-in-out infinite 1s;
 }
@@ -187,16 +235,17 @@
   50% { opacity: 1; transform: scale(1.2); }
 }
 
-/* Texto principal */
+/* =========================
+   TIPOGRAFÍA / MARCA
+   ========================= */
 .tagline {
-  color: #fff;
+  color: var(--hero-text);
   font-size: 1.5rem;
   font-weight: 400;
   margin: 0 0 1.5rem 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* Marca Viva Latino */
 .logo-wrapper {
   margin-bottom: 2rem;
 }
@@ -206,9 +255,10 @@
   line-height: 1;
 }
 
-.viva {
+.viva,
+.latino {
   display: block;
-  color: #fff;
+  color: var(--hero-text);
   font-size: 4rem;
   font-weight: 900;
   text-transform: lowercase;
@@ -222,36 +272,28 @@
 .viva::before,
 .viva::after {
   content: '✦';
-  color: #fff;
+  color: var(--hero-text);
   font-size: 2rem;
   margin: 0 0.5rem;
   opacity: 0.9;
 }
 
 .latino {
-  display: block;
-  color: #fff;
-  font-size: 4rem;
-  font-weight: 900;
-  text-transform: lowercase;
-  letter-spacing: -2px;
   margin-top: -0.5rem;
-  text-shadow:
-    3px 3px 0 rgba(0, 0, 0, 0.1),
-    0 4px 8px rgba(0, 0, 0, 0.2);
-  font-style: italic;
 }
 
 .show-subtitle {
-  color: #fff;
+  color: var(--hero-text);
   font-size: 1.5rem;
   font-weight: 700;
   letter-spacing: 4px;
   margin: 0.5rem 0 0 0;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Botones CTA PLAY WITH */
+/* =========================
+   BOTONES CTA (PLAY / SOCIAL)
+   ========================= */
 .cta-buttons {
   display: flex;
   gap: 1rem;
@@ -271,13 +313,14 @@
   letter-spacing: 0.5px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  color: var(--hero-text);
+  background: #2b2b2b; /* fallback si no se sobreescribe */
 }
 
 .play-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 
 .play-button:active {
@@ -285,19 +328,17 @@
 }
 
 .facebook-button {
-  background: #1877f2;
+  background: var(--facebook);
 }
-
 .facebook-button:hover {
-  background: #0d65d9;
+  background: var(--facebook-hover);
 }
 
 .youtube-button {
-  background: #ff0000;
+  background: var(--youtube);
 }
-
 .youtube-button:hover {
-  background: #cc0000;
+  background: var(--youtube-hover);
 }
 
 .button-text {
@@ -310,7 +351,9 @@
   fill: currentColor;
 }
 
-/* Responsive */
+/* =========================
+   RESPONSIVE
+   ========================= */
 @media (max-width: 968px) {
   .hero-content {
     flex-direction: column;
@@ -318,18 +361,12 @@
     gap: 2rem;
   }
 
-  .host-image {
-    width: 280px;
-  }
+  .host-image { width: 280px; }
 
   .viva,
-  .latino {
-    font-size: 3rem;
-  }
+  .latino { font-size: 3rem; }
 
-  .show-subtitle {
-    font-size: 1.25rem;
-  }
+  .show-subtitle { font-size: 1.25rem; }
 
   .badge-top-right,
   .badge-bottom-left {
@@ -337,15 +374,8 @@
     height: 100px;
   }
 
-  .badge-top-right {
-    top: 1rem;
-    right: 1rem;
-  }
-
-  .badge-bottom-left {
-    bottom: 1rem;
-    left: 1rem;
-  }
+  .badge-top-right { top: 1rem; right: 1rem; }
+  .badge-bottom-left { bottom: 1rem; left: 1rem; }
 }
 
 @media (max-width: 640px) {
@@ -354,18 +384,12 @@
     padding: 1.5rem 1rem;
   }
 
-  .host-image {
-    width: 220px;
-  }
+  .host-image { width: 220px; }
 
-  .tagline {
-    font-size: 1.125rem;
-  }
+  .tagline { font-size: 1.125rem; }
 
   .viva,
-  .latino {
-    font-size: 2.5rem;
-  }
+  .latino { font-size: 2.5rem; }
 
   .show-subtitle {
     font-size: 1rem;
@@ -390,11 +414,55 @@
     height: 80px;
   }
 
-  .badge-text {
-    font-size: 0.625rem;
-  }
+  .badge-text { font-size: 0.625rem; }
+  .badge-text-circular { font-size: 0.5rem; }
+}
 
-  .badge-text-circular {
-    font-size: 0.5rem;
+/* =========================
+   PREFERENCIAS DE USUARIO
+   ========================= */
+@media (prefers-reduced-motion: reduce) {
+  .badge-text-circular,
+  .sparkle-1,
+  .sparkle-2,
+  .sparkle-3 {
+    animation: none !important;
   }
+}
+
+
+
+
+
+/* Fondo sólido detrás de toda la sección */
+.feature-visual{
+  position: relative;            /* crea contexto de apilado para los hijos */
+  background-color: #FD9D04;     /* <-- tu color de fondo */
+  width: 100%;
+  isolation: isolate;            /* evita que filtros/mezclas de hijos “escapen” */
+}
+
+/* Asegura que el SVG y demás contenido se dibujen encima del fondo */
+.feature-visual .svg-wrap{
+  position: relative;            /* o absolute si ya lo usas para layout */
+  z-index: 1;
+}
+
+/* Si tienes otros bloques por encima, puedes usar z-index mayores ahí */
+.feature-visual > *{
+  position: relative;
+  z-index: 1;
+}
+
+/* Opcional: elimina espacios externos para un fondo “full-bleed” */
+.feature-visual{
+  margin: 0;
+  padding: 0;                    /* ajusta si necesitas espacio interno */
+}
+
+/* Si el SVG se posiciona absolute para ocupar todo */
+.feature-visual .bg-hero-svg{
+  display: block;
+  width: 100%;
+  height: auto;                  /* o height: 100% si usas contenedor fijo */
 }
