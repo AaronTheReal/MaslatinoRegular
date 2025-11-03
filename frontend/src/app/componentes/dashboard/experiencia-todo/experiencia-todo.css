@@ -442,27 +442,83 @@ button {
   isolation: isolate;            /* evita que filtros/mezclas de hijos “escapen” */
 }
 
-/* Asegura que el SVG y demás contenido se dibujen encima del fondo */
-.feature-visual .svg-wrap{
-  position: relative;            /* o absolute si ya lo usas para layout */
-  z-index: 1;
-}
-
-/* Si tienes otros bloques por encima, puedes usar z-index mayores ahí */
-.feature-visual > *{
-  position: relative;
-  z-index: 1;
-}
-
-/* Opcional: elimina espacios externos para un fondo “full-bleed” */
-.feature-visual{
-  margin: 0;
-  padding: 0;                    /* ajusta si necesitas espacio interno */
-}
-
-/* Si el SVG se posiciona absolute para ocupar todo */
-.feature-visual .bg-hero-svg{
+.feature-visual .bg-hero-svg {
   display: block;
   width: 100%;
-  height: auto;                  /* o height: 100% si usas contenedor fijo */
+  height: auto;
+}
+
+/* === Botones sobre el SVG === */
+.cta-on-visual {
+  --cta-x: 66%;   /* pos X (0% izquierda, 100% derecha) */
+  --cta-y: 82%;   /* pos Y (0% arriba, 100% abajo) */
+  --cta-gap: clamp(0.6rem, 1.2vw, 1rem);
+
+  position: absolute;
+  left: var(--cta-x);
+  top: var(--cta-y);
+  transform: translate(-50%, -50%); /* centra el grupo en el punto */
+  display: flex;
+  gap: var(--cta-gap);
+  z-index: 3; /* por encima del SVG */
+  pointer-events: auto;
+}
+
+/* Botones (reutiliza tu estilo actual) */
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: clamp(.55rem, 1.1vw, .8rem) clamp(.9rem, 1.6vw, 1.2rem);
+  border: 0;
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  cursor: pointer;
+  backdrop-filter: saturate(140%) blur(4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.15);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .2s ease;
+  opacity: .98;
+}
+
+.play-button .button-text {
+  font-size: clamp(.78rem, 1.2vw, .9rem);
+}
+
+.play-button .social-icon {
+  width: clamp(18px, 2.2vw, 22px);
+  height: clamp(18px, 2.2vw, 22px);
+}
+
+/* Colores por red (ajústalos a tu sistema de tokens) */
+.facebook-button {
+  background: #1877F2;
+  color: #fff;
+}
+.facebook-button:hover { box-shadow: 0 10px 28px rgba(24,119,242,.35); transform: translateY(-1px); }
+
+.youtube-button {
+  background: #FF0033;
+  color: #fff;
+}
+.youtube-button:hover { box-shadow: 0 10px 28px rgba(255,0,51,.35); transform: translateY(-1px); }
+
+/* === Responsivo: recoloca y escalar en pantallas pequeñas === */
+@media (max-width: 1024px) {
+  .cta-on-visual { --cta-x: 60%; --cta-y: 64%; }
+}
+@media (max-width: 768px) {
+  .cta-on-visual {
+    --cta-x: 58%;
+    --cta-y: 66%;
+    transform: translate(-50%, -50%) scale(.95);
+  }
+}
+@media (max-width: 540px) {
+  .cta-on-visual {
+    --cta-x: 54%;
+    --cta-y: 70%;
+    gap: .5rem;
+  }
+  .play-button { padding: .5rem .9rem; }
 }
