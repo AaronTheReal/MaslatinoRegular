@@ -18,7 +18,6 @@ import TaquicardiaController from './TaquiController.js';
 import MuxController from './MuxController.js';
 import Noticia from '../models/Noticias.js'; // ajusta el path
 
-
 import dotenv from 'dotenv';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
@@ -27,6 +26,11 @@ import Usuario from '../models/Usuarios.js';
 import { OAuth2Client } from 'google-auth-library';
 import admin from './firebase-admin.js';
 import { sendNotificationToUser } from './onesignal-service.js';  // Ajusta la ruta si es necesario
+
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { flexibleChecksumsMiddlewareOptions } from '@aws-sdk/middleware-flexible-checksums';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -46,6 +50,40 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
+
+const s3 = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  },
+  requestChecksumCalculation: 'NEVER'  // Deshabilita checksums automáticos para PutObject y similares
+});
+// ⚠️ Quita checksums para que S3 no exija x-amz-checksum-*
+s3.middlewareStack.remove(flexibleChecksumsMiddlewareOptions.name);
+
+// Helpers
+function sanitizeFilename(name = 'file') {
+  return name
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9.\-]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .toLowerCase();
+}
+
+function yyyymmddParts(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return { y, m, dd };
+}
+
+// Limpia el nombre del archivo
+function sanitize(name = '') {
+  const base = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return base.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-').toLowerCase();
+}
 
 export default class MainRoute {
   static configRoutes(router) {
@@ -405,10 +443,52 @@ router.post('/google-login', async (req, res) => {
 
     router.get('/share/podcast/:podcastId/episode/:episodeId', SmartLinkController.redirectPodcastLink);
 
+    router.post('/sign-upload', async (req, res) => {
+      try {
+        const { filename = 'archivo', contentType = 'application/octet-stream', approxSize = 0 } = req.body || {};
+        console.log('Signing with ContentType:', contentType);
+ 
+
+        // (opcional) límite por tamaño
+        const maxMB = Number(process.env.MAX_UPLOAD_MB || 10);
+        if (approxSize > maxMB * 1024 * 1024) {
+          return res.status(400).json({ error: `Archivo > ${maxMB} MB` });
+        }
+
+        const safe = sanitizeFilename(filename);
+        const { y, m, dd } = yyyymmddParts(new Date());
+        const prefix = process.env.UPLOAD_PREFIX || 'uploads';
+        // Ejemplo de estructura: uploads/2025/11/04/ts-8hex-nombre.ext
+        const rand = Math.random().toString(16).slice(2, 10);
+        const key = `${prefix}/${y}/${m}/${dd}/${Date.now()}-${rand}-${safe}`;
+
+        const putCmd = new PutObjectCommand({
+          Bucket: process.env.S3_BUCKET,
+          Key: key,
+          ContentType: contentType
+          // ACL: 'public-read'  // solo si tu bucket **no** usa Bucket owner enforced
+        });
+
+        // Firma válida unos minutos (sube a 300–600s mientras pruebas)
+        const uploadUrl = await getSignedUrl(s3, putCmd, {
+          expiresIn: 300,
+          signableHeaders: new Set(['content-type'])  // <- Añade esto
+        });
+        // URL pública (usa CloudFront si lo tienes; si no, S3 directo)
+        const region = process.env.AWS_REGION;
+        const cdn = process.env.CDN_BASE_URL;
+        const publicUrl = cdn
+          ? `https://${cdn}/${key}`
+          : `https://${process.env.S3_BUCKET}.s3.${region}.amazonaws.com/${key}`;
+
+        return res.json({ uploadUrl, publicUrl, key, contentType });
+      } catch (err) {
+        console.error('sign-upload error:', err);
+        return res.status(500).json({ error: 'No se pudo firmar la subida' });
+      }
+    });
 
     return router;
-
-
   }
 }
 

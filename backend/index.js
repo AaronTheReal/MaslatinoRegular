@@ -6,7 +6,6 @@ import mongoose from 'mongoose';
 import multer from 'multer';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-
 import mainRoute from './api/MainRoute.js';
 
 dotenv.config();

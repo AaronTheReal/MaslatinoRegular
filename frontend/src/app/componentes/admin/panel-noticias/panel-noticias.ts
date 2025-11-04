@@ -15,6 +15,8 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { debounceTime, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
+import { S3UploadAdapterPlugin } from '../../../../utils/ckeditor-s3-adapter';
+
 @Component({
   selector: 'app-panel-noticias',
   standalone: true,
@@ -70,15 +72,12 @@ export class PanelNoticias implements OnInit {
 
   // CKEditor config
   public editorConfig: any = {
-    toolbar: ['heading','bold','italic','link','bulletedList','numberedList','blockQuote','undo','redo','insertTable'],
-    heading: {
-      options: [
-        { model:'paragraph', title:'Párrafo' },
-        { model:'heading2', view:'h2', title:'H2' },
-        { model:'heading3', view:'h3', title:'H3' }
-      ]
-    }
+    licenseKey: 'GPL',
+    toolbar: [ 'heading','bold','italic','link','bulletedList','numberedList','blockQuote','insertTable','imageUpload','undo','redo' ],
+    image: { toolbar: ['imageTextAlternative','toggleImageCaption','imageStyle:inline','imageStyle:block','imageStyle:side','resizeImage'] },
+    extraPlugins: [ S3UploadAdapterPlugin ],
   };
+
 
   // ======== NUEVO: Estado de UI del estudio ========
   dockMode: 'hidden' | 'right' | 'bottom' = 'right';
@@ -131,8 +130,10 @@ export class PanelNoticias implements OnInit {
         ogTitle: [''],
         ogDescription: ['', [Validators.maxLength(300)]],
         // NUEVO
-        imageCaption: ['', [Validators.maxLength(140)]],
-        imageCaptionUrl: ['', [Validators.maxLength(300), Validators.pattern(/^https?:\/\/.+/)]],
+        imageCaptionHtml: [
+          '',
+          [this.captionHtmlValidator(140)] // cuenta 140 sobre texto plano, valida <a> http/https y etiquetas permitidas
+        ],
       }),
 
       state: ['draft'],
@@ -181,9 +182,13 @@ export class PanelNoticias implements OnInit {
   ngOnInit(): void {
     // Carga diferida del editor solo en navegador
     if (this.isBrowser) {
-      import('@ckeditor/ckeditor5-build-classic').then(m => {
-        this.Editor = m.default;
-      });
+        import('@ckeditor/ckeditor5-build-classic').then(m => {
+          this.Editor = m.default;
+
+          // Debug: imprime plugins disponibles
+          const names = (this.Editor as any).builtinPlugins?.map((p: any) => p.pluginName);
+          console.log('CKEditor plugins:', names);
+        });
     }
 
     // Vista previa reactiva
@@ -239,6 +244,49 @@ export class PanelNoticias implements OnInit {
       return /[!¡/?]/.test(t) ? { noSpecialChars: true } : null;
     };
   }
+/** Valida:
+ *  - Máx N caracteres de TEXTO (HTML strip)
+ *  - Solo etiquetas permitidas: a, strong, em, b, i
+ *  - Si hay <a>, href debe ser http(s)
+ */
+private captionHtmlValidator(maxPlain: number): ValidatorFn {
+  const allowed = ['a','strong','em','b','i'];
+  const disallowedRx = /<\s*(script|style|iframe|img|video|audio|svg|object|embed)\b/i;
+  const anchorRx = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>/ig;
+
+  const stripHtml = (html: string) =>
+    (html || '')
+      .replace(/<[^>]+>/g, '')        // quita etiquetas
+      .replace(/\s+/g, ' ')           // colapsa espacios
+      .trim();
+
+  return (control: AbstractControl): ValidationErrors | null => {
+    const html = String(control.value || '');
+
+    if (!html) return null;
+
+    // 1) etiquetas no permitidas
+    if (disallowedRx.test(html)) return { disallowedTags: true };
+
+    // 2) si hay otras etiquetas distintas a las permitidas, invalida
+    const tagNames = Array.from(html.matchAll(/<\s*\/?\s*([a-z0-9-]+)/ig)).map(m => (m[1] || '').toLowerCase());
+    const bad = tagNames.filter(t => !allowed.includes(t) && !t.startsWith('/'));
+    if (bad.length) return { disallowedTags: true };
+
+    // 3) href de <a> debe ser http(s)
+    let m: RegExpExecArray | null;
+    while ((m = anchorRx.exec(html)) !== null) {
+      const href = m[1];
+      if (!/^https?:\/\//i.test(href)) return { invalidHref: true };
+    }
+
+    // 4) límite por texto sin HTML
+    const plain = stripHtml(html);
+    if (plain.length > maxPlain) return { maxlengthText: true };
+
+    return null;
+  };
+}
 
   // Slug
   private slugLengthValidator(): ValidatorFn {
@@ -770,6 +818,46 @@ export class PanelNoticias implements OnInit {
     }
   }
 
+  async onPickHero(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+    // 1) Firma
+    //http://localhost:3000/aaron/maslatino/api/sign-upload
+    //http://localhost:3000/aaron/maslatino/api/sign-upload
+    const sign = await fetch('http://localhost:3000/aaron/maslatino/sign-upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: file.type || 'application/octet-stream',
+        approxSize: file.size
+      })
+    });
+    if (!sign.ok) { alert('No se pudo firmar la subida.'); return; }
+    const { uploadUrl, publicUrl, key } = await sign.json();
+
+    // 2) Subir
+    const put = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file
+    });
+    if (!put.ok) { alert('Fallo al subir a S3'); return; }
+
+    // 3) Actualizar el formulario (cumple tus validadores: https y extensión)
+    this.noticiaForm.patchValue({
+      meta: {
+        ...this.noticiaForm.get('meta')?.value,
+        image: publicUrl,           // <- la URL CDN/https
+        // imageKey: key,           // <- si decides agregarlo al form (opcional)
+      }
+    });
+
+    // 4) dispara validación y si quieres medir dimensiones
+    this.noticiaForm.get('meta.image')?.updateValueAndValidity();
+    setTimeout(() => this.metaImageWarning = '', 0);
+  }
   onSubmit() {
     this.isSubmitting = true;
     this.noticiaForm.markAllAsTouched();
@@ -825,14 +913,44 @@ export class PanelNoticias implements OnInit {
     this.canonicalUrl = '';
     this.previewDataObj = this.buildPreviewData();
   }
-
   private prepareSubmitData() {
-    const raw = this.noticiaForm.value;
+    const raw = this.noticiaForm.value as any;
     const categories: string[] = raw.categories;
     const authorId = 'a94f23c8bd7e4ad1f6c30ae5';
 
     const html = String(raw.body || '');
     const contentForSave = this.parseHtmlToBlocksForSave(html);
+
+    // Endurece <a> del caption: target/rel seguros
+    const hardenCaptionLinks = (captionHtml: string) => {
+      if (!captionHtml) return captionHtml;
+      return captionHtml
+        // añade target si falta
+        .replace(/<a\b(?![^>]*\btarget=)[^>]*>/ig, m => m.replace('<a', '<a target="_blank"'))
+        // añade rel si falta
+        .replace(/<a\b(?![^>]*\brel=)[^>]*>/ig, m => m.replace('<a', '<a rel="nofollow noopener"'));
+    };
+
+    // Toma solo imageCaptionHtml y descarta legacy (imageCaption / imageCaptionUrl)
+    const {
+      imageCaption,        // legacy - ignorado
+      imageCaptionUrl,     // legacy - ignorado
+      imageCaptionHtml = ''
+    } = raw.meta || {};
+
+    const metaOut = {
+      ...raw.meta,
+      // sobrescribe con los valores calculados
+      ogTitle: raw.meta?.ogTitle || raw.title,
+      ogDescription: raw.meta?.ogDescription || (raw.extracto || raw.meta?.description),
+      canonical: raw.meta?.canonical || `https://${this.domain}/${raw.slug}`,
+      twitterCard: 'summary_large_image',
+      imageCaptionHtml: hardenCaptionLinks(imageCaptionHtml)
+    };
+
+    // Limpia propiedades legacy si existieran
+    delete (metaOut as any).imageCaption;
+    delete (metaOut as any).imageCaptionUrl;
 
     return {
       ...raw,
@@ -840,13 +958,7 @@ export class PanelNoticias implements OnInit {
       author: authorId,
       bodyHtml: html,
       content: contentForSave,
-      meta: {
-        ...raw.meta,
-        ogTitle: raw.meta.ogTitle || raw.title,
-        ogDescription: raw.meta.ogDescription || (raw.extracto || raw.meta.description),
-        canonical: raw.meta.canonical || `https://${this.domain}/${raw.slug}`,
-        twitterCard: 'summary_large_image'
-      }
+      meta: metaOut
     };
   }
 
@@ -899,4 +1011,5 @@ export class PanelNoticias implements OnInit {
     this.updateChecklist();
     this.updatePublishTooltip();
   }
+  
 }

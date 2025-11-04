@@ -36,17 +36,14 @@
             class="img-fluid rounded featured-image"
             itemprop="image" />
         </div>
-        <!-- Pie de foto de la imagen destacada (protegido con alias 'm') -->
-        <ng-container *ngIf="noticia?.meta as m">
-          <div *ngIf="m.imageCaption || m.imageCaptionUrl" class="featured-caption mb-3">
-            <small>
-              <ng-container *ngIf="m.imageCaption as cap">{{ cap }}</ng-container>
-              <ng-container *ngIf="m.imageCaptionUrl as capUrl">
-                <a [href]="capUrl" target="_blank" rel="noopener nofollow ugc">Fuente</a>
-              </ng-container>
-            </small>
+
+        <!-- Pie de foto de la imagen destacada (HTML combinado ya saneado en backend) -->
+        <ng-container *ngIf="noticia?.meta?.imageCaptionHtml as capHtml">
+          <div class="featured-caption mb-3">
+            <small [innerHTML]="capHtml"></small>
           </div>
         </ng-container>
+
 
         <!-- Cuerpo con bloques -->
         <div class="content" itemprop="articleBody">

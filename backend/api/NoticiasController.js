@@ -38,7 +38,26 @@ function normTags(tags) {
   const cleaned = tags.map(t => String(t || '').trim()).filter(Boolean);
   return Array.from(new Set(cleaned)).slice(0, 5);
 }
-
+function toCdnUrl(keyOrUrl, cdnBase) {
+  if (!keyOrUrl) return keyOrUrl;
+  const base = cdnBase?.replace(/\/$/, '') || '';
+  const isAbs = /^https?:\/\//i.test(keyOrUrl);
+  if (isAbs) {
+    // Si viene de S3, reescribe al CDN manteniendo path
+    try {
+      const u = new URL(keyOrUrl);
+      // si ya es tu CDN, regresa tal cual
+      if (base && keyOrUrl.startsWith(base)) return keyOrUrl;
+      // si parece s3, reescribe
+      if (/\.s3[.-]/i.test(u.hostname)) {
+        return `${base}${u.pathname}`;
+      }
+      return keyOrUrl;
+    } catch { return keyOrUrl; }
+  }
+  // Es una key relativa
+  return `${base}/${String(keyOrUrl).replace(/^\/+/, '')}`;
+}
 // Resolve categories from IDs / slugs / names -> ObjectId[]
 async function resolveCategories(input) {
   if (!Array.isArray(input) || input.length === 0) return [];
@@ -635,7 +654,7 @@ async getAllNoticias(req, res, next) {
   }
 } 
 // dentro de tu controlador (donde ya tienes helpers generarSlug / ensureUniqueSlug, etc.)
-async createNoticia(req, res, next) {
+async  createNoticia(req, res, next) {
   try {
     const {
       title,
@@ -644,9 +663,9 @@ async createNoticia(req, res, next) {
       categories,
       tags,
       location,
-      content,      // bloques “planos” del front (puede incluir itemsHtml en listas)
-      body,         // HTML del editor (opcional)
-      bodyHtml,     // preferido si ya lo mandas así
+      content,      // bloques “planos” del front
+      body,
+      bodyHtml,
       state,
       publishAt,
       meta = {}
@@ -654,19 +673,12 @@ async createNoticia(req, res, next) {
 
     // Requisitos mínimos
     if (!title) return res.status(400).json({ message: 'El campo title es obligatorio.' });
-    if (!meta.description || !meta.image) {
-      return res.status(400).json({ message: 'meta.description y meta.image son obligatorios.' });
-    }
 
-    // Autor
+    // Autor (igual que antes)
     let authorId;
-    if (req.user && req.user.id) {
-      authorId = req.user.id;
-    } else if (req.body.author) {
-      authorId = req.body.author;
-    } else {
-      return res.status(400).json({ message: 'No se proporcionó author.' });
-    }
+    if (req.user?.id) authorId = req.user.id;
+    else if (req.body.author) authorId = req.body.author;
+    else return res.status(400).json({ message: 'No se proporcionó author.' });
 
     // Slug final y único
     const baseSlug = slugFromClient ? generarSlug(slugFromClient) : generarSlug(title);
@@ -676,40 +688,108 @@ async createNoticia(req, res, next) {
     const normCategories = Array.isArray(categories)
       ? categories
       : typeof categories === 'string'
-        ? categories.split(',').map(s => s.trim())
+        ? categories.split(',').map(s => s.trim()).filter(Boolean)
         : [];
 
     const normTags = Array.isArray(tags)
       ? tags
       : typeof tags === 'string'
-        ? tags.split(',').map(s => s.trim())
+        ? tags.split(',').map(s => s.trim()).filter(Boolean)
         : [];
 
-    // ===== NORMALIZAR CONTENT (mantener itemsHtml y limpiar textAlign inválido) =====
+    // === HTML (el Schema lo sanea en pre-save)
+    const html = bodyHtml || body || '';
+
+    // === Backfill de caption global (igual que tenías)
+    let imageCaptionHtml = '';
+    if (typeof meta.imageCaptionHtml === 'string' && meta.imageCaptionHtml.trim()) {
+      imageCaptionHtml = meta.imageCaptionHtml.trim();
+    } else if (meta.imageCaption || meta.imageCaptionUrl) {
+      const txt = (meta.imageCaption || '').toString().trim();
+      const url = (meta.imageCaptionUrl || '').toString().trim();
+      if (url) {
+        let host = '';
+        try { host = new URL(url).hostname.replace(/^www\./, ''); } catch {}
+        const anchorText = host || 'Fuente';
+        imageCaptionHtml = txt
+          ? `${txt} — <a href="${url}">${anchorText}</a>`
+          : `<a href="${url}">${anchorText}</a>`;
+      } else {
+        imageCaptionHtml = txt;
+      }
+    }
+
+    // === Normalización de imágenes a CDN (meta + bloques)
+    const CDN = process.env.CDN_BASE_URL;
+
+    // Meta hero: aceptar imageKey o image absoluta/cdnKey
+    let metaImageUrl = meta.image || '';
+    if (!metaImageUrl && meta.imageKey) {
+      metaImageUrl = toCdnUrl(meta.imageKey, CDN);
+    } else if (metaImageUrl) {
+      metaImageUrl = toCdnUrl(metaImageUrl, CDN);
+    }
+
+    // Si tras normalizar no tenemos hero image → error
+    if (!meta.description || !metaImageUrl) {
+      return res.status(400).json({ message: 'meta.description y meta.image (o imageKey) son obligatorios.' });
+    }
+
+    // ===== NORMALIZAR CONTENT (mantener itemsHtml, limpiar align, y reescribir images a CDN)
     const normContent = Array.isArray(content) ? content.map((b) => {
       const out = { ...b };
 
-      // Aseguramos estructura style
+      // Asegura style.textAlign válido
       if (out.style) {
         const ta = (out.style.textAlign ?? '').toString().trim();
         if (!['left', 'center', 'right'].includes(ta)) {
-          // deja que el setter/default del Schema decida
           delete out.style.textAlign;
         }
       }
 
-      // En listas, permitir que venga itemsHtml (se saneará en el pre-save del Schema)
+      // Listas: preserva itemsHtml; el schema saneará en pre-save
       if (out.type === 'list') {
         if (!Array.isArray(out.items)) out.items = [];
-        if (!Array.isArray(out.itemsHtml)) out.itemsHtml = []; // <-- clave: preserva <a> dentro de <li>
+        if (!Array.isArray(out.itemsHtml)) out.itemsHtml = [];
+      }
+
+      // Imágenes: aceptar cdnKey o url absoluta o s3 y reescribir a CDN
+      if (out.type === 'image') {
+        // campos nuevos (si llegan)
+        const cdnKey = out.cdnKey || '';
+        const mime   = out.mime || '';
+        const bytes  = out.bytes || undefined;
+        const width  = out.width || undefined;
+        const height = out.height || undefined;
+
+        if (cdnKey && !out.url) {
+          out.url = toCdnUrl(cdnKey, CDN);
+        } else if (out.url) {
+          out.url = toCdnUrl(out.url, CDN);
+        }
+
+        // Endurecer mime: solo image/*
+        if (mime && !/^image\//i.test(mime)) delete out.mime;
+
+        // Asegura tipos numéricos
+        if (bytes !== undefined) out.bytes = Number(bytes) || undefined;
+        if (width !== undefined) out.width = Number(width) || undefined;
+        if (height !== undefined) out.height = Number(height) || undefined;
+
+        // Variantes (si te llegan desde front)
+        if (out.variants) {
+          const v = { ...out.variants };
+          if (v.sm) v.sm = toCdnUrl(v.sm, CDN);
+          if (v.md) v.md = toCdnUrl(v.md, CDN);
+          if (v.lg) v.lg = toCdnUrl(v.lg, CDN);
+          out.variants = v;
+        }
       }
 
       return out;
     }) : [];
 
-    // HTML (el Schema lo sanea en pre-save)
-    const html = bodyHtml || body || '';
-
+    // Construir documento
     const doc = new Noticia({
       title,
       slug: finalSlug,
@@ -722,29 +802,27 @@ async createNoticia(req, res, next) {
       bodyHtml: html,
       meta: {
         description:    meta.description,
-        image:          meta.image,
+        image:          metaImageUrl,                // ya normalizada a CDN
         imageAltGlobal: meta.imageAltGlobal || '',
         canonical:      meta.canonical || '',
         ogTitle:        meta.ogTitle || title,
         ogDescription:  meta.ogDescription || (summary || meta.description),
         twitterCard:    meta.twitterCard || 'summary_large_image',
-        // ===== NUEVO: pie de foto global y su enlace =====
-        imageCaption:    meta.imageCaption || '',
-        imageCaptionUrl: meta.imageCaptionUrl || ''
+        imageCaptionHtml,
+        // nuevos opcionales
+        imageKey:       meta.imageKey || undefined,
+        imageWidth:     meta.imageWidth || undefined,
+        imageHeight:    meta.imageHeight || undefined,
+        imageType:      meta.imageType || undefined
       },
       state: state || 'draft',
       publishAt: publishAt || null
     });
 
-    // Debug opcional
-    // console.log('Saving noticia:', JSON.stringify(doc.toObject(), null, 2));
-
     const saved = await doc.save();
 
     // Recache (no bloqueante)
-    try {
-      await recacheNoticia(saved.slug);
-    } catch (e) {
+    try { await recacheNoticia(saved.slug); } catch (e) {
       console.warn('recacheNoticia falló (no bloqueante):', e?.message || e);
     }
 
@@ -756,8 +834,8 @@ async createNoticia(req, res, next) {
     }
     next(error);
   }
-}
 
+}
 }
 
 const NoticiasController = new noticiasController();
