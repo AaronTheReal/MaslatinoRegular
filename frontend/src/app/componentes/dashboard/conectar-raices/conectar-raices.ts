@@ -17,7 +17,7 @@ export class ConectarRaices {
   // - Redirigir a /descargar-app
   // - window.open(App Store / Play Store)
   onDescargarApp(): void {
-    console.log('📲 DESCARGA LA APP');
+
     // ejemplo mínimo:
     // this.router.navigate(['/descargar-app']);
     // ó window.open('https://play.google.com/lo-que-sea', '_blank');

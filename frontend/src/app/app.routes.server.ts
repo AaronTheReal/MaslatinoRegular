@@ -33,7 +33,10 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'categoria/*',  renderMode:  RenderMode.Server },
   { path: 'eventos-show', renderMode: RenderMode.Server },
   { path: 'recomendadas-show', renderMode: RenderMode.Server },
-              { path: 'podcast-show', renderMode: RenderMode.Server },
+  { path: 'podcast-show', renderMode: RenderMode.Server },
+  {path: 'descarga-la-app', renderMode: RenderMode.Client},
+  {path: 'nosotros-pagina', renderMode: RenderMode.Client},
+              
       
   
 ];
