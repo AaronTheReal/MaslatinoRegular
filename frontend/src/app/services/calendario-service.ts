@@ -111,8 +111,8 @@ function buildParams(params: Record<string, any>): HttpParams {
 @Injectable({ providedIn: 'root' })
 export class CalendarioService {
   // Ajusta a tu prefijo real
-  private baseUrl = 'http://localhost:3000/aaron/maslatino';
-  //private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
+  //private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 
