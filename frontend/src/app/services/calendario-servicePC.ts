@@ -57,9 +57,9 @@ export interface CalendarItemPC {
 
 @Injectable({ providedIn: 'root' })
 export class CalendarPCService {
-  private API_URL = 'http://localhost:3000/aaron/maslatino/calendar-pc';
+  //private API_URL = 'http://localhost:3000/aaron/maslatino/calendar-pc';
   // private API_URL = 'https://maslatino.onrender.com/aaron/maslatino/calendar-pc'; // producción
-  //private API_URL = 'https://maslatinoregular.onrender.com/aaron/maslatino/calendar-pc';
+  private API_URL = 'https://maslatinoregular.onrender.com/aaron/maslatino/calendar-pc';
 
   constructor(private http: HttpClient) {}
 
