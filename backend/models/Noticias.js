@@ -32,14 +32,32 @@ const BlockSchema = new Schema({
         const val = String(v).trim();
         return ['left', 'center', 'right'].includes(val) ? val : undefined;
       }
-    },
+    }
   },
 
-  // Imagen
-  url: { type: String },
-  alt: { type: String },
+  // Imagen (actual)
+  url:     { type: String },
+  alt:     { type: String },
   caption: { type: String },
   captionHtml: { type: String },
+
+  // Imagen (nuevo, retro-compatible)
+  cdnKey:   { type: String, trim: true },    // p.ej. uploads/2025/11/123-abc.webp
+  width:    { type: Number, min: 1 },
+  height:   { type: Number, min: 1 },
+  mime:     { type: String, trim: true },     // image/webp, image/jpeg
+  bytes:    { type: Number, min: 0 },
+  credit:   { type: String, trim: true },     // “Foto: AP / Reuters…”
+  sourceUrl:{ type: String, trim: true },     // si citas origen
+  variants: {
+    sm:  { type: String, trim: true },        // URLs absolutas en CDN (srcset)
+    md:  { type: String, trim: true },
+    lg:  { type: String, trim: true }
+  },
+  focalPoint: {
+    x: { type: Number, min: 0, max: 1 },      // opcional (crop inteligente)
+    y: { type: Number, min: 0, max: 1 }
+  },
 
   // Enlace
   href: { type: String },
@@ -47,7 +65,7 @@ const BlockSchema = new Schema({
 
   // Lista
   items: [{ type: String }],
-  itemsHtml: [{ type: String }], // <--- NUEVO: preserva HTML de cada <li> (incluye <a>)
+  itemsHtml: [{ type: String }], // preserva HTML de cada <li> (incluye <a>)
   ordered: { type: Boolean },
 
   // Cita
@@ -103,13 +121,13 @@ BlockSchema.pre('save', function (next) {
     if (this.type === 'list') {
       // Sanea cada <li> con HTML si viene desde el front
       if (Array.isArray(this.itemsHtml) && this.itemsHtml.length) {
-        this.itemsHtml = this.itemsHtml.map(h => DOMPurify.sanitize(String(h)));
+        this.itemsHtml = this.itemsHtml.map((h) => DOMPurify.sanitize(String(h)));
       }
       // Genera html desde items plano si no hay html
       if (!this.html && Array.isArray(this.items)) {
         const mdList = (this.ordered
           ? this.items.map((it, i) => `${i + 1}. ${it}`)
-          : this.items.map(it => `- ${it}`)
+          : this.items.map((it) => `- ${it}`)
         ).join('\n');
         const rawHtml = marked(mdList);
         this.html = DOMPurify.sanitize(rawHtml);
@@ -173,13 +191,17 @@ const NoticiaSchema = new Schema({
     description:     { type: String, required: true },
     image:           { type: String, required: true },
     imageAltGlobal:  { type: String, trim: true },
+    imageKey:   { type: String, trim: true }, 
+    imageWidth: { type: Number, min: 1 },
+    imageHeight:{ type: Number, min: 1 },
+    imageType:  { type: String, trim: true },
     canonical:       { type: String, trim: true },
     ogTitle:         { type: String, trim: true },
     ogDescription:   { type: String, trim: true },
     twitterCard:     { type: String, trim: true },
-    // NUEVO: pie de foto global y su enlace
-    imageCaption:    { type: String, trim: true },
-    imageCaptionUrl: { type: String, trim: true }
+
+    // Pie de foto combinado (HTML seguro)
+    imageCaptionHtml: { type: String, trim: true }
   },
 
   state:     { type: String, enum: ['draft', 'review', 'published'], default: 'draft' },
@@ -190,16 +212,60 @@ const NoticiaSchema = new Schema({
   autorizada: { type: Boolean, default: false }
 });
 
-// Actualiza updatedAt y sanitiza bodyHtml si viene
+// Helper: refuerza <a> con target/rel si faltan
+function hardenLinks(html) {
+  if (!html) return html;
+  // añade target si falta
+  const withTarget = html.replace(
+    /<a\b(?![^>]*\btarget=)[^>]*>/ig,
+    function (m) { return m.replace('<a', '<a target="_blank"'); }
+  );
+  // añade rel si falta
+  const withRel = withTarget.replace(
+    /<a\b(?![^>]*\brel=)[^>]*>/ig,
+    function (m) { return m.replace('<a', '<a rel="nofollow noopener"'); }
+  );
+  return withRel;
+}
+
+// Hook: sanea bodyHtml y pie de foto global
 NoticiaSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
-  if (this.bodyHtml) {
-    this.bodyHtml = DOMPurify.sanitize(String(this.bodyHtml));
+
+  try {
+    if (this.bodyHtml) {
+      this.bodyHtml = DOMPurify.sanitize(String(this.bodyHtml));
+    }
+
+    if (this.meta && this.meta.imageCaptionHtml) {
+      // Solo permitir etiquetas seguras
+      const sanitized = DOMPurify.sanitize(String(this.meta.imageCaptionHtml), {
+        ALLOWED_TAGS: ['a', 'strong', 'em', 'b', 'i'],
+        ALLOWED_ATTR: ['href', 'title', 'target', 'rel']
+      });
+
+      // Acepta únicamente http(s) en href
+      const onlyHttp = sanitized.replace(
+        /<a\b[^>]*href=["']([^"']+)["'][^>]*>/ig,
+        function (m, href) {
+          if (!/^https?:\/\//i.test(href)) {
+            return m.replace(href, '#');
+          }
+          return m;
+        }
+      );
+
+      this.meta.imageCaptionHtml = hardenLinks(onlyHttp);
+    }
+
+    next();
+  } catch (err) {
+    next(err);
   }
-  next();
 });
 
 export default model('Noticia', NoticiaSchema);
+
 
 
 

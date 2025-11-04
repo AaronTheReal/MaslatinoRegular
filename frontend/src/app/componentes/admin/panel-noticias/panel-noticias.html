@@ -127,8 +127,19 @@
               <span *ngIf="noticiaForm.get('meta.image')?.errors?.['imageFilename']">Nombre de archivo no optimizado.</span>
             </div>
 
-            <!-- Preview invisible para medir dimensiones -->
-            <img [src]="noticiaForm.get('meta.image')?.value || ''" (load)="onMetaImageLoad($event)" alt="" style="display:none" />
+            <!-- Subir desde la compu (sube a S3 y llena meta.image automáticamente) -->
+            <div class="mt-2">
+              <input type="file" accept="image/*"
+                    (change)="onPickHero($event)" />
+              <small class="text-muted d-block">Puedes subir una imagen; guardaremos su URL del CDN en el campo de arriba.</small>
+              <!-- Vista previa opcional -->
+              <img *ngIf="noticiaForm.get('meta.image')?.value"
+                   [src]="noticiaForm.get('meta.image')?.value"
+                   (load)="onMetaImageLoad($event)"
+                   alt=""
+                   style="max-width:100%;margin-top:.5rem;border-radius:8px;" />
+            </div>
+
             <div class="text-warning small" *ngIf="metaImageWarning">{{ metaImageWarning }}</div>
           </div>
 
@@ -157,26 +168,42 @@
             </div>
           </div>
 
-          <!-- Pie de foto + link (opcionales) -->
+          <!-- Pie de foto + enlace (en una sola línea / admite HTML básico) -->
           <div class="col-12" formGroupName="meta">
-            <label for="imageCaption" class="form-label">Pie de foto (opcional)</label>
-            <textarea id="imageCaption" class="form-control" formControlName="imageCaption" rows="2"
-                      placeholder="Ej.: Concierto en el City Hall. Foto: Juan Pérez"></textarea>
-            <small class="text-muted">{{ noticiaForm.get('meta.imageCaption')?.value?.length || 0 }} / 140</small>
-            <div class="text-danger small"
-                 *ngIf="noticiaForm.get('meta.imageCaption')?.touched && noticiaForm.get('meta.imageCaption')?.invalid">
-              <span *ngIf="noticiaForm.get('meta.imageCaption')?.errors?.['maxlength']">Máximo 140 caracteres.</span>
-            </div>
+            <label for="imageCaptionHtml" class="form-label">
+              Pie de foto + enlace (opcional)
+            </label>
 
-            <label for="imageCaptionUrl" class="form-label mt-2">Enlace del pie (opcional)</label>
-            <input id="imageCaptionUrl" type="url" class="form-control" formControlName="imageCaptionUrl"
-                   placeholder="https://autor-o-fuente.com/credito" />
+            <textarea id="imageCaptionHtml"
+                      class="form-control"
+                      formControlName="imageCaptionHtml"
+                      rows="2"
+                      placeholder='Ej.: Concierto en el City Hall. Foto: Juan Pérez — Fuente: <a href="https://elpais.com">El País</a>'>
+            </textarea>
+
+            <small class="text-muted d-block">
+              Puedes mezclar texto y un enlace con <code>&lt;a href="https://..."&gt;Texto&lt;/a&gt;</code>.
+              Se permiten etiquetas: <code>&lt;a&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>.
+              Límite: 140 caracteres de texto (sin contar HTML).
+            </small>
+
             <div class="text-danger small"
-                 *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.touched && noticiaForm.get('meta.imageCaptionUrl')?.invalid">
-              <span *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.errors?.['pattern']">Debe ser una URL válida (http/https).</span>
-              <span *ngIf="noticiaForm.get('meta.imageCaptionUrl')?.errors?.['maxlength']">Máximo 300 caracteres.</span>
+                *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.touched && noticiaForm.get('meta.imageCaptionHtml')?.invalid">
+
+              <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['maxlengthText']">
+                Máximo 140 caracteres de texto (se ignoran las etiquetas HTML).
+              </span>
+
+              <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['disallowedTags']">
+                Solo se permiten <code>a</code>, <code>strong</code>, <code>em</code>, <code>b</code>, <code>i</code>.
+              </span>
+
+              <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['invalidHref']">
+                Todo <code>&lt;a&gt;</code> debe usar <code>http://</code> o <code>https://</code>.
+              </span>
             </div>
           </div>
+
 
         </div>
 
@@ -470,7 +497,6 @@
             </div>
           </div>
         </div>
-
         <div class="mt-3 small">
           <div *ngIf="titleWarning" class="text-warning">{{ titleWarning }}</div>
           <div *ngIf="metaDescWarning" class="text-warning">{{ metaDescWarning }}</div>

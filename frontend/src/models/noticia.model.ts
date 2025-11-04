@@ -53,16 +53,16 @@ export interface NoticiaMeta {
   description?: string;
   image?: string;
 
-  // NUEVO: usados por tu template
+  // NUEVO: pie de foto combinado (texto + <a href=...>)
   imageAltGlobal?: string;
-  imageCaption?: string;
-  imageCaptionUrl?: string;
+  imageCaptionHtml?: string;
 
   canonical?: string;
   ogTitle?: string;
   ogDescription?: string;
   twitterCard?: string;
 }
+
 
 export interface Noticia {
   _id: string;
