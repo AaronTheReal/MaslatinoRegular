@@ -58,8 +58,10 @@
               <span *ngIf="noticiaForm.get('title')?.errors?.['maxlength']">Ideal 50–60 chars (≤60).</span>
               <span *ngIf="noticiaForm.get('title')?.errors?.['titleContainsKeyphrase']">
                 La keyword debe estar cerca del inicio.</span>
+                <!--
               <span *ngIf="noticiaForm.get('title')?.errors?.['titleCase']">
                 Usa Mayúscula Inicial en palabras principales.</span>
+                -->
               <span *ngIf="noticiaForm.get('title')?.errors?.['noSpecialChars']">
                 Evita signos “¡ ! / ?”.</span>
             </div>
@@ -347,6 +349,7 @@
                 <span *ngIf="noticiaForm.get('body')?.errors?.['links']">1–3 externos, 2–3 internos, máx 7. </span>
                 <span *ngIf="noticiaForm.get('body')?.errors?.['uniqueImages']">Imágenes únicas. </span>
                 <span *ngIf="noticiaForm.get('body')?.errors?.['altKeyphraseHyphen']">Alt incluye keyword-con-guiones. </span>
+                <span *ngIf="noticiaForm.get('body')?.errors?.['maxListItems']">Máximo 7 items en listas. </span>
               </div>
             </div>
 
@@ -359,6 +362,11 @@
                 <li>Imágenes en cuerpo: {{ imageCount }}</li>
                 <li>H2/H3: {{ headerCount }}</li>
                 <li>Legibilidad (Flesch): {{ fleschScore }} (Objetivo 60–70)</li>
+                <!-- NUEVO: Muestra densidad siempre -->
+                <li *ngIf="noticiaForm.get('focusKeyphrase')?.value">Densidad keyword: {{ density.toFixed(1) }}% (Óptimo 0.5–2%)</li>
+                <li>Enlaces internos: {{ internalLinks }} (Recomendado 2–3)</li>
+                <li>Enlaces externos: {{ externalLinks }} (Recomendado 1–3)</li>
+                <li>Enlaces total: {{ linkCount }} (Máx 7)</li>
               </ul>
               <div *ngIf="paragraphWarnings.length > 0" class="text-warning small mt-2">
                 <div *ngFor="let w of paragraphWarnings">{{ w }}</div>
@@ -366,6 +374,10 @@
               <div *ngIf="headerSuggestion" class="text-info small">{{ headerSuggestion }}</div>
               <div *ngIf="titleRepetitionWarning" class="text-warning small">{{ titleRepetitionWarning }}</div>
               <div *ngIf="sourcesSuggestion" class="text-info small">{{ sourcesSuggestion }}</div>
+              <div *ngIf="linkSuggestion" class="text-warning small">{{ linkSuggestion }}</div>
+              <div *ngIf="listSuggestion.length > 0" class="text-warning small mt-2">
+                <div *ngFor="let w of listSuggestion">{{ w }}</div>
+              </div>
             </div>
 
             <!-- Checklist SEO -->
@@ -376,6 +388,7 @@
                 <li [class.text-success]="checklist.description" [class.text-danger]="!checklist.description">Meta: {{ checklist.description ? '✓' : '✗ 120–160 + keyword' }}</li>
                 <li [class.text-success]="checklist.slug" [class.text-danger]="!checklist.slug">Slug: {{ checklist.slug ? '✓' : '✗ 3–6 palabras' }}</li>
                 <li [class.text-success]="checklist.headers" [class.text-danger]="!checklist.headers">Encabezados: {{ checklist.headers ? '✓' : '✗ ≥1 H2 si >400' }}</li>
+                <li [class.text-success]="checklist.links" [class.text-danger]="!checklist.links">Enlaces: {{ checklist.links ? '✓' : '✗ 1–3 ext, 2–3 int' }}</li>
                 <li [class.text-success]="checklist.image" [class.text-danger]="!checklist.image">Imagen: {{ checklist.image ? '✓' : '✗ Tamaño/ratio/alt' }}</li>
                 <li [class.text-success]="checklist.publishAt" [class.text-danger]="!checklist.publishAt">Publicación: {{ checklist.publishAt ? '✓' : '✗ Requerida' }}</li>
                 <li [class.text-success]="checklist.sources" [class.text-danger]="!checklist.sources">Fuentes: {{ checklist.sources ? '✓' : '✗ 1–3 confiables' }}</li>
@@ -437,6 +450,9 @@
                 <li>Imágenes: {{ imageCount }}</li>
                 <li>H2/H3: {{ headerCount }}</li>
                 <li>Flesch: {{ fleschScore }}</li>
+                <li>Internos: {{ internalLinks }}</li>
+                <li>Externos: {{ externalLinks }}</li>
+                <li>Total: {{ linkCount }}</li>
               </ul>
             </div>
           </div>
@@ -461,6 +477,10 @@
           <div *ngIf="titleRepetitionWarning" class="text-warning">{{ titleRepetitionWarning }}</div>
           <div *ngIf="localSeoSuggestion" class="text-info">{{ localSeoSuggestion }}</div>
           <div *ngIf="sourcesSuggestion" class="text-info">{{ sourcesSuggestion }}</div>
+          <div *ngIf="linkSuggestion" class="text-warning">{{ linkSuggestion }}</div>
+          <div *ngIf="listSuggestion.length > 0" class="text-warning mt-2">
+            <div *ngFor="let w of listSuggestion">{{ w }}</div>
+          </div>
           <div *ngFor="let w of paragraphWarnings" class="text-warning">{{ w }}</div>
           <div *ngFor="let w of keyphraseWarnings" class="text-warning">{{ w }}</div>
           <div *ngFor="let w of keywordDensityWarnings" class="text-warning">{{ w }}</div>

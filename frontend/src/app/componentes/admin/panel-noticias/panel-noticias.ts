@@ -33,6 +33,10 @@ export class PanelNoticias implements OnInit {
   imageCount = 0;
   headerCount = 0;
   fleschScore = 0;
+  density = 0;  // NUEVO: Para almacenar el % de densidad de keyword en body
+  linkCount = 0;
+  internalLinks = 0;
+  externalLinks = 0;
 
   // Avisos
   titleWarning = '';
@@ -43,11 +47,12 @@ export class PanelNoticias implements OnInit {
   keywordDensityWarnings: string[] = [];
   keyphraseWarnings: string[] = [];
   headerSuggestion = '';
-  listSuggestion = '';
+  listSuggestion: string[] = [];
   quoteWarning = '';
   localSeoSuggestion = '';
   titleRepetitionWarning = '';
   sourcesSuggestion = '';
+  linkSuggestion = '';
 
   // Checklist / UI
   showChecklist = false;
@@ -61,7 +66,7 @@ export class PanelNoticias implements OnInit {
   public Editor: any = null;
 
   // Dominio para distinguir enlaces internos
-  private domain = 'yourdomain.com'; // TODO: cambia por tu dominio
+  private domain = 'maslatino.com'; // TODO: cambia por tu dominio
 
   // CKEditor config
   public editorConfig: any = {
@@ -364,6 +369,9 @@ export class PanelNoticias implements OnInit {
       const hyphenKey = focus.normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().replace(/\s+/g,'-');
       const altOk = !focus || images.every(img => (img.alt || '').toLowerCase().includes(hyphenKey));
 
+      const lists = doc.querySelectorAll('ul, ol');
+      const maxListItems = Array.from(lists).reduce((max, list) => Math.max(max, list.querySelectorAll(':scope > li').length), 0);
+
       const errors: any = {};
       if (wordCount < 300) errors.minWords = true;
       if (wordCount > 400 && h2s.length < 1) errors.minHeaders = true;
@@ -380,6 +388,7 @@ export class PanelNoticias implements OnInit {
 
       if (external < 1 || external > 3 || internal < 2 || internal > 3 || totalLinks > 7) errors.links = true;
       if (!uniqueImages) errors.uniqueImages = true;
+      if (maxListItems > 7) errors.maxListItems = true;
 
       return Object.keys(errors).length ? errors : null;
     };
@@ -409,7 +418,7 @@ export class PanelNoticias implements OnInit {
 
     const doc = new DOMParser().parseFromString(html, 'text/html');
 
-    const text = doc.body.textContent || '';
+    const text = doc.body.textContent?.trim() || '';
     const words = text.split(/\s+/).filter(Boolean);
     this.wordCount = words.length;
     this.readingTime = Math.ceil(this.wordCount / 200);
@@ -422,6 +431,21 @@ export class PanelNoticias implements OnInit {
     this.fleschScore = this.wordCount
       ? Math.round(206.835 - 1.015 * (this.wordCount / sentences) - 84.6 * (vowels / this.wordCount))
       : 0;
+
+    // NUEVO: Calcula densidad de keyword
+    const focus = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase().trim();
+    this.density = 0;
+    if (focus && this.wordCount > 0) {
+      const rx = new RegExp(focus.replace(/\s+/g, '\\s+'), 'g');
+      const keyCount = (text.toLowerCase().match(rx) || []).length;
+      this.density = (keyCount / this.wordCount) * 100;
+    }
+
+    // Calcula enlaces
+    const links = Array.from(doc.querySelectorAll('a[href]')) as HTMLAnchorElement[];
+    this.linkCount = links.length;
+    this.internalLinks = links.filter(a => a.href.includes(this.domain)).length;
+    this.externalLinks = this.linkCount - this.internalLinks;
 
     this.paragraphWarnings = [];
     const paras = Array.from(doc.querySelectorAll('p')).map(p => p.textContent || '');
@@ -447,6 +471,21 @@ export class PanelNoticias implements OnInit {
       const hasLinks = Array.from(doc.querySelectorAll('a[href^="https://"]')).length > 0;
       this.sourcesSuggestion = hasLinks ? '' : 'Si hay “Fuentes:”, exige lista de enlaces https con textos claros.';
     } else this.sourcesSuggestion = '';
+
+    this.linkSuggestion = (this.externalLinks < 1 || this.externalLinks > 3 || this.internalLinks < 2 || this.internalLinks > 3 || this.linkCount > 7) 
+      ? 'Enlaces: recomienda 1–3 externos, 2–3 internos, total ≤7.' : '';
+
+    // NUEVO: Chequeo de listas (máximo 7 items)
+    const lists = doc.querySelectorAll('ul, ol');
+    let maxListItems = 0;
+    this.listSuggestion = [];
+    Array.from(lists).forEach((list, i) => {
+      const itemCount = list.querySelectorAll(':scope > li').length;
+      if (itemCount > maxListItems) maxListItems = itemCount;
+      if (itemCount > 7) {
+        this.listSuggestion.push(`Lista ${i+1} tiene ${itemCount} items (máximo 7 recomendados).`);
+      }
+    });
   }
 
   private updateSoftValidators() {
@@ -461,11 +500,14 @@ export class PanelNoticias implements OnInit {
     const wc = text.split(/\s+/).filter(Boolean).length;
 
     const keyphrase = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase();
+    // NUEVO: Warnings de densidad (usa this.density si ya está calculado, o recálculo mínimo)
     if (keyphrase && wc > 0) {
-      const count = text.split(keyphrase).length - 1;
-      const density = (count / wc) * 100;
-      if (density > 2) this.keyphraseWarnings.push(`La palabra clave aparece al ${density.toFixed(1)}% - posible sobreoptimización (máx. 2%).`);
-      if (density < 0.5 && count > 0) this.keyphraseWarnings.push(`La palabra clave aparece al ${density.toFixed(1)}% - sugiere aumentar su uso (mín. 0.5%).`);
+      if (this.density > 2) {
+        this.keywordDensityWarnings.push(`La palabra clave aparece al ${this.density.toFixed(1)}% - posible sobreoptimización (máx. 2%).`);
+      }
+      if (this.density < 0.5 && this.density > 0) {  // Cambié count > 0 por density > 0
+        this.keywordDensityWarnings.push(`La palabra clave aparece al ${this.density.toFixed(1)}% - sugiere aumentar su uso (mín. 0.5%).`);
+      }
     }
 
     const firstPara = (doc.querySelector('p')?.textContent || '').toLowerCase();
@@ -662,7 +704,7 @@ export class PanelNoticias implements OnInit {
     const html = (this.noticiaForm.get('body')?.value || '').toString();
     if (!this.isBrowser) return;
     const text = new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
-    this.localSeoSuggestion = (city && !text.includes(city)) ? `Sugiere añadir mención a "${city}" en el primer 30% del texto.` : '';
+    this.localSeoSuggestion = (city && !text.includes(city)) ? `Sugiere añadir mención a "${city}" en el primer 30% del texto. (Opcional)` : '';
   }
   private updateTitleRepetition() {
     const title = (this.noticiaForm.get('title')?.value || '').toLowerCase();
@@ -678,7 +720,7 @@ export class PanelNoticias implements OnInit {
       description: this.noticiaForm.get('meta.description')?.valid,
       slug: this.noticiaForm.get('slug')?.valid,
       headers: this.headerCount >= 1 || this.wordCount <= 400,
-      links: true,
+      links: this.noticiaForm.get('state')?.value !== 'review' || !this.noticiaForm.get('body')?.errors?.['links'],
       image: this.noticiaForm.get('meta.image')?.valid,
       publishAt: !this.publishAtError,
       noUtm: true,
@@ -698,6 +740,7 @@ export class PanelNoticias implements OnInit {
     if (!this.checklist.description) fails.push('Meta 120–160 + keyword');
     if (!this.checklist.slug) fails.push('Slug válido/único');
     if (!this.checklist.headers) fails.push('≥1 H2 si >400');
+    if (!this.checklist.links) fails.push('Enlaces óptimos');
     if (!this.checklist.image) fails.push('Imagen destacada OK');
     if (!this.checklist.publishAt) fails.push('Fecha publicación válida');
     if (!this.checklist.sources) fails.push('Fuentes claras');
@@ -766,10 +809,16 @@ export class PanelNoticias implements OnInit {
   private resetForm() {
     this.noticiaForm.reset({ state: 'draft', publishAt: null, focusKeyphrase: '', body: '' });
     this.wordCount = this.readingTime = this.imageCount = this.headerCount = this.fleschScore = 0;
+    this.density = 0;
+    this.linkCount = 0;
+    this.internalLinks = 0;
+    this.externalLinks = 0;
     this.titleWarning = this.metaDescWarning = this.metaImageWarning = this.publishAtError = '';
     this.paragraphWarnings = this.keywordDensityWarnings = this.keyphraseWarnings = [];
-    this.headerSuggestion = this.listSuggestion = this.quoteWarning = this.localSeoSuggestion = '';
+    this.headerSuggestion = this.quoteWarning = this.localSeoSuggestion = '';
     this.titleRepetitionWarning = this.sourcesSuggestion = '';
+    this.linkSuggestion = '';
+    this.listSuggestion = [];
     this.showChecklist = false;
     this.checklist = {};
     this.publishTooltip = '';
