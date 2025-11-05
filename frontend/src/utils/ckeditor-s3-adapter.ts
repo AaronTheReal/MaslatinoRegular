@@ -30,7 +30,7 @@ export class S3UploadAdapter {
     const filename = sanitizeFilename(file.name || 'upload');
 
     // 1) pedir URL firmada
-    const signRes = await fetch('http://localhost:3000/aaron/maslatino/sign-upload', {
+    const signRes = await fetch('https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

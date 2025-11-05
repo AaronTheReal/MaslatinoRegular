@@ -39,6 +39,7 @@ export class PanelNoticias implements OnInit {
   linkCount = 0;
   internalLinks = 0;
   externalLinks = 0;
+  captionPlainCount = 0;
 
   // Avisos
   titleWarning = '';
@@ -860,7 +861,7 @@ private captionHtmlValidator(maxPlain: number): ValidatorFn {
     // 1) Firma
     //http://localhost:3000/aaron/maslatino/api/sign-upload
     //http://localhost:3000/aaron/maslatino/api/sign-upload
-    const sign = await fetch('http://localhost:3000/aaron/maslatino/sign-upload', {
+    const sign = await fetch('https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1065,6 +1066,167 @@ private noTrailingDotValidator(): ValidatorFn {
     // Rechaza si termina en punto (incluye "..." porque el último char es '.')
     return /\.\s*$/.test(v) ? { noTrailingDot: true } : null;
   };
+}
+// Envuelve selección con before/after (respetando caret y validación)
+wrapSelection(textarea: HTMLTextAreaElement, before: string, after: string) {
+  const ctrl = this.noticiaForm.get('meta.imageCaptionHtml');
+  const value = String(ctrl?.value || '');
+  const start = textarea.selectionStart ?? value.length;
+  const end   = textarea.selectionEnd   ?? value.length;
+  const sel   = value.slice(start, end) || 'texto';
+
+  const next = value.slice(0, start) + before + sel + after + value.slice(end);
+  ctrl?.setValue(next);
+  ctrl?.markAsDirty();
+  // Reposiciona el caret al final del bloque insertado
+  const newPos = start + before.length + sel.length + after.length;
+  setTimeout(() => {
+    textarea.focus();
+    textarea.setSelectionRange(newPos, newPos);
+    ctrl?.updateValueAndValidity();
+  });
+}
+
+// Pide URL y crea <a href="...">selección</a>
+wrapSelectionAsLink(textarea: HTMLTextAreaElement) {
+  const url = (window.prompt('Pega la URL (debe iniciar con http:// o https://)') || '').trim();
+  if (!/^https?:\/\/.+/i.test(url)) {
+    if (url) alert('URL inválida. Debe iniciar con http:// o https://');
+    return;
+  }
+  this.wrapSelection(textarea, `<a href="${url}">`, `</a>`);
+}
+private sanitizeCaptionHtml(html: string): string {
+  // Permite solo: a,strong,em,b,i y texto. Limpia atributos peligrosos.
+  const doc = new DOMParser().parseFromString(html || '', 'text/html');
+  const allowed = new Set(['A', 'STRONG', 'EM', 'B', 'I']);
+  const walker = (node: Node) => {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      if (!allowed.has(el.tagName)) {
+        // Reemplaza elementos no permitidos por su texto interior
+        const span = doc.createTextNode(el.textContent || '');
+        el.replaceWith(span);
+        return;
+      }
+      // Limpia atributos
+      for (const attr of Array.from(el.attributes)) {
+        if (el.tagName === 'A' && attr.name.toLowerCase() === 'href') continue;
+        el.removeAttribute(attr.name);
+      }
+      // Enlaces: solo http(s)
+      if (el.tagName === 'A') {
+        const href = el.getAttribute('href') || '';
+        if (!/^https?:\/\//i.test(href)) {
+          // si es inválido, “desenlaza” dejando solo el texto
+          el.replaceWith(doc.createTextNode(el.textContent || ''));
+          return;
+        }
+      }
+    }
+    // Recorre hijos
+    for (const child of Array.from(node.childNodes)) walker(child);
+  };
+  walker(doc.body);
+
+  // Aplana <div>/<p> creados por el navegador (ya filtrados)
+  return (doc.body.innerHTML || '')
+    .replace(/<(div|p)>(.*?)<\/\1>/gi, '$2')
+    .trim();
+}
+
+private getPlainTextLenFromHtml(html: string): number {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html || '';
+  return (tmp.textContent || '').replace(/\s+/g, ' ').trim().length;
+}
+
+onCaptionInput(ev: Event) {
+  const el = ev.target as HTMLElement;
+  const clean = this.sanitizeCaptionHtml(el.innerHTML);
+  // Mantiene lo que se ve siempre “limpio”
+  if (clean !== el.innerHTML) el.innerHTML = clean;
+
+  // Actualiza contador y form control
+  this.captionPlainCount = this.getPlainTextLenFromHtml(clean);
+  this.noticiaForm.get('meta.imageCaptionHtml')?.setValue(clean, { emitEvent: true });
+  this.noticiaForm.get('meta.imageCaptionHtml')?.updateValueAndValidity();
+}
+
+onCaptionPaste(ev: ClipboardEvent) {
+  // Pegar como texto plano (sin estilos del sistema)
+  ev.preventDefault();
+  const text = (ev.clipboardData?.getData('text/plain') || '').replace(/\s+/g, ' ');
+  document.execCommand('insertText', false, text);
+}
+
+syncCaptionToForm() {
+  // En blur, sincroniza por si algo quedó sin emitir
+  const ctrl = this.noticiaForm.get('meta.imageCaptionHtml');
+  const editor = document.querySelector('.caption-editor') as HTMLElement | null;
+  if (ctrl && editor) {
+    const clean = this.sanitizeCaptionHtml(editor.innerHTML);
+    ctrl.setValue(clean, { emitEvent: true });
+    ctrl.updateValueAndValidity();
+    this.captionPlainCount = this.getPlainTextLenFromHtml(clean);
+    if (clean !== editor.innerHTML) editor.innerHTML = clean;
+  }
+}
+
+// === Acciones de formato ===
+capBold(editor: HTMLElement)  { editor.focus(); document.execCommand('bold');  this.syncCaptionToForm(); }
+capItalic(editor: HTMLElement){ editor.focus(); document.execCommand('italic');this.syncCaptionToForm(); }
+private isSelectionInside(editor: HTMLElement): boolean {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return false;
+  const range = sel.getRangeAt(0);
+  const container = range.commonAncestorContainer;
+  return editor.contains(container.nodeType === Node.ELEMENT_NODE ? container as Node : container.parentNode);
+}
+
+capLink(editor: HTMLElement)  {
+  editor.focus();
+
+  // 1) Pide URL válida
+  const url = (prompt('Pega la URL (debe iniciar con http:// o https://)') || '').trim();
+  if (!/^https?:\/\//i.test(url)) {
+    if (url) alert('URL inválida. Debe iniciar con http:// o https://');
+    return;
+  }
+
+  const sel = window.getSelection();
+  const hasSel = !!sel && sel.rangeCount > 0 && !sel.isCollapsed && this.isSelectionInside(editor);
+
+  if (hasSel) {
+    // 2) Hay texto seleccionado → convierte en enlace
+    document.execCommand('createLink', false, url);
+  } else {
+    // 3) Sin selección → pide “Texto a mostrar” y lo inserta como <a>
+    const display = (prompt('Texto a mostrar para el enlace:') || '').trim();
+    if (!display) return;
+
+    const a = document.createElement('a');
+    a.href = url;           // (target/rel se agregan al guardar con harden)
+    a.textContent = display;
+
+    // Inserta en la posición del caret si está dentro del editor; si no, al final
+    if (sel && sel.rangeCount > 0 && this.isSelectionInside(editor)) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(a);
+      // mueve el cursor después del enlace
+      range.setStartAfter(a);
+      range.setEndAfter(a);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      editor.appendChild(a);
+      editor.appendChild(document.createTextNode(' '));
+    }
+  }
+
+  // 4) Limpia y sincroniza con el FormControl
+  this.syncCaptionToForm();
 }
 
   
