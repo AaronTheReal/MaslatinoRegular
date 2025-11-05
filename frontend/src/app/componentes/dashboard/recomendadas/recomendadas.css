@@ -1,6 +1,6 @@
 .experience-section {
   background: #fff;
-  padding: 4rem 2rem;
+  padding: 6rem 2rem;
   position: relative;
   overflow: visible;
   position: relative;
@@ -14,7 +14,7 @@
 .decorative-marker {
   position: absolute;
   left: min(calc(-50vw + 600px), -50px);
-  top: -20px;
+  top: -50px;
   width: 233px;
   height: 273px;
   opacity: 0.9;
@@ -28,7 +28,7 @@
 .decorative-ribbon {
   position: absolute;
   left: min(calc(-50vw + 600px), -80px);
-  bottom: -60px;
+  bottom: -100px;
   width: 235px;
   height: 210px;
   z-index: 2;
