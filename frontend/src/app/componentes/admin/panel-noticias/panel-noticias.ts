@@ -69,7 +69,9 @@ export class PanelNoticias implements OnInit {
 
   // Dominio para distinguir enlaces internos
   private domain = 'maslatino.com'; // TODO: cambia por tu dominio
-
+  private escapeRegex(s: string): string {
+  return (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
   // CKEditor config
   public editorConfig: any = {
     licenseKey: 'GPL',
@@ -107,8 +109,17 @@ export class PanelNoticias implements OnInit {
   ) {
     this.noticiaForm = this.fb.group({
       focusKeyphrase: ['', [Validators.required, Validators.maxLength(50)]],
-      title: ['', [Validators.required, Validators.minLength(50), Validators.maxLength(60),
-                   this.titleContainsKeyphraseValidator(), this.titleCaseValidator(), this.noSpecialCharsValidator()]],
+      title: ['',
+        [
+          Validators.required,
+          Validators.minLength(50),
+          Validators.maxLength(60),
+          this.noTrailingDotValidator(),              // ← AÑADIR
+          this.titleContainsKeyphraseValidator(),
+          this.titleCaseValidator(),
+          this.noSpecialCharsValidator()
+        ]
+      ],
       slug: ['', {
         validators: [
           Validators.required,
@@ -122,8 +133,17 @@ export class PanelNoticias implements OnInit {
         asyncValidators: [this.slugUniqueValidator()],
         updateOn: 'blur'
       }],
-      extracto: ['', [Validators.required, Validators.minLength(150), Validators.maxLength(300),
-                      this.keyphraseOnceValidator(), this.noDoubleQuotesValidator(), this.naturalLanguageValidator()]],
+      extracto: ['',
+        [
+          Validators.required,
+          Validators.minLength(150),
+          Validators.maxLength(300),
+          this.noTrailingDotValidator(),
+          this.keyphraseOnceValidator(),
+          this.noDoubleQuotesValidator(),
+          this.naturalLanguageValidator()
+        ]
+      ],
       summary: ['', [Validators.minLength(150), Validators.maxLength(160)]],
       tags: this.fb.array([], [Validators.minLength(1), Validators.maxLength(5)]),
       categories: [[], Validators.required],
@@ -348,7 +368,8 @@ private captionHtmlValidator(maxPlain: number): ValidatorFn {
         control.parent?.parent?.get('focusKeyphrase')?.value?.toLowerCase() ||
         control.root.get('focusKeyphrase')?.value?.toLowerCase() || '';
       if (focus) {
-        const rx = new RegExp(focus.replace(/\s+/g, '\\s+'), 'g');
+        const safe = this.escapeRegex(focus).replace(/\s+/g, '\\s+');
+        const rx = new RegExp(safe, 'g');
         const count = (text.match(rx) || []).length;
         if (count !== 1) return { keyphraseOnce: true };
       }
@@ -497,7 +518,8 @@ private captionHtmlValidator(maxPlain: number): ValidatorFn {
     const focus = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase().trim();
     this.density = 0;
     if (focus && this.wordCount > 0) {
-      const rx = new RegExp(focus.replace(/\s+/g, '\\s+'), 'g');
+      const safe = this.escapeRegex(focus).replace(/\s+/g, '\\s+');
+      const rx = new RegExp(safe, 'g');
       const keyCount = (text.toLowerCase().match(rx) || []).length;
       this.density = (keyCount / this.wordCount) * 100;
     }
@@ -989,6 +1011,7 @@ private captionHtmlValidator(maxPlain: number): ValidatorFn {
     this.dockMode = this.dockMode === 'hidden' ? 'right' : this.dockMode === 'right' ? 'bottom' : 'hidden';
   }
 
+
   onGutterDown(_: MouseEvent) {
     if (this.dockMode !== 'right') return;
     this.resizing = true;
@@ -1035,6 +1058,13 @@ private captionHtmlValidator(maxPlain: number): ValidatorFn {
   if (this.editorConfig.image?.toolbar?.length) {
     this.editorConfig.image.toolbar = this.editorConfig.image.toolbar.filter((t: string) => available.has(t));
   }
+}
+private noTrailingDotValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const v = (control.value || '').toString().trim();
+    // Rechaza si termina en punto (incluye "..." porque el último char es '.')
+    return /\.\s*$/.test(v) ? { noTrailingDot: true } : null;
+  };
 }
 
   

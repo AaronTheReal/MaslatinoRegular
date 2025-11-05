@@ -58,6 +58,9 @@
               <span *ngIf="noticiaForm.get('title')?.errors?.['maxlength']">Ideal 50–60 chars (≤60).</span>
               <span *ngIf="noticiaForm.get('title')?.errors?.['titleContainsKeyphrase']">
                 La keyword debe estar cerca del inicio.</span>
+                <span *ngIf="noticiaForm.get('title')?.errors?.['noTrailingDot']">
+                No termines el título con punto.
+              </span>
                 <!--
               <span *ngIf="noticiaForm.get('title')?.errors?.['titleCase']">
                 Usa Mayúscula Inicial en palabras principales.</span>
@@ -236,6 +239,9 @@
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['keyphraseOnce']">Keyword 1 vez. </span>
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['noDoubleQuotes']">Sin comillas dobles. </span>
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['naturalLanguage']">Lenguaje natural. </span>
+                <span *ngIf="noticiaForm.get('extracto')?.errors?.['noTrailingDot']">
+                  No termines el extracto con punto.
+                </span>
               </div>
             </div>
 
