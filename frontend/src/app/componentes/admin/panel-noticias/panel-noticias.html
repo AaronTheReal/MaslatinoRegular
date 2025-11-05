@@ -130,18 +130,12 @@
               <span *ngIf="noticiaForm.get('meta.image')?.errors?.['imageFilename']">Nombre de archivo no optimizado.</span>
             </div>
 
-            <!-- Subir desde la compu (sube a S3 y llena meta.image automáticamente) -->
             <div class="mt-2">
-              <input type="file" accept="image/*"
-                    (change)="onPickHero($event)" />
-              <small class="text-muted d-block">Puedes subir una imagen; guardaremos su URL del CDN en el campo de arriba.</small>
-              <!-- Vista previa opcional -->
-              <img *ngIf="noticiaForm.get('meta.image')?.value"
-                   [src]="noticiaForm.get('meta.image')?.value"
-                   (load)="onMetaImageLoad($event)"
-                   alt=""
-                   style="max-width:100%;margin-top:.5rem;border-radius:8px;" />
-            </div>
+            <label class="btn-upload">
+              <input type="file" accept="image/*" (change)="onPickHero($event)" />
+              <span>Seleccionar imagen</span>
+            </label>
+          </div>
 
             <div class="text-warning small" *ngIf="metaImageWarning">{{ metaImageWarning }}</div>
           </div>
@@ -171,41 +165,47 @@
             </div>
           </div>
 
-          <!-- Pie de foto + enlace (en una sola línea / admite HTML básico) -->
-          <div class="col-12" formGroupName="meta">
-            <label for="imageCaptionHtml" class="form-label">
-              Pie de foto + enlace (opcional)
-            </label>
 
-            <textarea id="imageCaptionHtml"
-                      class="form-control"
-                      formControlName="imageCaptionHtml"
-                      rows="2"
-                      placeholder='Ej.: Concierto en el City Hall. Foto: Juan Pérez — Fuente: <a href="https://elpais.com">El País</a>'>
-            </textarea>
+<!-- Pie de foto + enlace (WYSIWYG sin mostrar HTML) -->
+<div class="col-12" formGroupName="meta">
+  <label class="form-label">Pie de foto + enlace (opcional)</label>
 
-            <small class="text-muted d-block">
-              Puedes mezclar texto y un enlace con <code>&lt;a href="https://..."&gt;Texto&lt;/a&gt;</code>.
-              Se permiten etiquetas: <code>&lt;a&gt;</code>, <code>&lt;strong&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>.
-              Límite: 140 caracteres de texto (sin contar HTML).
-            </small>
+  <!-- Toolbar mínima -->
+  <div class="caption-toolbar">
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="capBold(capEd)" title="Negritas (Ctrl+B)">B</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="capItalic(capEd)" title="Cursivas (Ctrl+I)">I</button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" (click)="capLink(capEd)" title="Enlace">Enlace</button>
+    <span class="ms-auto small text-muted">
+      {{ captionPlainCount }}/140
+    </span>
+  </div>
 
-            <div class="text-danger small"
-                *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.touched && noticiaForm.get('meta.imageCaptionHtml')?.invalid">
+  <!-- Editor visual -->
+  <div #capEd
+       class="caption-editor"
+       contenteditable="true"
+       [innerHTML]="noticiaForm.get('meta.imageCaptionHtml')?.value || ''"
+       (input)="onCaptionInput($event)"
+       (paste)="onCaptionPaste($event)"
+       (blur)="syncCaptionToForm()"
+       aria-label="Pie de foto (puedes escribir, poner negritas, cursivas y enlaces)">
+  </div>
 
-              <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['maxlengthText']">
-                Máximo 140 caracteres de texto (se ignoran las etiquetas HTML).
-              </span>
+  <!-- Mensajes de error (siguen usando tu validador actual) -->
+  <div class="text-danger small mt-1"
+       *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.touched && noticiaForm.get('meta.imageCaptionHtml')?.invalid">
+    <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['maxlengthText']">
+      Máximo 140 caracteres de texto (sin contar etiquetas).
+    </span>
+    <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['disallowedTags']">
+      Solo <code>a</code>, <code>strong</code>, <code>em</code>, <code>b</code>, <code>i</code>.
+    </span>
+    <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['invalidHref']">
+      Todo enlace debe usar <code>http(s)://</code>.
+    </span>
+  </div>
+</div>
 
-              <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['disallowedTags']">
-                Solo se permiten <code>a</code>, <code>strong</code>, <code>em</code>, <code>b</code>, <code>i</code>.
-              </span>
-
-              <span *ngIf="noticiaForm.get('meta.imageCaptionHtml')?.errors?.['invalidHref']">
-                Todo <code>&lt;a&gt;</code> debe usar <code>http://</code> o <code>https://</code>.
-              </span>
-            </div>
-          </div>
 
 
         </div>
