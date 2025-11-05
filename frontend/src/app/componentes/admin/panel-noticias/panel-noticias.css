@@ -443,3 +443,43 @@ body.resizing *{ cursor:col-resize!important; }
   font-weight: 500;
   color: #000 !important;
 }
+
+
+
+
+
+/* === Forzar a que CKEditor muestre sus imágenes correctamente === */
+:host ::ng-deep .ck-content figure.image {
+  background: none !important;
+  border: none !important;
+}
+
+/* Quita cualquier ícono/overlay de reglas globales que usen .image */
+:host ::ng-deep .ck-content figure.image::before,
+:host ::ng-deep .ck-content figure.image::after,
+:host ::ng-deep .ck-content .image .icon,
+:host ::ng-deep .ck-content figure.image .icon {
+  content: none !important;
+  display: none !important;
+}
+
+/* Asegura visibilidad del <img> */
+:host ::ng-deep .ck-content figure.image > img {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Estilo lateral de CKEditor (imageStyle:side) */
+:host ::ng-deep .ck-content .image.image-style-side {
+  float: right;
+  margin: 0 0 1rem 1rem;
+}
+
+/* Regla general segura para imágenes dentro del editor */
+:host ::ng-deep .ck-content img {
+  max-width: 100%;
+  height: auto;
+}

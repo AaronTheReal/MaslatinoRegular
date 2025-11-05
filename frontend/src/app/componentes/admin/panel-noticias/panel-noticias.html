@@ -358,7 +358,14 @@
             <div class="form-group mb-3">
               <label>Contenido</label>
               <ng-container *ngIf="isBrowser && Editor; else fallbackWhileLoading">
-                <ckeditor [editor]="Editor" formControlName="body" [config]="editorConfig" (change)="onBodyChange()"></ckeditor>
+
+            <ckeditor
+              [editor]="Editor"
+              [config]="editorConfig"
+              formControlName="body"
+              (ready)="onEditorReady($event)"
+              (change)="onBodyChange()">
+            </ckeditor>
               </ng-container>
               <ng-template #fallbackWhileLoading>
                 <textarea class="form-control" formControlName="body" rows="10"
