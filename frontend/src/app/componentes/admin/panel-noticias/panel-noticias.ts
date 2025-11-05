@@ -73,10 +73,23 @@ export class PanelNoticias implements OnInit {
   // CKEditor config
   public editorConfig: any = {
     licenseKey: 'GPL',
-    toolbar: [ 'heading','bold','italic','link','bulletedList','numberedList','blockQuote','insertTable','imageUpload','undo','redo' ],
-    image: { toolbar: ['imageTextAlternative','toggleImageCaption','imageStyle:inline','imageStyle:block','imageStyle:side','resizeImage'] },
-    extraPlugins: [ S3UploadAdapterPlugin ],
-  };
+    toolbar: [
+      'heading','bold','italic','link',
+      'bulletedList','numberedList','blockQuote',
+      'insertTable','imageUpload','undo','redo'
+    ],
+    image: {
+      toolbar: [
+      'imageTextAlternative',
+      'toggleImageCaption',
+      'imageStyle:inline',
+      'imageStyle:block',
+      'imageStyle:side'
+    ]
+  },
+  extraPlugins: [ S3UploadAdapterPlugin ],
+};
+
 
 
   // ======== NUEVO: Estado de UI del estudio ========
@@ -1011,5 +1024,18 @@ private captionHtmlValidator(maxPlain: number): ValidatorFn {
     this.updateChecklist();
     this.updatePublishTooltip();
   }
+
+  onEditorReady(editor: any) {
+  const available = new Set<string>(Array.from(editor.ui.componentFactory.names()));
+  // Filtra la toolbar principal
+  if (Array.isArray(this.editorConfig.toolbar)) {
+    this.editorConfig.toolbar = this.editorConfig.toolbar.filter((t: string) => available.has(t));
+  }
+  // Filtra la toolbar de imagen
+  if (this.editorConfig.image?.toolbar?.length) {
+    this.editorConfig.image.toolbar = this.editorConfig.image.toolbar.filter((t: string) => available.has(t));
+  }
+}
+
   
 }
