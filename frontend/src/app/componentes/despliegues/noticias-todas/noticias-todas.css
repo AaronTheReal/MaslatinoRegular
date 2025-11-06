@@ -1,0 +1,266 @@
+.noticias-section {
+  padding: 50px 20px;
+  background: #fff;
+  font-family: Inter, -apple-system, Roboto, Helvetica, sans-serif;
+}
+
+.noticias-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.main-title {
+  font-size: 55px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 50px;
+  color: #000;
+}
+
+.search-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border: 1px solid #000;
+  border-radius: 22px;
+  background: #fff;
+  min-width: 280px;
+  flex: 1;
+  max-width: 500px;
+}
+
+.search-icon {
+  width: 25px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  border: none;
+  outline: none;
+  flex: 1;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.search-button {
+  padding: 12px 32px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 22px;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.search-button:hover {
+  opacity: 0.9;
+}
+
+.category-filters {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+.category-btn {
+  padding: 8px 24px;
+  border-radius: 16px;
+  border: 1px solid #ddd;
+  background: transparent;
+  color: #000;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+
+.category-btn.active {
+  color: #fff;
+  border: none;
+}
+
+.category-btn:hover {
+  transform: translateY(-2px);
+}
+
+.news-grid {
+  display: grid;
+  gap: 50px;
+}
+
+.news-card {
+  display: grid;
+  grid-template-columns: 375px 1fr;
+  gap: 40px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.news-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.news-image-wrapper {
+  border-radius: 16px;
+  overflow: hidden;
+  height: 306px;
+}
+
+.news-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.news-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 6px 18px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  align-self: flex-start;
+}
+
+.news-title {
+  font-size: 41px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #000;
+  margin: 0;
+}
+
+.news-date {
+  font-size: 15px;
+  font-weight: 300;
+  color: #000;
+}
+
+.noticias-watermark {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  opacity: 0.5;
+  width: 85px;
+  height: auto;
+}
+
+.noticias-watermark svg {
+  width: 100%;
+  height: auto;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .news-card {
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    padding: 30px;
+  }
+
+  .news-image-wrapper {
+    height: 250px;
+  }
+
+  .news-title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-title {
+    font-size: 40px;
+  }
+
+  .search-container {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-input-wrapper {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .search-button {
+    width: 100%;
+  }
+
+  .category-filters {
+    gap: 8px;
+  }
+
+  .category-btn {
+    padding: 6px 16px;
+    font-size: 16px;
+  }
+
+  .news-card {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .news-image-wrapper {
+    height: 250px;
+  }
+
+  .news-title {
+    font-size: 28px;
+  }
+
+  .noticias-watermark {
+    width: 60px;
+    right: 10px;
+    bottom: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .noticias-section {
+    padding: 30px 15px;
+  }
+
+  .main-title {
+    font-size: 32px;
+    margin-bottom: 30px;
+  }
+
+  .news-title {
+    font-size: 24px;
+  }
+
+  .category-btn {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+}
