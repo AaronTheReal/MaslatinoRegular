@@ -2,46 +2,66 @@
   <div class="eventos-container">
     <h1 class="main-title">EVENTOS</h1>
 
+    <!-- Filtros -->
     <div class="filter-buttons">
       <button
         *ngFor="let filter of filters"
         class="filter-btn"
-        [class.active]="filter === activeFilter"
+        [class.active]="filter === activeFilter()"
         (click)="setActiveFilter(filter)">
         {{ filter }}
       </button>
     </div>
 
-    <div class="months-container">
-      <div *ngFor="let month of months" class="month-section">
-      <button
-        class="month-header"
-        [class.expanded]="isMonthExpanded(month)"
-        [attr.aria-expanded]="isMonthExpanded(month)"
-        [attr.aria-controls]="'events-' + month"
-        (click)="toggleMonth(month)">
-        <svg class="plus-icon" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path d="M33.689 21.212H21.212V33.689H12.477V21.212H0V12.478H12.477V0H21.212V12.478H33.689V21.212Z" fill="black"/>
-        </svg>
-        <h2 class="month-title">{{ month }}</h2>
-      </button>
+    <!-- Estados de carga / error -->
+    <div class="state" *ngIf="loading()">Cargando eventos…</div>
+    <div class="state error" *ngIf="!loading() && errorMsg()">{{ errorMsg() }}</div>
 
+    <!-- Lista por meses -->
+    <div class="months-container" *ngIf="!loading() && !errorMsg()">
+      <div *ngFor="let month of months()" class="month-section">
+        <button
+          class="month-header"
+          [class.expanded]="isMonthExpanded(month)"
+          [attr.aria-expanded]="isMonthExpanded(month)"
+          [attr.aria-controls]="'events-' + month"
+          (click)="toggleMonth(month)">
+          <svg class="plus-icon" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M33.689 21.212H21.212V33.689H12.477V21.212H0V12.478H12.477V0H21.212V12.478H33.689V21.212Z" fill="black"/>
+          </svg>
+          <h2 class="month-title">{{ month }}</h2>
+        </button>
 
-      <div
-        class="events-grid"
-        *ngIf="isMonthExpanded(month)"
-        [attr.id]="'events-' + month">
-          <article *ngFor="let event of getEventsByMonth(month)" class="event-card">
+        <div
+          class="events-grid"
+          *ngIf="isMonthExpanded(month)"
+          [attr.id]="'events-' + month">
+
+          <article
+            *ngFor="let event of getEventsByMonth(month); trackBy: trackById"
+            class="event-card">
+
             <div class="event-image-wrapper">
-              <img [src]="event.imageUrl" [alt]="event.description" class="event-image" />
-              <div class="wca-badge">WCA</div>
+              <!-- <a [routerLink]="['/evento', event.slug]"> -->
+              <img
+                [src]="event.imageUrl"
+                [alt]="event.title"
+                class="event-image" />
+              <!-- </a> -->
+              <div class="wca-badge" *ngIf="true">WCA</div>
             </div>
+
             <div class="event-details">
-              <h3 class="event-date">{{ event.date }}</h3>
-              <time class="event-time">{{ event.time }}</time>
-              <p class="event-description">{{ event.description }}</p>
+              <h3 class="event-date">{{ event.dateLabel }}</h3>
+              <time class="event-time">{{ event.timeLabel }}</time>
+              <!--<p class="event-description">{{ event.description }}</p>-->
             </div>
           </article>
+
+          <!-- vacío del mes (tras filtro) -->
+          <p class="empty" *ngIf="getEventsByMonth(month).length === 0">
+            No hay eventos para “{{ activeFilter() }}” en este mes.
+          </p>
         </div>
       </div>
     </div>

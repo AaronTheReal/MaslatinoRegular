@@ -79,7 +79,7 @@
 }
 
 .month-header.expanded .plus-icon {
-  transform: rotate(45deg);
+  transform: rotate(90deg);
 }
 
 .month-title {
@@ -149,7 +149,7 @@
 
 .event-date {
   font-size: 17px;
-  font-weight: 500;
+  font-weight: bold;
   color: #000;
   margin: 0;
 }
