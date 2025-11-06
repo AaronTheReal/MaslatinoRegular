@@ -21,6 +21,8 @@ import {NoticiasRecomendadas} from './componentes/despliegues/noticias-recomenda
 import {DescargaLaApp} from './pages/descarga-la-app/descarga-la-app'
 import {Podcast} from './componentes/despliegues/podcast/podcast'
 import {Nosotros} from './pages/nosotros/nosotros'
+import {NoticiasTodas} from './componentes/despliegues/noticias-todas/noticias-todas'
+
 //show
 import {Eventos} from './componentes/despliegues/eventos/eventos'
 
@@ -51,9 +53,11 @@ export const routes: Routes = [
 
     { path: 'eventos-show', component: Eventos },
     { path: 'recomendadas-show', component: NoticiasRecomendadas },
-        { path: 'podcast-show', component: Podcast },
-        {path: 'descarga-la-app', component:DescargaLaApp},
-         {path: 'nosotros-pagina', component:Nosotros},
+  { path: 'podcast-show', component: Podcast },
+  {path: 'descarga-la-app', component:DescargaLaApp},
+  {path: 'nosotros-pagina', component:Nosotros},
+  {path: 'nosotros-pagina', component:Nosotros},
+  {path: 'noticias-todas', component:NoticiasTodas},
 
 
 

@@ -1,81 +1,49 @@
 <section class="eventos-section">
-  <!-- Título con firma "+" -->
-  <div class="section-head">
-    <h2 class="section-title">EVENTOS</h2>
-    <p class="section-sub">Conoce lo que viene en tu comunidad</p>
+  <div class="eventos-container">
+    <h1 class="main-title">EVENTOS</h1>
+
+    <div class="filter-buttons">
+      <button
+        *ngFor="let filter of filters"
+        class="filter-btn"
+        [class.active]="filter === activeFilter"
+        (click)="setActiveFilter(filter)">
+        {{ filter }}
+      </button>
+    </div>
+
+    <div class="months-container">
+      <div *ngFor="let month of months" class="month-section">
+      <button
+        class="month-header"
+        [class.expanded]="isMonthExpanded(month)"
+        [attr.aria-expanded]="isMonthExpanded(month)"
+        [attr.aria-controls]="'events-' + month"
+        (click)="toggleMonth(month)">
+        <svg class="plus-icon" width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M33.689 21.212H21.212V33.689H12.477V21.212H0V12.478H12.477V0H21.212V12.478H33.689V21.212Z" fill="black"/>
+        </svg>
+        <h2 class="month-title">{{ month }}</h2>
+      </button>
+
+
+      <div
+        class="events-grid"
+        *ngIf="isMonthExpanded(month)"
+        [attr.id]="'events-' + month">
+          <article *ngFor="let event of getEventsByMonth(month)" class="event-card">
+            <div class="event-image-wrapper">
+              <img [src]="event.imageUrl" [alt]="event.description" class="event-image" />
+              <div class="wca-badge">WCA</div>
+            </div>
+            <div class="event-details">
+              <h3 class="event-date">{{ event.date }}</h3>
+              <time class="event-time">{{ event.time }}</time>
+              <p class="event-description">{{ event.description }}</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <!-- Filtros -->
-  <div class="filters">
-    <div class="tabs" role="tablist" aria-label="filtros">
-      <button class="tab" [class.active]="tab() === 'proximos'" (click)="setTab('proximos')">Próximos</button>
-      <button class="tab" [class.active]="tab() === 'pasados'" (click)="setTab('pasados')">Pasados</button>
-      <button class="tab" [class.active]="tab() === 'destacados'" (click)="setTab('destacados')">Destacados</button>
-    </div>
-
-<div class="inputs">
-  <!-- ✅ signals: one-way bind + change -->
-  <input
-    type="search"
-    class="input"
-    placeholder="Buscar por título, lugar o etiqueta..."
-    [ngModel]="query()"
-    (ngModelChange)="query.set($event)"
-  />
-
-  <!-- Opción A: input libre de categoría (manteniendo tu lógica actual) -->
-  <input
-    type="text"
-    class="input"
-    placeholder="Categoría (opcional)"
-    [ngModel]="category()"
-    (ngModelChange)="category.set($event)"
-  />
-
-  <div class="layout-switch">
-    <button class="switch" [class.active]="layout() === 'grid'" (click)="toggleLayout('grid')" aria-label="ver en cuadrícula">▦</button>
-    <button class="switch" [class.active]="layout() === 'lista'" (click)="toggleLayout('lista')" aria-label="ver en lista">☰</button>
-  </div>
-</div>
-</div>
-
-  <!-- Estados -->
-  <div *ngIf="loading()" class="state center">
-    <div class="skeleton-grid">
-      <div class="skeleton-card" *ngFor="let i of [0,1,2,3,4,5,6,7]"></div>
-    </div>
-  </div>
-
-  <div *ngIf="error()" class="state center error">
-    {{ error() }}
-    <button class="btn primary" (click)="load()">Reintentar</button>
-  </div>
-
-  <ng-container *ngIf="!loading() && !error()">
-    <!-- GRID -->
-    <div *ngIf="layout() === 'grid'" class="grid">
-      <app-evento-card
-        *ngFor="let ev of visible()"
-        [evento]="ev">
-      </app-evento-card>
-    </div>
-
-    <!-- LISTA -->
-    <div *ngIf="layout() === 'lista'" class="list">
-      <app-evento-row
-        *ngFor="let ev of visible()"
-        [evento]="ev">
-      </app-evento-row>
-    </div>
-
-    <!-- Empty -->
-    <div *ngIf="!visible().length" class="state center">
-      <p>No encontramos eventos aquí. Prueba con otra búsqueda o categoría.</p>
-      <a routerLink="/eventos" class="btn ghost">Ver todos</a>
-    </div>
-
-    <div class="more center" *ngIf="visible().length < filtered().length">
-      <button class="btn primary" (click)="onShowMore()">Show more</button>
-    </div>
-  </ng-container>
 </section>
