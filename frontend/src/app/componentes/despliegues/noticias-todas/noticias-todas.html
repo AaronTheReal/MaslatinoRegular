@@ -19,18 +19,20 @@
       <button class="search-button" (click)="onSearchInput(searchQuery)">Buscar</button>
     </div>
 
-    <!-- Filtros de categoría -->
-    <div class="category-filters">
-      <button
-        *ngFor="let category of categories"
-        class="category-btn"
-        [class.active]="category === activeCategory"
-        [style.background-color]="category === activeCategory ? getCategoryColor(category) : 'transparent'"
-        [style.color]="category === activeCategory ? '#FFF' : '#000'"
-        (click)="setActiveCategory(category)">
-        {{ category }}
-      </button>
-    </div>
+<!-- Filtros de categoría -->
+<div class="category-filters">
+  <button
+    *ngFor="let category of categories"
+    class="category-btn"
+    [class.active]="category === activeCategory"
+    [style.backgroundColor]="getCategoryColor(category)"
+    [style.color]="getCategoryTextColor(category)"
+    [attr.aria-pressed]="category === activeCategory"
+    (click)="setActiveCategory(category)">
+    {{ category }}
+  </button>
+</div>
+
 
     <!-- Grid de noticias -->
     <div class="news-grid">
@@ -43,9 +45,16 @@
         </div>
 
         <div class="news-content">
-          <span class="category-badge" [style.background-color]="getCategoryColor(getPrimaryCategory(n))">
-            {{ getPrimaryCategory(n) }}
+          <div class="category-badges">
+          <span
+            class="category-badge"
+            *ngFor="let cat of getCategoriesFor(n); let i = index"
+            [style.backgroundColor]="getCategoryColor(cat)"
+            [style.color]="getCategoryTextColor(cat)"
+          >
+            {{ cat }}
           </span>
+        </div>
 
           <h2 class="news-title">{{ n.title }}</h2>
 

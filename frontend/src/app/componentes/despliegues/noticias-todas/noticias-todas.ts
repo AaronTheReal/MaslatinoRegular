@@ -177,6 +177,21 @@ export class NoticiasTodas implements OnInit {
     this.currentPage = 1;
   }
 
+  /** Dado el/** Siempre texto blanco para las etiquetas de categoría. */
+getCategoryTextColor(_: string): string {
+  return '#fff';
+}
+/** Devuelve todas las categorías “display” de una noticia (resueltas por catálogo). */
+getCategoriesFor(n: Noticia): string[] {
+  return this.extraerNombresCategorias(n);
+}
+
+/** Luminancia relativa (WCAG) para decidir color de texto. */
+private relativeLuminance(r: number, g: number, b: number): number {
+  const srgb = [r, g, b].map(v => v / 255).map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+}
+
   // =========================
   //    Derivados de render
   // =========================
