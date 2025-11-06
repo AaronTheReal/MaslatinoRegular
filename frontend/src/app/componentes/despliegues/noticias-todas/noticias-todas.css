@@ -68,7 +68,6 @@
 .search-button:hover {
   opacity: 0.9;
 }
-
 .category-filters {
   display: flex;
   gap: 12px;
@@ -77,26 +76,43 @@
   flex-wrap: wrap;
 }
 
+/* Base: siempre con su color de fondo (lo asigna el [style.backgroundColor]) */
 .category-btn {
-  padding: 8px 24px;
-  border-radius: 16px;
-  border: 1px solid #ddd;
-  background: transparent;
-  color: #000;
-  font-size: 18px;
-  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 9999px;          /* cápsula */
+  border: none;                   /* ← sin contorno */
+  background: var(--cat, #eee);   /* fallback si faltara inline style */
+  color: #fff;                    /* el texto real lo define el [style.color] inline */
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  font-family: inherit;
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  will-change: transform;
 }
 
-.category-btn.active {
-  color: #fff;
-  border: none;
-}
-
+/* Hover: ligerísima elevación sin romper el color */
 .category-btn:hover {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+/* Activa: un poco más grande + realce */
+.category-btn.active {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 3px rgba(0,0,0,0.18),   /* halo exterior sutil */
+    0 6px 14px rgba(0,0,0,0.18);  /* elevación */
+}
+
+/* Responsive fino */
+@media (max-width: 480px) {
+  .category-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  .category-btn.active {
+    transform: scale(1.05);
+  }
 }
 
 .news-grid {
@@ -141,14 +157,21 @@
   gap: 16px;
 }
 
+.category-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
 .category-badge {
   display: inline-block;
-  padding: 6px 18px;
+  padding: 6px 14px;
   border-radius: 14px;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .news-title {

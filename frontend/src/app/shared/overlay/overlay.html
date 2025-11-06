@@ -39,7 +39,7 @@
           [ngClass]="{
             'purple': link.key === 'quienes' || link.key === 'privacy',
             'red':    link.key === 'podcast',
-            'yellow': link.key === 'locales' || link.key === 'categorias',
+            'yellow': link.key === 'locales',
             'green':  link.key === 'contacto'
           }"
           (click)="setSection(link.key)"
@@ -50,40 +50,5 @@
       }
     </nav>
 
-    <!-- Recientes (misma lógica) -->
-    <div class="overlay-recents" *ngIf="!showResults">
-      <div class="recents-title">Búsquedas recientes</div>
-      <div class="recents-chips">
-        @for (r of recent; track r) {
-          <button type="button" class="chip" (click)="useRecent(r)">{{ r }}</button>
-        }
-      </div>
-    </div>
 
-    <!-- Resultados (usa pick/filtered/highlightedIndex) -->
-    <div class="overlay-results" *ngIf="showResults">
-      <div class="results-count" aria-live="polite">
-        {{ filtered.length }} resultado{{ filtered.length === 1 ? '' : 's' }}
-      </div>
-
-      <ul class="results-list" role="listbox">
-        @for (item of filtered; track (item.route ?? item.title); let i = $index) {
-          <li
-            id="{{'result-' + i}}"
-            class="result-item"
-            [class.highlighted]="i === highlightedIndex"
-            (click)="pick(item)"
-            role="option"
-            [attr.aria-selected]="i === highlightedIndex"
-          >
-            <a [routerLink]="item.route || '/'" class="result-link">
-              <span class="result-title">{{ item.title }}</span>
-              <span class="result-meta">· {{ item.section }}</span>
-            </a>
-          </li>
-        }
-      </ul>
-    </div>
-
-  </div>
 </div>

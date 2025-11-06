@@ -29,7 +29,6 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
   // Quick links (your navbar sections)
   quickLinks = [
     { key: 'quienes',  label: '¿Quiénes Somos?', icon: '👥', route: '/quienes-somos' },
-    { key: 'categorias', label: 'Categorias',    icon: '🗂️', route: '/categorias' },
     { key: 'podcast',  label: 'Podcast',         icon: '🎧', route: '/podcast' },
     { key: 'locales',  label: 'Noticias Locales',icon: '📰', route: '/noticias-locales' },
     { key: 'contacto', label: 'Contacto',        icon: '✉️', route: '/contacto' },
