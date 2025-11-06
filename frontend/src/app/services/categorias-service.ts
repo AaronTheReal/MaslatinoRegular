@@ -6,13 +6,15 @@ import { Observable } from 'rxjs';
 export interface CategoriaPayload {
   _id?: string;
   name: string;
-  slug?: string;
+  slug: string;
   description?: string;
   image?: string;
   color?: string;
+  order?: number; // ← agrega esta línea
   createdAt?: string;
   updatedAt?: string;
 }
+
 
 @Injectable({ providedIn: 'root' })
 export class CategoriaService {

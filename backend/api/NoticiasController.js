@@ -551,9 +551,12 @@ async getNoticiasRecientes(req, res, next) {
     const limit = Math.min(parseInt(req.query.limit));
 
     const noticias = await Noticia.find(
-      {},
-      'title slug createdAt meta.image' // solo campos necesarios para sidebar
+      
+      {autorizada: true},
+      //'title slug createdAt meta.image'
+        // solo campos necesarios para sidebar
     )
+      .populate('categories', 'name slug color')
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean();

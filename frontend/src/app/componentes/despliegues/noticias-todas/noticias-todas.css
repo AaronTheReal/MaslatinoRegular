@@ -264,3 +264,98 @@
     padding: 6px 12px;
   }
 }
+
+
+
+
+
+/* CONTENEDOR */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+}
+
+/* BOTÓN BASE - Forma de cápsula estirada (casi circular en lados, recta arriba/abajo) */
+.pagination-btn {
+  --height: 46px;           /* Altura del botón (como en Figma: ~44px) */
+  --min-width: 58px;        /* Ancho mínimo para números (como el vector de 58px) */
+  --border: 1.5px;          /* Grosor del borde (1px en Figma, escalado) */
+  --radius-x: 23px;         /* Radio horizontal: mitad de la altura → casi circular en lados */
+  --radius-y: 23px;         /* Radio vertical igual para lados, pero con clip para arriba/abajo */
+
+  min-height: var(--height);
+  min-width: var(--min-width);
+  padding: 0 16px;
+  border: var(--border) solid #000;
+  background: #fff;
+  color: #000;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  
+  /* Forma de "cápsula estirada": bordes laterales casi circulares, arriba/abajo rectos */
+  border-radius: var(--radius-x);
+  clip-path: inset(0 0 0 0 round var(--radius-x));
+}
+
+/* HOVER (solo si no está activo ni deshabilitado) */
+.pagination-btn:hover:not(.active):not(:disabled) {
+  background: #f7f7f7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ESTADO ACTIVO - Fondo negro, texto blanco */
+.pagination-btn.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+/* BOTONES DE NAVEGACIÓN « y » - Más pequeños pero misma forma */
+.pagination-btn.nav {
+  min-width: 46px;
+  padding: 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* DESHABILITADO */
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* FOCUS VISIBLE (accesibilidad) */
+.pagination-btn:focus-visible {
+  outline: 3px solid #000;
+  outline-offset: 2px;
+}
+
+/* RESPONSIVE - Pantallas pequeñas */
+@media (max-width: 480px) {
+  .pagination-btn {
+    --height: 40px;
+    --min-width: 50px;
+    --radius-x: 20px;
+    font-size: 15px;
+    padding: 0 12px;
+  }
+  .pagination-btn.nav {
+    min-width: 40px;
+    font-size: 16px;
+  }
+}
