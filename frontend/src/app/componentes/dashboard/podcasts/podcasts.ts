@@ -76,11 +76,10 @@ import { PodcastPCService, PodcastDesktopPayload } from './../../../services/pod
             </div>
           }
         </div>
-
         <!-- CTA -->
         <button
           class="cta-button"
-          [routerLink]="['/podcast-list']"
+          [routerLink]="['/podcast-show']"
           type="button"
         >
           ver más

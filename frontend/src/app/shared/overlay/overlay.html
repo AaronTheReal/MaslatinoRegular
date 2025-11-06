@@ -1,43 +1,89 @@
-<!-- Backdrop -->
-<div class="ol-backdrop" *ngIf="open" aria-hidden="true"></div>
+<!-- Backdrop blanco (abre/cierra con [open]) -->
+<div class="overlay-backdrop" [class.active]="open" (click)="close()">
+  <!-- Contenedor principal: conserva #panel para el click-outside de tu TS -->
+  <div #panel class="overlay-content" (click)="$event.stopPropagation()">
+    
+    <!-- Sección de búsqueda -->
+    <div class="search-section">
+      <div class="search-bar">
+        <!-- Ícono lupa -->
+        <svg class="search-icon" width="25" height="26" viewBox="0 0 25 26" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M15.9707 16.4993C12.7357 19.4533 7.7007 19.2263 4.7467 15.9913C1.7917 12.7563 2.0207 7.72133 5.2547 4.76733C8.4897 1.81234 13.5247 2.04033 16.4787 5.27533C19.4337 8.51033 19.2057 13.5453 15.9707 16.4993ZM18.4677 3.45933C14.3787 -1.01767 7.3137 -1.19367 3.0107 3.19133C-0.8083 7.08233 -1.0203 13.4003 2.5247 17.5433C5.7817 21.3503 11.1097 22.2613 15.3537 20.1463C16.2107 19.7193 17.2417 19.8883 17.8877 20.5953L22.1897 25.3053C22.6647 25.8253 23.4717 25.9573 24.0367 25.5363C24.6857 25.0523 24.7627 24.1283 24.2297 23.5453L19.8767 18.7793C19.2297 18.0703 19.1587 17.0263 19.6617 16.2093C22.0897 12.2703 21.7397 7.04134 18.4677 3.45933Z" fill="black"/>
+        </svg>
+        <!-- Input: mantiene refs/eventos de tu TS -->
+        <input
+          #searchInput
+          type="text"
+          class="search-input"
+          placeholder=""
+          [(ngModel)]="query"
+          (input)="onQueryChange()"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Buscar"
+        />
+      </div>
 
-<!-- Panel -->
-<section
-  *ngIf="open"
-  #panel
-  class="ol-panel"
-  role="dialog"
-  aria-modal="true"
-  aria-label="Búsqueda Más Latino"
-  (click)="$event.stopPropagation()" 
->
-  <!-- Top: input + close -->
-  <div class="ol-row ol-top">
-    <div class="ol-input-wrap">
-      <span class="ol-icon">⌘K</span>
-      <input #searchInput
-             type="text"
-             [(ngModel)]="query"
-             (input)="onQueryChange()"
-             placeholder="Buscar noticias, podcasts, categorías…"
-             aria-label="Buscar"
-             class="ol-input" />
-      <button class="ol-close" (click)="close()" aria-label="Cerrar">Esc</button>
+      <!-- Botón categorías: usa tu setSection -->
+      <button class="categorias-btn" type="button" (click)="setSection('categorias')">
+        Categorias
+      </button>
     </div>
+
+    <!-- Navegación de secciones (usa quickLinks existentes) -->
+    <nav class="navigation-menu" aria-label="Secciones">
+      @for (link of quickLinks; track link.key) {
+        <button
+          type="button"
+          class="nav-btn"
+          [ngClass]="{
+            'purple': link.key === 'quienes' || link.key === 'privacy',
+            'red':    link.key === 'podcast',
+            'yellow': link.key === 'locales' || link.key === 'categorias',
+            'green':  link.key === 'contacto'
+          }"
+          (click)="setSection(link.key)"
+          [attr.aria-pressed]="activeSection === link.key"
+        >
+          {{ link.label }}
+        </button>
+      }
+    </nav>
+
+    <!-- Recientes (misma lógica) -->
+    <div class="overlay-recents" *ngIf="!showResults">
+      <div class="recents-title">Búsquedas recientes</div>
+      <div class="recents-chips">
+        @for (r of recent; track r) {
+          <button type="button" class="chip" (click)="useRecent(r)">{{ r }}</button>
+        }
+      </div>
+    </div>
+
+    <!-- Resultados (usa pick/filtered/highlightedIndex) -->
+    <div class="overlay-results" *ngIf="showResults">
+      <div class="results-count" aria-live="polite">
+        {{ filtered.length }} resultado{{ filtered.length === 1 ? '' : 's' }}
+      </div>
+
+      <ul class="results-list" role="listbox">
+        @for (item of filtered; track (item.route ?? item.title); let i = $index) {
+          <li
+            id="{{'result-' + i}}"
+            class="result-item"
+            [class.highlighted]="i === highlightedIndex"
+            (click)="pick(item)"
+            role="option"
+            [attr.aria-selected]="i === highlightedIndex"
+          >
+            <a [routerLink]="item.route || '/'" class="result-link">
+              <span class="result-title">{{ item.title }}</span>
+              <span class="result-meta">· {{ item.section }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </div>
+
   </div>
-
-  <!-- Quick actions: your sections -->
-  <div class="ol-row ol-quick">
-    <a *ngFor="let q of quickLinks"
-       class="ol-quick-item"
-       [routerLink]="q.route"
-       (click)="close()">
-      <span class="ol-qi-icon">{{q.icon}}</span>
-      <span class="ol-qi-label">{{q.label}}</span>
-    </a>
-  </div>
-
-
-
-
-</section>
+</div>
