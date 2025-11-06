@@ -312,7 +312,7 @@ async getNoticiasByArchive(req, res) {
         $gte: new Date(year, month - 1, 1),
         $lt: new Date(year, month, 1)
       },
-      //autorizada: true
+      autorizada: true
     })
       .populate('categories', 'name slug color')
       .lean();
@@ -326,7 +326,7 @@ async getNoticiasByArchive(req, res) {
 async getArchivos(req, res) {
   try {
     const archivos = await Noticia.aggregate([
-      //{ $match: { autorizada: true } },
+      { $match: { autorizada: true } },
       {
         $group: {
           _id: {
@@ -375,7 +375,7 @@ async getArchivos(req, res) {
     console.log(category);
     const noticias = await Noticia.find({
       categories: category._id,
-      //autorizada: true
+      autorizada: true
     })
       .populate('categories', 'name slug color')
       .lean();
