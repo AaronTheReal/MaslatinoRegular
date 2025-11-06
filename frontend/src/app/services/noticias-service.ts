@@ -65,7 +65,7 @@ export class NoticiasService {
 
   /** ======== Lecturas optimizadas (con TransferState) ======== */
 
-  getNoticiasRecientes(limit = 200): Observable<Noticia[]> {
+  getNoticiasRecientes(limit = 0): Observable<Noticia[]> {
     const key = makeStateKey<Noticia[]>('noticias-recientes-' + limit);
     if (this.ts.hasKey(key)) {
       const data = this.ts.get<Noticia[]>(key, []);
