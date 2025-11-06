@@ -1,162 +1,105 @@
-<!-- src/app/pages/podcast/podcast.html -->
-<section class="podcasts-page">
-  <!-- Título con “+” patrón unificado -->
-  <h2 class="titulo-seccion">PODCASTS</h2>
-
-  <!-- Filtros -->
-  <div class="filters-bar" role="region" aria-label="Filtros de podcasts">
-    <div class="filters-left">
-      <div class="search-wrap">
-        <input
-          type="search"
-          class="input search"
-          placeholder="Buscar podcasts..."
-          [value]="search()"
-            (input)="onSearchInput(($any($event.target)).value)"
-          aria-label="Buscar por título o descripción"
-        />
-      </div>
-
-      <div class="select-wrap">
-        <label class="label" for="lang">Idioma</label>
-        <select id="lang" class="input select" [value]="selectedLang()" (change)="onSelectLang(($any($event.target)).value)">
-          <option value="">Todos</option>
-          <option value="es">Español</option>
-          <option value="es-MX">Español (MX)</option>
-          <option value="en-US">English (US)</option>
-          <option value="en-GB">English (UK)</option>
-          <option value="en-CA">English (CA)</option>
-          <option value="pt-BR">Português (BR)</option>
-          <option value="fr">Français</option>
-          <!-- Agrega los demás que uses -->
-        </select>
-      </div>
-
-      <div class="select-wrap">
-        <label class="label" for="sort">Ordenar</label>
-        <select id="sort" class="input select" [value]="sort()" (change)="onSortChange(($any($event.target)).value)">
-          <option value="newest">Más recientes</option>
-          <option value="az">A–Z</option>
-          <option value="episodes">Más episodios</option>
-        </select>
-      </div>
+<div class="podcast-individual-page">
+  <section class="hero-section">
+    <div class="hero-background">
+      <img src="https://api.builder.io/api/v1/image/assets/TEMP/6251a550337d9f8c7d36a095aa90fedf8e4e7f22?width=3095" alt="Background" class="hero-bg-image">
     </div>
-
-    <div class="filters-right">
-      <div class="layout-toggle" role="tablist" aria-label="Cambiar diseño">
-        <button
-          class="btn-toggle"
-          [class.active]="layout() === 'frame'"
-          role="tab"
-          aria-selected="{{layout()==='frame'}}"
-          (click)="onLayoutChange('frame')">Marco</button>
-        <button
-          class="btn-toggle"
-          [class.active]="layout() === 'list'"
-          role="tab"
-          aria-selected="{{layout()==='list'}}"
-          (click)="onLayoutChange('list')">Lista</button>
-      </div>
-      <button class="btn-secondary" (click)="clearFilters()" aria-label="Limpiar filtros">Limpiar</button>
-    </div>
-  </div>
-
-  <!-- Chips de categorías -->
-  <div class="chips-row" *ngIf="categories().length">
-    <button
-      *ngFor="let c of categories()"
-      type="button"
-      class="chip"
-      [class.active]="selectedCats().includes(c._id)"
-      (click)="onToggleCat(c._id)"
-      [attr.aria-pressed]="selectedCats().includes(c._id)">
-      <span class="dot" [style.backgroundColor]="c.color || '#8e4ef6'"></span>
-      {{ c.name }}
-    </button>
-  </div>
-
-  <!-- Estado error -->
-  <div class="alert error" *ngIf="error()">{{ error() }}</div>
-
-  <!-- Skeletons -->
-  <div class="grid" *ngIf="loading()">
-    <div class="card skeleton" *ngFor="let s of [0,1,2,3,4,5,6,7]">
-      <div class="marco-tarjeta">
-        <div class="contenido-interno">
-          <div class="skel-img"></div>
-          <div class="skel-title"></div>
-          <div class="skel-meta"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Lista / Grid -->
-  <ng-container *ngIf="!loading()">
-    <div class="empty" *ngIf="!podcasts().length">
-      <p>No encontramos podcasts con esos filtros.</p>
-      <button class="btn-primary" (click)="clearFilters()">Ver todos</button>
-    </div>
-
-    <!-- Grid “Marco” -->
-    <div class="grid" *ngIf="podcasts().length && layout() === 'frame'">
-      <a
-        class="card"
-        *ngFor="let p of podcasts(); trackBy: trackById"
-        [routerLink]="['/podcast', p._id]"
-      >
-        <div class="marco-tarjeta" tabindex="0">
-          <div class="contenido-interno">
-            <img
-              class="imagen-tarjeta"
-              [src]="p.coverImage || p.meta?.image || 'assets/default-news.jpg'"
-              [alt]="p.title"
-              loading="lazy"
-              decoding="async"
-            />
-            <h3 class="titulo-tarjeta">{{ p.title }}</h3>
-            <p class="subtitulo" *ngIf="p.subtitle">{{ p.subtitle }}</p>
-
-            <div class="meta-row">
-              <span class="badge lang">{{ langLabel(p.language) }}</span>
-              <span class="meta">{{ episodesCount(p) }} ep.</span>
-              <span class="meta" *ngIf="latestDate(p)">Actualizado {{ latestDate(p) }}</span>
+    <div class="hero-content-wrapper">
+      <div class="hero-text">
+        <p class="hero-label">PODCAST</p>
+        <h1 class="hero-title">Viva Latino<br>Morning Show</h1>
+        <p class="hero-description">
+          Lorem ipsum dolor sit amet, consectetuer adipiscing elit,<br>
+          sed diam nonummy nibh euismod tincidunt ut laoreet<br>
+          dolore magna aliquam erat volutpat. Ut wisi
+        </p>
+        <div class="available-badges">
+          <p class="available-label">AVAILABLE ON</p>
+          <div class="badge-group">
+            <div class="badge-wrapper">
+              <img src="https://api.builder.io/api/v1/image/assets/TEMP/b66f3912d6f06a77ee1e63fc1a920667a8aceaf9?width=287" alt="Google Play" class="badge-image">
+            </div>
+            <div class="badge-wrapper">
+              <img src="https://api.builder.io/api/v1/image/assets/TEMP/968df345bb7bbc8b6f0e47327e6679135dd4af37?width=287" alt="App Store" class="badge-image">
             </div>
           </div>
         </div>
-      </a>
+      </div>
+      <div class="hero-image-wrapper">
+        <img src="https://api.builder.io/api/v1/image/assets/TEMP/bd17cdfc93d7c5b97152a962abce74a6149e6c89?width=3095" alt="Podcast host with headphones" class="hero-person-image">
+      </div>
     </div>
+  </section>
 
-    <!-- Lista -->
-    <div class="list" *ngIf="podcasts().length && layout() === 'list'">
-      <a
-        class="row-item"
-        *ngFor="let p of podcasts(); trackBy: trackById"
-        [routerLink]="['/podcast', p._id]"
-      >
-        <img
-          class="row-cover"
-          [src]="p.coverImage || p.meta?.image || 'assets/default-news.jpg'"
-          [alt]="p.title"
-          loading="lazy"
-        />
-        <div class="row-content">
-          <h3 class="row-title">{{ p.title }}</h3>
-          <p class="row-sub" *ngIf="p.subtitle">{{ p.subtitle }}</p>
-          <div class="row-meta">
-            <span class="badge lang">{{ langLabel(p.language) }}</span>
-            <span class="meta">{{ episodesCount(p) }} ep.</span>
-            <span class="meta" *ngIf="latestDate(p)">Actualizado {{ latestDate(p) }}</span>
+  <section class="player-section">
+    <div class="player-card">
+      <div class="player-content">
+        <div class="album-art">
+          <img src="https://api.builder.io/api/v1/image/assets/TEMP/ff58d9189b36f5aad253933fd9cc8a359b13ad4c?width=959" alt="Episode cover" class="album-image">
+        </div>
+        <div class="player-info">
+          <h2 class="episode-title">Lorem ipsum dolor<br>sit amet, consectetuer</h2>
+          <p class="episode-number">Episode 10</p>
+          <div class="player-controls">
+            <button class="play-btn" aria-label="Play episode">
+              <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+                <circle cx="34" cy="34" r="34" fill="black"/>
+                <path d="M25 47.9V19.7L49.4 33.8L25 47.9Z" fill="white"/>
+              </svg>
+            </button>
+            <div class="progress-bar">
+              <div class="progress-track"></div>
+              <div class="progress-indicator"></div>
+            </div>
+            <button class="volume-btn" aria-label="Volume control">
+              <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+                <path d="M21 0C9.402 0 0 9.402 0 21C0 32.598 9.402 42 21 42C32.598 42 42 32.598 42 21C42 9.402 32.598 0 21 0Z" fill="black"/>
+              </svg>
+            </button>
           </div>
         </div>
-      </a>
+      </div>
     </div>
+  </section>
 
-    <!-- Paginación -->
-    <div class="load-more" *ngIf="podcasts().length">
-      <button class="btn-primary" (click)="loadMore()" [disabled]="!hasMore() || loadingMore()">
-        {{ loadingMore() ? 'Cargando…' : (hasMore() ? 'Mostrar más' : 'No hay más') }}
-      </button>
+  <section class="more-podcasts-section">
+    <h2 class="section-title">MAS PODCAST</h2>
+    <div class="more-podcasts-grid">
+      <div class="podcast-item">
+        <div class="podcast-thumbnail">
+          <img src="https://api.builder.io/api/v1/image/assets/TEMP/614b4e4d89705b4a7bd5d74def4c7c6bf8f7d2fe?width=424" alt="Salud Vital" class="thumbnail-image">
+        </div>
+        <h3 class="podcast-item-title">SALUD VITAL</h3>
+      </div>
+      <div class="podcast-item">
+        <div class="podcast-thumbnail">
+          <img src="https://api.builder.io/api/v1/image/assets/TEMP/5336adda5a7de99796bc4c1023ad2717c3a3e0c2?width=425" alt="New England Deportes" class="thumbnail-image">
+        </div>
+        <h3 class="podcast-item-title">NEW ENGLAND<br>DEPORTES</h3>
+      </div>
+      <div class="podcast-item">
+        <div class="podcast-thumbnail">
+          <img src="https://api.builder.io/api/v1/image/assets/TEMP/b58b77f797ece7b5e09710516627c817dec01c33?width=425" alt="New England Deportes" class="thumbnail-image">
+        </div>
+        <h3 class="podcast-item-title">NEW ENGLAND<br>DEPORTES</h3>
+      </div>
     </div>
-  </ng-container>
-</section>
+  </section>
+
+  <section class="contact-section">
+    <h2 class="section-title">CONTÁCTANOS</h2>
+    <form class="contact-form">
+      <div class="form-row">
+        <div class="form-group">
+          <input type="text" placeholder="Nombre" class="form-input" aria-label="Nombre">
+        </div>
+        <div class="form-group">
+          <input type="email" placeholder="Correo" class="form-input" aria-label="Correo">
+        </div>
+      </div>
+      <div class="form-group">
+        <textarea placeholder="Mensaje" class="form-textarea" rows="5" aria-label="Mensaje"></textarea>
+      </div>
+      <button type="submit" class="submit-btn">enviar</button>
+    </form>
+  </section>
+</div>
