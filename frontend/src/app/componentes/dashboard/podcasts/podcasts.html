@@ -1,0 +1,82 @@
+  <main class="podcast-section">
+
+      <!-- PODCASTS BLOCK -->
+      <div class="podcast-container">
+        <h2 class="section-title">PODCAST</h2>
+
+        <p class="section-subtitle">
+            Programas que informan, inspiran y acompañan tu día.<br>
+            Encuentra el podcast que va contigo.
+        </p>
+
+        <!-- Estado de carga / error -->
+        <div *ngIf="loading || errorMessage" style="color:#fff; text-align:center; margin-bottom:2rem;">
+          <div *ngIf="loading">
+            <p style="opacity:.8; font-size:0.9rem;">Cargando podcasts...</p>
+          </div>
+          <div *ngIf="!loading && errorMessage">
+            <p style="color:#ff6b6b; font-weight:600;">{{ errorMessage }}</p>
+          </div>
+        </div>
+
+        <!-- Tarjetas dinámicas -->
+        <div class="podcast-cards" *ngIf="!loading && !errorMessage">
+          @for (p of podcastsLimited(); track trackById; let idx = $index) {
+            <div class="podcast-card" [ngClass]="getSizeClass(idx)">
+              <div class="card-container">
+                <div class="card-image-wrapper">
+                  <img
+                    class="card-image"
+                    [src]="getCover(p)"
+                    [alt]="getTitle(p)"
+                    loading="lazy"
+                  />
+                </div>
+
+                <button
+                  class="play-button"
+                  aria-label="Play podcast"
+                  type="button"
+                  (click)="onPlay(p)"
+                >
+                  <!-- SVG escalable según tamaño -->
+                  <svg
+                    [attr.width]="getPlaySize(idx)"
+                    [attr.height]="getPlaySize(idx)"
+                    [attr.viewBox]="getPlayViewBox(idx)"
+                    fill="none"
+                  >
+                    <circle
+                      [attr.cx]="getPlayRadius(idx)"
+                      [attr.cy]="getPlayRadius(idx)"
+                      [attr.r]="getPlayRadius(idx)"
+                      fill="rgba(255,255,255,0.3)"
+                    />
+                    <path
+                      [attr.d]="getPlayPath(idx)"
+                      fill="white"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <h3 class="card-title">
+                {{ getTitle(p) }}
+              </h3>
+            </div>
+          }
+        </div>
+        <!-- CTA -->
+        <button
+          class="cta-button"
+          [routerLink]="['/podcast-show']"
+          type="button"
+        >
+          ver más
+        </button>
+      </div>
+
+
+    </main>
+
+    <router-outlet />
