@@ -1,15 +1,32 @@
-import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component, ElementRef, EventEmitter, HostListener, Input,
+  OnChanges, OnDestroy, OnInit, Output, ViewChild, Inject, PLATFORM_ID
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { Router } from '@angular/router';
+import Fuse from 'fuse.js';
+import { forkJoin } from 'rxjs';
 
-type SectionKey = 'quienes' | 'categorias' | 'podcast' | 'locales' | 'contacto' | 'privacy' | 'todo';
+// Servicios reales
+import { NoticiasService } from '../../services/noticias-service';
+import { PodcastService, PodcastPayload } from '../../services/podcast-service'; // <= ruta corregida
+import { CategoriaService, CategoriaPayload } from '../../services/categorias-service';
+
+interface SearchItem {
+  id: string;
+  title: string;
+  type: 'noticia' | 'podcast';
+  image?: string;
+  route: string;
+  categories?: string[];                        // ids de categorías
+  category?: { name: string; color?: string };  // 1a categoría para badge
+}
 
 @Component({
   selector: 'app-overlay',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './overlay.html',
   styleUrls: ['./overlay.css']
 })
@@ -17,161 +34,270 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
   @Input() open = false;
   @Output() closed = new EventEmitter<void>();
   @Output() selected = new EventEmitter<{ title: string; route?: string }>();
-
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
   @ViewChild('panel') panelRef!: ElementRef<HTMLDivElement>;
 
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: Object,
+    private router: Router,
+    private noticiasService: NoticiasService,
+    private podcastService: PodcastService,
+    private categoriaService: CategoriaService
+  ) {}
+
+  // UI / estado
   query = '';
-  activeSection: SectionKey = 'todo';
-  highlightedIndex = -1; // for keyboard navigation
-  showResults = false;
+  filtered: SearchItem[] = [];
+  original: SearchItem[] = [];
+  fuse!: Fuse<SearchItem>;
+  loading = true;
+  highlightedIndex = -1;
+  isFilterOpen = false;
 
-  // Quick links (your navbar sections)
-  quickLinks = [
-    { key: 'quienes',  label: '¿Quiénes Somos?', icon: '👥', route: '/quienes-somos' },
-    { key: 'podcast',  label: 'Podcast',         icon: '🎧', route: '/podcast' },
-    { key: 'locales',  label: 'Noticias Locales',icon: '📰', route: '/noticias-locales' },
-    { key: 'contacto', label: 'Contacto',        icon: '✉️', route: '/contacto' },
-    { key: 'privacy',  label: 'Privacy Policy',  icon: '🔐', route: '/privacy-policy' },
-  ] as const;
+  // Filtros
+  filters = { noticias: true, podcasts: true };
+  selectedCats: string[] = []; // ids reales seleccionados
 
-  // Mock data (replace later with service)
-  private mockResults = [
-    { title: 'Nuestra misión y valores', section: 'quienes', route: '/quienes-somos#mision' },
-    { title: 'Equipo editorial', section: 'quienes', route: '/quienes-somos#equipo' },
-    { title: 'Tecnología y Cultura', section: 'categorias', route: '/categorias/tecnologia' },
-    { title: 'Deportes y Salud', section: 'categorias', route: '/categorias/deportes' },
-    { title: 'Podcast: Voces de la Comunidad', section: 'podcast', route: '/podcast/voces' },
-    { title: 'Última hora Torreón', section: 'locales', route: '/noticias-locales/ultima-hora' },
-    { title: 'Contacto Prensa', section: 'contacto', route: '/contacto?tipo=prensa' },
-    { title: 'Cómo tratamos tus datos', section: 'privacy', route: '/privacy-policy#datos' },
-  ] as const;
+  // Catálogo real
+  categorias: CategoriaPayload[] = [];
+  private catMap = new Map<string, CategoriaPayload>();
 
-  filtered: Array<{ title: string; section: string; route?: string }> = [];
-  recent = ['elecciones', 'mux streaming', 'angular ssr', 'mas latino'].slice(0, 4);
+  // Fuente dependiente de filtros (para re-indexar Fuse)
+  private lastFuseSource: SearchItem[] = [];
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
+  // ===== Ciclo de vida =====
+  ngOnInit() {
+    this.loadDataReal();
+  }
 
-  ngOnInit(): void {
+  ngOnChanges() {
     if (this.open) this.afterOpen();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['open']?.currentValue) {
-      this.afterOpen();
-    } else if (changes['open'] && !changes['open'].currentValue) {
-      if (isPlatformBrowser(this.platformId)) {
-        document.body.classList.remove('no-scroll');
-      }
-    }
-  }
-
-  ngOnDestroy(): void {
+  ngOnDestroy() {
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.remove('no-scroll');
     }
   }
 
-  private resetState() {
-    this.query = '';
-    this.activeSection = 'todo';
-    this.highlightedIndex = -1;
-    this.showResults = false;
-    this.applyFilter();
+  // ===== Carga real desde backend =====
+  private loadDataReal() {
+    this.loading = true;
+
+    forkJoin({
+      categorias: this.categoriaService.obtenerCategorias(),
+      noticias: this.noticiasService.getNoticias(),
+      podcasts: this.podcastService.obtenerPodcasts()
+    }).subscribe({
+      next: ({ categorias, noticias, podcasts }) => {
+        // 1) mapa de categorías
+        this.categorias = (categorias || []).filter(c => !!c?._id);
+        this.catMap.clear();
+        for (const c of this.categorias) {
+          if (c._id) this.catMap.set(c._id, c);
+        }
+
+        // 2) Noticias -> SearchItem
+        const newsItems: SearchItem[] = (noticias || []).map((n: any) => {
+          const id = n?._id || n?.id || '';
+          const slug = n?.slug || n?.meta?.slug;
+          const title = n?.title || n?.meta?.title || 'Sin título';
+          const image = n?.meta?.image || n?.image || n?.imagen || undefined;
+
+          const catIds: string[] = Array.isArray(n?.categories)
+            ? n.categories
+                .map((c: any) => typeof c === 'string' ? c : (c?._id || c?.id || ''))
+                .filter((v: string) => !!v)
+            : [];
+
+          const firstCat = this.pickFirstCat(catIds);
+
+          return {
+            id,
+            title,
+            type: 'noticia',
+            image,
+            route: this.buildNoticiaRoute(slug, id),
+            categories: catIds,
+            category: firstCat
+          };
+        });
+
+        // 3) Podcasts -> SearchItem
+        const podcastItems: SearchItem[] = (podcasts || []).map((p: PodcastPayload | any) => {
+          const id = p?._id || p?.id || '';
+          const title = p?.title || p?.name || 'Sin título';
+          const image = p?.coverImage || p?.image || p?.images?.[0]?.url || undefined;
+
+          const catIds: string[] = Array.isArray(p?.categories)
+            ? p.categories
+                .map((c: any) => typeof c === 'string' ? c : (c?._id || c?.id || ''))
+                .filter((v: string) => !!v)
+            : [];
+
+          const firstCat = this.pickFirstCat(catIds);
+
+          return {
+            id,
+            title,
+            type: 'podcast',
+            image,
+            route: this.buildPodcastRoute(id),
+            categories: catIds,
+            category: firstCat
+          };
+        });
+
+        // 4) Consolidado
+        this.original = [...newsItems, ...podcastItems];
+
+        // 5) Fuse inicial
+        this.lastFuseSource = [...this.original];
+        this.fuse = new Fuse(this.lastFuseSource, {
+          keys: ['title'],
+          ignoreLocation: true,
+          threshold: 0.3,
+          distance: 100
+        });
+
+        this.filtered = this.lastFuseSource.slice(0, 20);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Error cargando datos del overlay:', err);
+        this.original = [];
+        this.filtered = [];
+        this.loading = false;
+      }
+    });
   }
 
-  // Keyboard handlers (ESC, arrows, enter)
-  @HostListener('window:keydown', ['$event'])
-  onKey(ev: KeyboardEvent) {
-    if (!this.open) return;
-    if (ev.key === 'Escape') {
-      ev.preventDefault();
-      this.close();
-    }
-    if (this.showResults && this.filtered.length) {
-      if (ev.key === 'ArrowDown') {
-        ev.preventDefault();
-        this.highlightedIndex = Math.min(this.highlightedIndex + 1, this.filtered.length - 1);
-        this.scrollResultIntoView();
-      }
-      if (ev.key === 'ArrowUp') {
-        ev.preventDefault();
-        this.highlightedIndex = Math.max(this.highlightedIndex - 1, 0);
-        this.scrollResultIntoView();
-      }
-      if (ev.key === 'Enter') {
-        ev.preventDefault();
-        const item = this.filtered[this.highlightedIndex] ?? this.filtered[0];
-        if (item) this.pick(item);
-      }
-    }
+  // ===== Helpers rutas / categorías =====
+  private buildNoticiaRoute(slug?: string, id?: string) {
+    if (slug) return `/noticia/${encodeURIComponent(slug)}`;
+    if (id)   return `/noticia/${id}`;
+    return '/noticias';
   }
 
+  private buildPodcastRoute(id?: string) {
+    if (id) return `/podcast/${id}`;
+    return '/podcasts';
+  }
+
+  private pickFirstCat(catIds?: string[]): { name: string; color?: string } | undefined {
+    if (!catIds?.length) return undefined;
+    const found = this.catMap.get(catIds[0]);
+    if (!found) return undefined;
+    return { name: found.name, color: found.color };
+  }
+
+  // ===== Búsqueda / Filtros =====
   onQueryChange() {
-    this.showResults = this.query.trim().length > 0;
     this.highlightedIndex = -1;
-    this.applyFilter();
+    this.applyFilters();
   }
 
-  setSection(key: SectionKey) {
-    this.activeSection = key;
-    this.highlightedIndex = -1;
-    this.applyFilter();
-    // Keep focus on input
-    this.searchInput?.nativeElement?.focus();
+  applyFilters() {
+    let base = [...this.original];
+
+    if (!this.filters.noticias) base = base.filter(i => i.type !== 'noticia');
+    if (!this.filters.podcasts) base = base.filter(i => i.type !== 'podcast');
+
+    if (this.selectedCats.length > 0) {
+      base = base.filter(i => (i.categories || []).some(cid => this.selectedCats.includes(cid)));
+    }
+
+    // Re-indexar Fuse con la fuente filtrada
+    this.lastFuseSource = base;
+    this.fuse = new Fuse(this.lastFuseSource, {
+      keys: ['title'],
+      ignoreLocation: true,
+      threshold: 0.3,
+      distance: 100
+    });
+
+    if (this.query.trim()) {
+      const result = this.fuse.search(this.query.trim());
+      base = result.map(r => r.item);
+    }
+
+    this.filtered = base.slice(0, 20);
   }
 
-  private applyFilter() {
-    const q = this.query.toLowerCase().trim();
-    const bySection = (r: any) => this.activeSection === 'todo' ? true : r.section === this.activeSection;
-    const byQuery = (r: any) => !q ? true : r.title.toLowerCase().includes(q);
-    this.filtered = this.mockResults.filter(r => bySection(r) && byQuery(r));
-  }
-
-  pick(item: { title: string; route?: string }) {
-    this.selected.emit(item);
-    // Navigate via routerLink in template; here just close for now
+  // ===== Selección / Navegación =====
+  pick(item: SearchItem) {
+    this.selected.emit({ title: item.title, route: item.route });
+    if (!item?.route) return;
+    this.router.navigate([item.route]);
     this.close();
   }
 
-  useRecent(r: string) {
-    this.query = r;
-    this.onQueryChange();
-    this.showResults = true;
+  // ===== Modal filtros =====
+  openFilterModal() { this.isFilterOpen = true; }
+  closeFilterModal() { this.isFilterOpen = false; }
+
+  toggleCat(id: string | undefined) {
+    if (!id) return;
+    const i = this.selectedCats.indexOf(id);
+    if (i > -1) this.selectedCats.splice(i, 1);
+    else this.selectedCats.push(id);
+    this.applyFilters();
+  }
+
+  resetFilters() {
+    this.filters = { noticias: true, podcasts: true };
+    this.selectedCats = [];
+    this.applyFilters();
+  }
+
+  // ===== Teclado / UX =====
+  @HostListener('window:keydown', ['$event'])
+  onKey(e: KeyboardEvent) {
+    if (!this.open) return;
+    if (e.key === 'Escape') this.close();
+    if (this.filtered.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.highlightedIndex = Math.min(this.highlightedIndex + 1, this.filtered.length - 1);
+      this.scrollToHighlight();
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.highlightedIndex = Math.max(this.highlightedIndex - 1, 0);
+      this.scrollToHighlight();
+    }
+    if (e.key === 'Enter' && this.highlightedIndex >= 0) {
+      e.preventDefault();
+      this.pick(this.filtered[this.highlightedIndex]);
+    }
+  }
+
+  private scrollToHighlight() {
+    if (isPlatformBrowser(this.platformId)) {
+      const el = document.getElementById(`result-${this.highlightedIndex}`);
+      el?.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   close() {
     this.open = false;
     this.closed.emit();
-    if (isPlatformBrowser(this.platformId)) {
-      document.body.classList.remove('no-scroll');
-    }
+    if (isPlatformBrowser(this.platformId)) document.body.classList.remove('no-scroll');
   }
-
-  private scrollResultIntoView() {
-    if (isPlatformBrowser(this.platformId)) {
-      const id = `result-${this.highlightedIndex}`;
-      const el = document.getElementById(id);
-      el?.scrollIntoView({ block: 'nearest' });
-    }
-  }
-
-  private justOpened = false;
 
   private afterOpen() {
-    if (isPlatformBrowser(this.platformId)) {
-      document.body.classList.add('no-scroll');
-    }
-    this.justOpened = true;
-    setTimeout(() => { this.justOpened = false; }, 0);
-    setTimeout(() => this.searchInput?.nativeElement?.focus(), 0);
-    this.resetState();
+    if (isPlatformBrowser(this.platformId)) document.body.classList.add('no-scroll');
+    setTimeout(() => this.searchInput?.nativeElement.focus(), 60);
   }
 
   @HostListener('document:click', ['$event'])
-  onDocClick(ev: MouseEvent) {
-    if (!this.open || this.justOpened) return;
+  onDocClick(e: MouseEvent) {
+    if (!this.open) return;
     const panel = this.panelRef?.nativeElement;
-    if (panel && !panel.contains(ev.target as Node)) this.close();
+    if (panel && !panel.contains(e.target as Node)) this.close();
   }
+
+  // ===== trackBy para categorías =====
+  trackByCatId = (_: number, cat: CategoriaPayload) => cat._id ?? _;
 }
