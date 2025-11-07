@@ -212,3 +212,139 @@
   }
   .event-description { font-size: 17px; }
 }
+
+
+
+
+
+
+
+/* ===== MODAL ===== */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  animation: fadeIn 160ms ease-out;
+}
+
+.modal-wrapper {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  animation: fadeIn 160ms ease-out;
+}
+
+.modal-card {
+  position: relative;
+  width: min(960px, 92vw);
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  padding: 28px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: #444;
+}
+
+.modal-close:hover { color: #000; }
+
+.modal-content {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.modal-image {
+  width: 360px;
+  height: 360px;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #eee;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+}
+
+.modal-image-el {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-info {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-title {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #000;
+  margin: 0 0 8px;
+}
+
+.modal-meta {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  font-size: 18px;
+  color: #111;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meta-bullet {
+  font-weight: 700;
+}
+
+.meta-link {
+  color: #000;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+/* Anim */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 860px) {
+  .modal-card { padding: 22px; }
+  .modal-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .modal-image {
+    width: min(420px, 80vw);
+    height: min(420px, 80vw);
+    margin: 0 auto;
+  }
+  .modal-title { font-size: 28px; text-align: center; }
+  .modal-meta { font-size: 16px; }
+}
