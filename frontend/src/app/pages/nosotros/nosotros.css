@@ -1,3 +1,736 @@
-.center{
+
+
+/* Reset y estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: #000;
+    background-color: #fff;
+    overflow-x: hidden;
+}
+
+.container {
+    width: 1080px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    position: absolute;
+    top: 50.46px;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-circle {
+    width: 44px;
+    height: 44px;
+    border: 0.75px solid black;
+    border-radius: 50%;
+}
+
+.logo-letter {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.menu-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.menu-line {
+    width: 37px;
+    height: 6px;
+    background-color: black;
+}
+
+/* Sección Nosotros */
+.nosotros-section {
+    position: relative;
+    height: 875.92px;
+    padding-top: 100px;
+}
+
+.nosotros-title {
+    font-size: 55.60px;
+    font-weight: 700;
     text-align: center;
+    margin-bottom: 50px;
+}
+
+.content-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 50px;
+}
+
+.text-content {
+    flex: 1;
+}
+
+.hero-title {
+    font-size: 43.61px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 30px;
+}
+
+.highlight-red {
+    color: #FE3824;
+}
+
+.hero-description {
+    font-size: 17.31px;
+    font-weight: 300;
+    line-height: 1.5;
+}
+
+.graphic-content {
+    flex: 1;
+    position: relative;
+}
+
+.floating-shapes {
+    position: relative;
+    height: 400px;
+}
+
+.shape {
+    position: absolute;
+    border-radius: 50%;
+}
+
+.shape-1 {
+    width: 350.49px;
+    height: 289.67px;
+    background-color: #FAAF3E;
+    top: 50px;
+    right: 0;
+}
+
+.shape-2 {
+    width: 339.62px;
+    height: 332.12px;
+    background-color: #00CB7E;
+    top: 100px;
+    right: 100px;
+}
+
+.shape-3 {
+    width: 427.19px;
+    height: 203.54px;
+    background-color: #FE3824;
+    top: 200px;
+    right: 50px;
+}
+
+/* Sección Plataforma */
+.platform-section {
+    padding: 80px 0;
+    text-align: center;
+}
+
+.platform-title {
+    font-size: 45.06px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 40px;
+}
+
+.platform-image {
+    position: left;
+    width: 142.87px;
+    height: 142.86px;
+    border-radius: 71px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+.platform-image-1 {
+    position: left;
+    width: 142.87px;
+    height: 142.86px;
+    border-radius: 71px;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+.platform-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Sección Pilares */
+.pillars-section {
+    padding: 80px 0;
+    text-align: center;
+}
+
+.pillars-title {
+    font-size: 44.89px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.pillars-description {
+    font-size: 17.15px;
+    font-weight: 300;
+    line-height: 1.5;
+    margin-bottom: 60px;
+}
+
+.pillars-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.pillar-card {
+    width: 577.26px;
+    background-color: #8F50F8;
+    border-radius: 55.5px;
+    padding: 30px;
+    color: white;
+    text-align: center;
+}
+
+.pillar-card h3 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+
+.pillar-card p {
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.5;
+}
+
+/* Sección Tecnología */
+.technology-section {
+    background-color: #fe3824;
+    padding: 80px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.tech-content {
+    flex: 1;
+    padding-left: 40px;
+}
+
+.tech-title {
+    font-size: 42.97px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 30px;
+}
+
+.highlight-white {
+    color: white;
+}
+
+.tech-description {
+    font-size: 17.81px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.tech-features {
+    list-style-type: none;
+}
+
+.tech-features li {
+    font-size: 17.63px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.tech-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.tech-image img {
+    width: 160.50px;
+    height: 160.50px;
+    border-radius: 83px;
+    object-fit: cover;
+}
+
+/* Sección Movimiento */
+.movement-section {
+    padding: 80px 0;
+    text-align: center;
+    position: relative;
+}
+
+.movement-title {
+    font-size: 44.84px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 40px;
+}
+
+.movement-graphics {
+    position: relative;
+    height: 404.58px;
+    background-color: #000000;
+    border-radius: 20px;
+    margin: 0 40px;
+}
+
+
+
+/* ---------- Color pyramid (frascos apilados) - reemplazar reglas antiguas ---------- */
+/* Contenedor base */
+.color-pyramid {
+    position: absolute;
+    bottom: 20px;      /* ajustar desde el layout */
+    left: 50px;        /* ajustar desde el layout */
+    width: 320px;      /* ancho del grupo */
+    height: 380px;     /* alto del grupo */
+    pointer-events: none;
+    transform: rotate(-6deg);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Recuadro rojo en esquina (si lo queremos visible delante del fondo) */
+.color-pyramid::before {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 140px;
+    height: 140px;
+    background: #FE3824;
+    border-radius: 6px;
+    z-index: 0;
+}
+
+/* Reglas comunes para cada "frasco" */
+.pyramid-layer {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-origin: center center;
+    transform: translate(-50%, -50%);
+    display: block;
+    z-index: 1;
+    box-shadow: 0 10px 18px rgba(0,0,0,0.06), inset 0 -6px 10px rgba(0,0,0,0.04);
+    /* transición sutil para micro-interacciones futuras */
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1), filter 200ms;
+    pointer-events: none;
+    /* para un contorno menos perfecto, usamos outline ligero en pantallas grandes */
+}
+
+/* Técnica: cada frasco usa una mezcla de border-radius asimétrico (para curvar "cuello" y "base")
+   y clip-path para tallar la parte superior y el cuello. Esto produce una silueta tipo botella. */
+
+/* Capa exterior - frasco grande */
+.layer-1 {
+    width: 320px;
+    height: 380px;
+    background: #00CB7E;
+    z-index: 1;
+    /* cuerpo ancho, base curva; cuello simulado por clip-path */
+    border-radius: 42% 42% 48% 48% / 62% 62% 36% 36%;
+    clip-path: polygon(
+        42% 0%, 58% 0%,       /* hombros arriba (ligeramente cortados) */
+        68% 8%, 72% 28%,      /* costado que baja formando cuello */
+        72% 68%, 66% 84%,     /* ensanchamiento hacia base */
+        50% 100%, 34% 84%,    /* fondo */
+        28% 68%, 28% 28%,     /* costado izquierdo */
+        32% 8%                /* hombro izquierdo */
+    );
+    transform: translate(-48%, -52%) rotate(-6deg);
+}
+
+/* Capa 2 */
+.layer-2 {
+    width: 276px;
+    height: 330px;
+    background: #8659EF;
+    z-index: 2;
+    border-radius: 44% 46% 50% 50% / 60% 60% 36% 36%;
+    clip-path: polygon(44% 0%, 56% 0%, 66% 10%, 70% 30%, 70% 68%, 62% 82%, 50% 96%, 38% 82%, 30% 68%, 30% 30%, 34% 10%);
+    transform: translate(-50%, -51%) rotate(-3deg);
+}
+
+/* Capa 3 */
+.layer-3 {
+    width: 238px;
+    height: 285px;
+    background: #FAAF3E;
+    z-index: 3;
+    border-radius: 46% 44% 52% 48% / 62% 58% 34% 36%;
+    clip-path: polygon(46% 0%, 54% 0%, 64% 12%, 68% 34%, 68% 66%, 60% 80%, 50% 92%, 40% 80%, 32% 66%, 32% 34%, 36% 12%);
+    transform: translate(-50.5%, -50%) rotate(-2deg);
+}
+
+/* Capa 4 */
+.layer-4 {
+    width: 205px;
+    height: 245px;
+    background: #FE3824;
+    z-index: 4;
+    border-radius: 44% 46% 50% 50% / 60% 58% 36% 36%;
+    clip-path: polygon(44% 0%, 56% 0%, 66% 14%, 70% 36%, 70% 64%, 60% 78%, 50% 90%, 40% 78%, 30% 64%, 30% 36%, 34% 14%);
+    transform: translate(-50%, -49.5%) rotate(1deg);
+}
+
+/* Capa 5 */
+.layer-5 {
+    width: 178px;
+    height: 210px;
+    background: #00CB7E;
+    z-index: 5;
+    border-radius: 46% 44% 52% 48% / 62% 56% 36% 36%;
+    clip-path: polygon(46% 0%, 54% 0%, 64% 15%, 68% 38%, 68% 62%, 60% 76%, 50% 88%, 40% 76%, 32% 62%, 32% 38%, 36% 15%);
+    transform: translate(-50%, -49%) rotate(2deg);
+}
+
+/* Capa 6 */
+.layer-6 {
+    width: 148px;
+    height: 176px;
+    background: #8659EF;
+    z-index: 6;
+    border-radius: 48% 44% 52% 48% / 62% 54% 36% 36%;
+    clip-path: polygon(48% 0%, 52% 0%, 62% 16%, 66% 40%, 66% 60%, 58% 74%, 50% 84%, 42% 74%, 34% 60%, 34% 40%, 38% 16%);
+    transform: translate(-50%, -48%) rotate(3deg);
+}
+
+/* Capa 7 */
+.layer-7 {
+    width: 120px;
+    height: 142px;
+    background: #FAAF3E;
+    z-index: 7;
+    border-radius: 50% 44% 52% 44% / 62% 52% 36% 36%;
+    clip-path: polygon(50% 0%, 52% 0%, 60% 18%, 64% 42%, 64% 58%, 56% 72%, 50% 80%, 44% 72%, 36% 58%, 36% 42%, 40% 18%);
+    transform: translate(-50%, -47%) rotate(4deg);
+}
+
+/* Capa 8 */
+.layer-8 {
+    width: 95px;
+    height: 118px;
+    background: #FE3824;
+    z-index: 8;
+    border-radius: 52% 44% 52% 44% / 60% 50% 36% 36%;
+    clip-path: polygon(50% 0%, 52% 0%, 58% 20%, 62% 44%, 62% 56%, 56% 70%, 50% 76%, 44% 70%, 38% 56%, 38% 44%, 42% 20%);
+    transform: translate(-50%, -46%) rotate(5deg);
+}
+
+/* Capa central: blanco negativo con frasco rojo dentro */
+.layer-9 {
+    width: 48px;
+    height: 88px;
+    background: #ffffff;
+    z-index: 9;
+    border-radius: 36% 36% 44% 44% / 60% 60% 40% 40%;
+    clip-path: polygon(48% 0%, 52% 0%, 58% 22%, 60% 40%, 60% 58%, 54% 72%, 50% 78%, 46% 72%, 40% 58%, 40% 40%, 42% 22%);
+    transform: translate(-50%, -45%) rotate(6deg);
+    position: relative;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.06), inset 0 -4px 6px rgba(0,0,0,0.03);
+}
+
+/* Dentro de layer-9: frasco rojo pequeño (tapón y cuerpo) - pseudo */
+.layer-9::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 12%;
+    transform: translateX(-50%);
+    width: 62%;
+    height: 64%;
+    background: #FE3824;
+    border-radius: 14% 14% 26% 26% / 10% 10% 30% 30%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Letra L centrada en el frasco */
+.layer-9::after {
+    content: "L";
+    position: absolute;
+    left: 50%;
+    top: 52%;
+    transform: translate(-50%,-50%);
+    font-weight: 800;
+    font-size: 13px;
+    color: #fff;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    pointer-events: none;
+}
+
+/* Ajustes responsivos: reducimos tamaño y rotación en pantallas pequeñas */
+@media (max-width: 900px) {
+    .color-pyramid {
+        transform: rotate(-4deg) scale(0.8);
+        bottom: 12px;
+        left: 22px;
+    }
+}
+@media (max-width: 480px) {
+    .color-pyramid {
+        transform: rotate(-2deg) scale(0.64);
+        left: 8px;
+        bottom: 8px;
+    }
+}
+
+
+
+
+
+/* Sección Descarga */
+.download-section {
+    padding: 80px 0;
+    text-align: center;
+}
+
+.download-title {
+    font-size: 33.60px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.download-button {
+    background-color: #FF3822;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 23px;
+    font-size: 25.74px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 206.22px;
+}
+
+/* Sección Raíces */
+.roots-section {
+    padding: 80px 0;
+    text-align: center;
+}
+
+.roots-title {
+    font-size: 57.93px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 30px;
+}
+
+.highlight-purple {
+    color: #8F50F8;
+}
+
+.roots-description {
+    font-size: 17.24px;
+    font-weight: 300;
+    line-height: 1.5;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Sección Contacto */
+.contact-section {
+    padding: 80px 0;
+    text-align: center;
+}
+
+.contact-title {
+    font-size: 32.89px;
+    font-weight: 700;
+    margin-bottom: 40px;
+}
+
+.contact-form {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-input, .form-textarea {
+    width: 431.32px;
+    padding: 15px;
+    border: 1px solid black;
+    border-radius: 21px;
+    font-size: 18px;
+    font-family: 'Inter', sans-serif;
+}
+
+.form-textarea {
+    height: 101px;
+    resize: none;
+}
+
+.submit-button {
+    background-color: #FF3822;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 23px;
+    font-size: 25.74px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 206.22px;
+}
+
+/* Sección Siguenos */
+.follow-section {
+    padding: 80px 0;
+}
+
+.follow-title {
+    font-size: 33.78px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.follow-subtitle {
+    font-size: 19.10px;
+    font-weight: 400;
+    margin-bottom: 30px;
+}
+
+.social-posts {
+    display: flex;
+    gap: 20px;
+}
+
+.post {
+    width: 301.66px;
+    height: 301.66px;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 26px;
+    overflow: hidden;
+}
+
+.post img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Footer */
+.footer {
+    background-color: #000;
+    color: white;
+    padding: 40px 0;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 30px;
+}
+
+.link-group h4 {
+    font-size: 19.83px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.social-icon {
+    width: 36px;
+    height: 36px;
+    background-color: white;
+    border-radius: 50%;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+    .container {
+        width: 100%;
+        padding: 0 20px;
+    }
+    
+    .content-wrapper {
+        flex-direction: column;
+    }
+    
+    .pillar-card {
+        width: 100%;
+    }
+    
+    .technology-section {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .tech-content {
+        padding-left: 0;
+        margin-bottom: 40px;
+    }
+    
+    .form-input, .form-textarea {
+        width: 100%;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-title, .platform-title, .pillars-title, 
+    .tech-title, .movement-title, .roots-title {
+        font-size: 32px;
+    }
+    
+    .nosotros-title {
+        font-size: 40px;
+    }
+    
+    .download-title {
+        font-size: 28px;
+    }
+    
+    .contact-title {
+        font-size: 28px;
+    }
+    
+    .follow-title {
+        font-size: 28px;
+    }
 }
