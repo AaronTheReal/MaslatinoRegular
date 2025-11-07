@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, HostListener, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CalendarioService, CalendarItem, PaginatedResponse } from '../../../services/calendario-service';
 import { RouterModule } from '@angular/router';
@@ -11,11 +11,14 @@ interface EventVM {
   title: string;
   description: string;
   imageUrl: string;
-  monthKey: string;   // p.ej., "SEPTIEMBRE 2025"
-  dateLabel: string;  // p.ej., "19 de septiembre de 2025"
-  timeLabel: string;  // p.ej., "12:30 a. m."
+  monthKey: string;
+  dateLabel: string;
+  timeLabel: string;
   timezone: string;
-  rawDate: Date;      // para filtros por semana
+  locationLabel?: string;   // NUEVO
+  linkUrl?: string;         // NUEVO
+  linkLabel?: string;       // NUEVO
+  rawDate: Date;
 }
 
 @Component({
@@ -31,6 +34,9 @@ export class Eventos implements OnInit {
   expandedMonths = signal<Set<string>>(new Set<string>());
   loading = signal<boolean>(true);
   errorMsg = signal<string | null>(null);
+
+  // Modal state
+  selectedEvent = signal<EventVM | null>(null);
 
   // ----- Filtros disponibles tipados -----
   readonly filters: Filtro[] = ['Todo', 'Esta semana', 'Próxima semana'];
@@ -102,6 +108,14 @@ export class Eventos implements OnInit {
     const dateLabel = this.formatDateMX(d, tz);
     const timeLabel = it.allDay ? 'Todo el día' : this.formatTimeMX(d, tz);
 
+    const loc =
+      it.location?.name ||
+      it.location?.address ||
+      tz; // fallback
+
+    const linkUrl = it.link?.url?.trim();
+    const linkLabel = it.link?.label?.trim();
+
     return {
       id: it._id || (globalThis.crypto?.randomUUID?.() ?? String(Math.random())),
       slug: it.slug,
@@ -112,6 +126,9 @@ export class Eventos implements OnInit {
       dateLabel,
       timeLabel,
       timezone: tz,
+      locationLabel: loc || undefined,
+      linkUrl: linkUrl || undefined,
+      linkLabel: linkLabel || undefined,
       rawDate: d,
     };
   }
@@ -142,7 +159,6 @@ export class Eventos implements OnInit {
   }
 
   private startOfWeek(d: Date): Date {
-    // Semana inicia lunes
     const dd = new Date(d);
     const day = (dd.getDay() + 6) % 7; // 0 = lunes
     dd.setHours(0, 0, 0, 0);
@@ -153,7 +169,7 @@ export class Eventos implements OnInit {
   private endOfWeek(d: Date): Date {
     const s = this.startOfWeek(d);
     const e = new Date(s);
-    e.setDate(s.getDate() + 7); // exclusivo
+    e.setDate(s.getDate() + 7);
     return e;
   }
 
@@ -183,10 +199,25 @@ export class Eventos implements OnInit {
     if (f === 'Esta semana') {
       return this.inRange(ev.rawDate, thisFrom, thisTo);
     }
-    // Próxima semana
     const nextWeekFrom = this.addDays(thisFrom, 7);
     const nextWeekTo = this.addDays(thisFrom, 14);
     return this.inRange(ev.rawDate, nextWeekFrom, nextWeekTo);
+  }
+
+  // ====== Modal helpers ======
+  openModal(ev: EventVM): void {
+    this.selectedEvent.set(ev);
+    document.body.style.overflow = 'hidden'; // lock scroll
+  }
+
+  closeModal(): void {
+    this.selectedEvent.set(null);
+    document.body.style.overflow = '';
+  }
+
+  @HostListener('document:keydown.escape')
+  onEsc(): void {
+    if (this.selectedEvent()) this.closeModal();
   }
 
   // ====== Template helpers ======

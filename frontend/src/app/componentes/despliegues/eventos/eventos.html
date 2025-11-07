@@ -39,22 +39,24 @@
 
           <article
             *ngFor="let event of getEventsByMonth(month); trackBy: trackById"
-            class="event-card">
+            class="event-card"
+            (click)="openModal(event)"
+            tabindex="0"
+            role="button"
+            aria-label="Ver detalles del evento">
 
             <div class="event-image-wrapper">
-              <!-- <a [routerLink]="['/evento', event.slug]"> -->
               <img
                 [src]="event.imageUrl"
                 [alt]="event.title"
                 class="event-image" />
-              <!-- </a> -->
               <div class="wca-badge" *ngIf="true">WCA</div>
             </div>
 
             <div class="event-details">
               <h3 class="event-date">{{ event.dateLabel }}</h3>
               <time class="event-time">{{ event.timeLabel }}</time>
-              <!--<p class="event-description">{{ event.description }}</p>-->
+              <!-- <p class="event-description">{{ event.description }}</p> -->
             </div>
           </article>
 
@@ -66,4 +68,57 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== MODAL ===== -->
+  <div
+    class="modal-backdrop"
+    *ngIf="selectedEvent()"
+    (click)="closeModal()"
+    aria-hidden="true"></div>
+
+  <div
+    class="modal-wrapper"
+    *ngIf="selectedEvent()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="selectedEvent()?.title">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeModal()" aria-label="Cerrar">×</button>
+
+      <div class="modal-content">
+        <div class="modal-image">
+          <img
+            [src]="selectedEvent()!.imageUrl"
+            [alt]="selectedEvent()!.title"
+            class="modal-image-el" />
+        </div>
+
+        <div class="modal-info">
+          <h2 class="modal-title">{{ selectedEvent()!.title }}</h2>
+
+          <ul class="modal-meta">
+            <li class="meta-row">
+              <span class="meta-bullet">•</span>
+              <span class="meta-text">{{ selectedEvent()!.dateLabel }}</span>
+            </li>
+            <li class="meta-row">
+              <span class="meta-bullet">•</span>
+              <span class="meta-text">{{ selectedEvent()!.timeLabel }}</span>
+            </li>
+            <li class="meta-row" *ngIf="selectedEvent()!.locationLabel">
+              <span class="meta-bullet">•</span>
+              <span class="meta-text">{{ selectedEvent()!.locationLabel }}</span>
+            </li>
+            <li class="meta-row" *ngIf="selectedEvent()!.linkUrl">
+              <span class="meta-bullet">•</span>
+              <a class="meta-link" [href]="selectedEvent()!.linkUrl" target="_blank" rel="noopener noreferrer">
+                {{ selectedEvent()!.linkLabel || selectedEvent()!.linkUrl }}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ===== /MODAL ===== -->
 </section>

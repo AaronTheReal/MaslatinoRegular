@@ -1,10 +1,14 @@
+/* Backdrop */
 .overlay-backdrop{
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.45); /* <- gris/negro translúcido */
+  background: rgba(0,0,0,.45);
   display: flex;
   justify-content: center;
-  align-items: center;
+  /* antes: align-items:center;  */
+  align-items: flex-start;             /* <- sube el contenido */
+  /* offset superior configurable */
+  padding-top: clamp(40px, 20vh, 120px);  /* <- ajusta aquí cuánto lo quieres arriba */
   opacity: 0;
   visibility: hidden;
   transition: opacity .3s, visibility .3s;
@@ -15,8 +19,7 @@
   visibility: visible;
 }
 
-
-/* Contenido principal */
+/* Contenido: quita cualquier intento de posicionamiento vertical anterior */
 .overlay-content{
   display: flex;
   flex-direction: column;
@@ -25,6 +28,13 @@
   max-width: 1200px;
   width: 100%;
   padding: 40px;
+  /* antes tenías top:0 sin position; elimínalo */
+}
+
+/* En móviles, normalmente menos offset para que no se corte */
+@media (max-width: 768px){
+  .overlay-backdrop{ padding-top: clamp(20px, 6vh, 64px); }
+  .overlay-content{ gap: 30px; padding: 30px 20px; }
 }
 
 /* ================== Search ================== */
