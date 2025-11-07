@@ -1,9 +1,20 @@
 /* ===== 7 ESFERAS CIRCULARES (centrado + separación + safe bottom) ===== */
+/* control centralizado */
+.spheres-orbit-wrapper { 
+  --orbit-shift: 64px;      /* ajusta aquí */
+  transform: translateY(var(--orbit-shift));
+}
+
+/* opcional: diferente en móvil */
+@media (max-width: 768px){
+  .spheres-orbit-wrapper { --orbit-shift: 24px; }
+}
+
 
 .spheres-section {
   background: #fff;
   /* altura pantalla menos un respiro para que no corte la burbuja inferior con el viewport */
-  min-height: calc(100vh - 4rem);
+  min-height: calc(130vh - 4rem);
   padding: 2rem 1rem 4rem; /* padding-bottom grande para que NO la tape la sección siguiente */
   display: flex;
   justify-content: center;
@@ -109,6 +120,7 @@
   transition: transform 0.3s ease;
   box-shadow: 0 12px 24px rgba(0,0,0,0.12);
   box-sizing: border-box;
+  opacity: 90%;
 }
 
 .sphere-circle:hover {

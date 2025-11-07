@@ -76,24 +76,54 @@
   margin: 0 0 60px 0;
   max-width: 600px;
 }
-
+/* ROW de tarjetas con escala proporcional y compensación del escalonado */
 .podcast-cards {
   display: flex;
-  gap: 20px;
+  gap: 18px;
   justify-content: center;
-  align-items: flex-end;
+  align-items: flex-start;      /* tope superior fijo */
   flex-wrap: wrap;
   margin-bottom: 50px;
   width: 100%;
   max-width: 1100px;
+
+  /* 🔧 controles globales */
+  --scale: 1;                /* ⬅️ cambia este valor para hacer TODO más grande/pequeño */
+  --max-offset: 50px;           /* ⬅️ iguala al mayor --offset usado abajo */
+
+  /* Compensa el translateY de las cards para que el CTA/texto no se suba */
+  padding-bottom: calc(0px + var(--max-offset) * var(--scale));
 }
 
+/* Card con escalonado + escala proporcional */
 .podcast-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
   flex: 0 0 auto;
+
+  --offset: 0px;                                      /* por tarjeta */
+  transform: translateY(var(--offset)) scale(var(--scale));
+  transform-origin: top center;                       /* ancla arriba para no desalinear */
+  transition: transform .3s ease;
+}
+
+/* Patrón de 5: extremos abajo, segundos un poco, centro arriba */
+.podcast-card:nth-child(1),
+.podcast-card:nth-child(5) { --offset: 50px; }  /* extremos más abajo */
+.podcast-card:nth-child(2),
+.podcast-card:nth-child(4) { --offset: 30px; }  /* segundos medio */
+.podcast-card:nth-child(3) { --offset: 0px;  }  /* centro arriba (sin bajar) */
+
+/* Responsivo: en móviles quitamos escalones y escala */
+@media (max-width: 900px) {
+  .podcast-card { --offset: 0px; }
+  .podcast-cards {
+    --scale: 1;                  /* vuelve al tamaño normal */
+    --max-offset: 0px;
+    padding-bottom: 60px;        /* valor base */
+  }
 }
 
 .card-container {
@@ -130,8 +160,11 @@
 }
 
 .podcast-card-medium .card-container {
-  padding: 18px;
-}
+    padding-top: 18px;
+    padding-right: 18px;
+    padding-bottom: 18px;
+    padding-left: 18px;
+  }
 
 .podcast-card-medium .card-image-wrapper {
   width: 140px;
@@ -180,7 +213,7 @@
   line-height: 1.15;
   max-width: 140px;
 }
-
+/* CTA: centrado absoluto bajo el conjunto visual */
 .cta-button {
   background: #8F50F8;
   color: #fff;
@@ -192,6 +225,11 @@
   cursor: pointer;
   transition: background 0.3s ease, transform 0.2s ease;
   font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
+
+  /* 🔽 nuevo: centrado robusto + aire superior */
+  display: block;
+  margin-inline: auto;
+  margin-top: 0.5rem;
 }
 
 .cta-button:hover {
@@ -202,6 +240,7 @@
 .cta-button:active {
   transform: translateY(0);
 }
+
 
 .additional-content {
   width: 100%;
