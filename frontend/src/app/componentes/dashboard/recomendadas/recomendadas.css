@@ -14,7 +14,7 @@
 .decorative-marker {
   position: absolute;
   left: min(calc(-50vw + 600px), -50px);
-  top: -50px;
+  top: -100px;
   width: 233px;
   height: 273px;
   opacity: 0.9;
@@ -28,7 +28,7 @@
 .decorative-ribbon {
   position: absolute;
   left: min(calc(-50vw + 600px), -80px);
-  bottom: -100px;
+  bottom: -30px;
   width: 235px;
   height: 210px;
   z-index: 2;
