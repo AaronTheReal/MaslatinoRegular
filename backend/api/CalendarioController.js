@@ -228,7 +228,7 @@ class CalendarioController {
 
       const filter = {
         status: 'published',
-        startAt: { $gte: now }
+        //startAt: { $gte: now }
       };
 
       const sort = parseSort(req.query.sort || 'startAt:asc');
@@ -242,6 +242,7 @@ class CalendarioController {
           .lean(),
         CalendarItem.countDocuments(filter)
       ]);
+      console.log("calendairo si llega",items);
 
       return res.json({
         ok: true,

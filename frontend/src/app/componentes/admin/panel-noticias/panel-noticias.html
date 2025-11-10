@@ -228,13 +228,12 @@
 
             <!-- Extracto redes -->
             <div class="form-group mb-3">
-              <label for="extracto">Extracto (redes) <span class="required">*</span> (150–300, keyword 1 vez)</label>
+              <label for="extracto">Extracto (redes) <span class="required">*</span> (Max 300. keyword 1 vez)</label>
               <textarea id="extracto" class="form-control" formControlName="extracto" rows="2"></textarea>
-              <small class="text-muted">{{ noticiaForm.get('extracto')?.value?.length || 0 }} / 300</small>
+              <small class="text-muted">Max 300</small>
               <div class="text-danger small mt-1"
                    *ngIf="noticiaForm.get('extracto')?.touched && noticiaForm.get('extracto')?.invalid">
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['required']">Obligatorio. </span>
-                <span *ngIf="noticiaForm.get('extracto')?.errors?.['minlength']">Mínimo 150. </span>
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['maxlength']">Máximo 300. </span>
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['keyphraseOnce']">Keyword 1 vez. </span>
                 <span *ngIf="noticiaForm.get('extracto')?.errors?.['noDoubleQuotes']">Sin comillas dobles. </span>
