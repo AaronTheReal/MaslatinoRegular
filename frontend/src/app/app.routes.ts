@@ -25,7 +25,7 @@ import {NoticiasTodas} from './componentes/despliegues/noticias-todas/noticias-t
 
 //show
 import {Eventos} from './componentes/despliegues/eventos/eventos'
-
+import {PruebaComponent} from './componentes/prueba-component/prueba-component'
 export const routes: Routes = [
   { path: '', component: Dashboard },
   { path: 'noticias-recientes', component: NoticiasRecientes },
@@ -59,6 +59,8 @@ export const routes: Routes = [
   {path: 'nosotros-pagina', component:Nosotros},
   {path: 'noticias-todas', component:NoticiasTodas},
 
+  {path: 'prueba-component', component:PruebaComponent},
+  
 
 
 
