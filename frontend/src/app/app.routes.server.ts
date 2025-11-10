@@ -37,6 +37,8 @@ export const serverRoutes: ServerRoute[] = [
   {path: 'descarga-la-app', renderMode: RenderMode.Client},
   {path: 'nosotros-pagina', renderMode: RenderMode.Client},
   {path: 'noticias-todas', renderMode: RenderMode.Client},
+    {path: 'prueba-component', renderMode: RenderMode.Client},
+  
               
       
   
