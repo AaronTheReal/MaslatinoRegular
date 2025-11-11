@@ -1,3 +1,4 @@
+
 /* Reset local del componente */
 * {
   margin: 0;
@@ -24,8 +25,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 60px;
+  row-gap: 60px;
+  column-gap: 60px;
+
 }
+
 
 /* Wrapper que contiene texto (izq) + grid (der) */
 .content-wrapper {
@@ -35,6 +39,7 @@
   justify-content: space-between;
   gap: 100px;
   flex-wrap: nowrap;
+  margin-bottom: -40px;
 }
 
 .text-section {
@@ -404,8 +409,11 @@
   color: #fff;
   font-size: clamp(16px, 2vw, 20px);
   font-weight: 700;
-  padding: 20px 55px;
-  border: none;
+    padding-top: 20px;
+    padding-right: 55px;
+    padding-bottom: 20px;
+    padding-left: 55px;  
+    border: none;
   border-radius: 16px;
   cursor: pointer;
   position: relative;
@@ -413,6 +421,7 @@
   transition: all 0.3s ease;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   margin-right: 40px;
+  margin-bottom: 30px;
   line-height: 1.2;
 }
 
@@ -546,8 +555,47 @@
 
 
 
-/*
-.feature-illustration {
-  transform: scale(1.2); 
-  transform-origin: top left; 
-*/
+
+/* ====== SOLO-IMÁGENES: quitar hueco por transparencia con clip ====== */
+.features-grid.solo-imagenes{
+  gap: 0 20px !important; /* sin espacio vertical entre filas */
+  align-items: stretch;
+  justify-items: stretch;
+  overflow: hidden; /* para recortar seguro */
+}
+
+.slot{
+  width:100%; height:100%; display:block; line-height:0;
+}
+
+/* Mic/Mega: ya los tienes en cover (sin aire) */
+.slot.morado   { object-fit: cover !important; object-position: 50% 42% !important; }
+.slot.megafono { object-fit: cover !important; object-position: top center !important; }
+
+/* --- Recorte visual de los pequeños --- */
+/* Ajusta estos % si hace falta; 6–10% suele bastar según el PNG */
+:root{
+  --trim-cal-bottom: 6%; /* recortar parte inferior del calendario */
+  --trim-noti-top:   6%; /* recortar parte superior de noticia   */
+}
+
+/* Calendario: pegarlo a micrófono/arriba y “cortar” su borde inferior transparente */
+.slot.calendario{
+  object-fit: contain; object-position: top center;
+  /* recorta la parte de abajo (top right bottom left) */
+  clip-path: inset(0 0 var(--trim-cal-bottom) 0);
+}
+
+/* Noticia: pegarla abajo de micrófono y “cortar” su borde superior transparente */
+.slot.noticia{
+  object-fit: contain; object-position: bottom center;
+  /* recorta la parte de arriba */
+  clip-path: inset(var(--trim-noti-top) 0 0 0);
+}
+
+/* Opcional: desactivar el recorte en móvil muy chico */
+@media (max-width:480px){
+  .slot.calendario, .slot.noticia{ clip-path: inset(0); }
+}
+
+

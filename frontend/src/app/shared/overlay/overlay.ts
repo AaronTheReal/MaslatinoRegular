@@ -1,6 +1,6 @@
 import {
   Component, ElementRef, EventEmitter, HostListener, Input,
-  OnChanges, OnDestroy, OnInit, Output, ViewChild, Inject, PLATFORM_ID
+  OnChanges, OnDestroy, OnInit, Output, ViewChild, Inject, PLATFORM_ID, AfterViewInit
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +10,7 @@ import { forkJoin } from 'rxjs';
 
 // Servicios reales
 import { NoticiasService } from '../../services/noticias-service';
-import { PodcastService, PodcastPayload } from '../../services/podcast-service'; // <= ruta corregida
+import { PodcastService, PodcastPayload } from '../../services/podcast-service';
 import { CategoriaService, CategoriaPayload } from '../../services/categorias-service';
 
 interface SearchItem {
@@ -19,8 +19,8 @@ interface SearchItem {
   type: 'noticia' | 'podcast';
   image?: string;
   route: string;
-  categories?: string[];                        // ids de categorías
-  category?: { name: string; color?: string };  // 1a categoría para badge
+  categories?: string[];
+  category?: { name: string; color?: string };
 }
 
 @Component({
@@ -30,12 +30,17 @@ interface SearchItem {
   templateUrl: './overlay.html',
   styleUrls: ['./overlay.css']
 })
-export class Overlay implements OnInit, OnChanges, OnDestroy {
+export class Overlay implements OnInit, OnChanges, OnDestroy, AfterViewInit {
   @Input() open = false;
   @Output() closed = new EventEmitter<void>();
   @Output() selected = new EventEmitter<{ title: string; route?: string }>();
+
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
   @ViewChild('panel') panelRef!: ElementRef<HTMLDivElement>;
+
+  // Viewport y sentinel para autoload
+  @ViewChild('resultsViewport') resultsViewport!: ElementRef<HTMLDivElement>;
+  @ViewChild('sentinel') sentinelRef!: ElementRef<HTMLDivElement>;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
@@ -65,9 +70,37 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
   // Fuente dependiente de filtros (para re-indexar Fuse)
   private lastFuseSource: SearchItem[] = [];
 
+  // Paginación progresiva
+  visibleCount = 0;
+  private readonly PAGE_DESKTOP = 12;
+  private readonly PAGE_MOBILE  = 8;
+  private pageSize = this.PAGE_DESKTOP;
+  private io?: IntersectionObserver;
+
   // ===== Ciclo de vida =====
   ngOnInit() {
+    // decide page size por dispositivo
+    if (isPlatformBrowser(this.platformId)) {
+      this.pageSize = window.matchMedia('(max-width: 768px)').matches
+        ? this.PAGE_MOBILE
+        : this.PAGE_DESKTOP;
+    }
     this.loadDataReal();
+  }
+
+  ngAfterViewInit() {
+    // Configura autoload al llegar al final del viewport
+    if (this.sentinelRef?.nativeElement && typeof IntersectionObserver !== 'undefined') {
+      this.io = new IntersectionObserver((entries) => {
+        const [e] = entries;
+        if (e.isIntersecting) this.showMore();
+      }, {
+        root: this.resultsViewport?.nativeElement || null,
+        rootMargin: '0px 0px 120px 0px', // dispara un poco antes
+        threshold: 0.02
+      });
+      this.io.observe(this.sentinelRef.nativeElement);
+    }
   }
 
   ngOnChanges() {
@@ -75,6 +108,7 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.io?.disconnect();
     if (isPlatformBrowser(this.platformId)) {
       document.body.classList.remove('no-scroll');
     }
@@ -160,13 +194,15 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
           distance: 100
         });
 
-        this.filtered = this.lastFuseSource.slice(0, 20);
+        this.filtered = this.lastFuseSource.slice(0, 200); // pool inicial amplio
+        this.resetVisible();
         this.loading = false;
       },
       error: (err) => {
         console.error('Error cargando datos del overlay:', err);
         this.original = [];
         this.filtered = [];
+        this.resetVisible();
         this.loading = false;
       }
     });
@@ -221,7 +257,8 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
       base = result.map(r => r.item);
     }
 
-    this.filtered = base.slice(0, 20);
+    this.filtered = base.slice(0, 200); // límite razonable
+    this.resetVisible();                // reinicia el paginado visible
   }
 
   // ===== Selección / Navegación =====
@@ -259,7 +296,7 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      this.highlightedIndex = Math.min(this.highlightedIndex + 1, this.filtered.length - 1);
+      this.highlightedIndex = Math.min(this.highlightedIndex + 1, Math.min(this.visibleCount, this.filtered.length) - 1);
       this.scrollToHighlight();
     }
     if (e.key === 'ArrowUp') {
@@ -269,14 +306,38 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
     }
     if (e.key === 'Enter' && this.highlightedIndex >= 0) {
       e.preventDefault();
-      this.pick(this.filtered[this.highlightedIndex]);
+      const item = this.filtered[this.highlightedIndex];
+      if (item) this.pick(item);
     }
   }
 
   private scrollToHighlight() {
-    if (isPlatformBrowser(this.platformId)) {
-      const el = document.getElementById(`result-${this.highlightedIndex}`);
-      el?.scrollIntoView({ block: 'nearest' });
+    if (!isPlatformBrowser(this.platformId)) return;
+    const viewport = this.resultsViewport?.nativeElement;
+    const el = document.getElementById(`result-${this.highlightedIndex}`);
+    if (!viewport || !el) return;
+
+    const vTop = viewport.scrollTop;
+    const vBottom = vTop + viewport.clientHeight;
+    const eTop = el.offsetTop;
+    const eBottom = eTop + el.clientHeight;
+
+    if (eTop < vTop) viewport.scrollTo({ top: eTop - 12, behavior: 'smooth' });
+    else if (eBottom > vBottom) viewport.scrollTo({ top: eBottom - viewport.clientHeight + 12, behavior: 'smooth' });
+  }
+
+  private resetVisible() {
+    this.visibleCount = Math.min(this.pageSize, this.filtered.length);
+    this.highlightedIndex = -1;
+    // scroll al inicio del viewport si existe
+    if (this.resultsViewport?.nativeElement) {
+      this.resultsViewport.nativeElement.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }
+
+  showMore() {
+    if (this.visibleCount < this.filtered.length) {
+      this.visibleCount = Math.min(this.visibleCount + this.pageSize, this.filtered.length);
     }
   }
 
@@ -298,6 +359,6 @@ export class Overlay implements OnInit, OnChanges, OnDestroy {
     if (panel && !panel.contains(e.target as Node)) this.close();
   }
 
-  // ===== trackBy para categorías =====
+  // trackBy para categorías
   trackByCatId = (_: number, cat: CategoriaPayload) => cat._id ?? _;
 }
