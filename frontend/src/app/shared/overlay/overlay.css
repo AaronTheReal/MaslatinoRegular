@@ -1,14 +1,14 @@
-/* Backdrop */
+/* =========================
+   Backdrop y contenedor
+   ========================= */
 .overlay-backdrop{
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,.45);
   display: flex;
   justify-content: center;
-  /* antes: align-items:center;  */
-  align-items: flex-start;             /* <- sube el contenido */
-  /* offset superior configurable */
-  padding-top: clamp(40px, 20vh, 120px);  /* <- ajusta aquí cuánto lo quieres arriba */
+  align-items: flex-start;
+  padding-top: clamp(40px, 20vh, 120px);
   opacity: 0;
   visibility: hidden;
   transition: opacity .3s, visibility .3s;
@@ -19,32 +19,33 @@
   visibility: visible;
 }
 
-/* Contenido: quita cualquier intento de posicionamiento vertical anterior */
 .overlay-content{
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 60px;
+  gap: 20px;              /* menor separación porque el header será sticky */
   max-width: 1200px;
   width: 100%;
-  padding: 40px;
-  /* antes tenías top:0 sin position; elimínalo */
+  padding: 16px 24px 24px;
+  background: transparent; /* el sticky usa fondo blanco */
 }
 
-/* En móviles, normalmente menos offset para que no se corte */
-@media (max-width: 768px){
-  .overlay-backdrop{ padding-top: clamp(20px, 6vh, 64px); }
-  .overlay-content{ gap: 30px; padding: 30px 20px; }
-}
-
-/* ================== Search ================== */
+/* =========================
+   Search (sticky)
+   ========================= */
 .search-section{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  width: 100%;
   display: flex;
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
   justify-content: center;
-  width: 100%;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid #f1f1f1;
 }
 .search-bar{
   display: flex;
@@ -58,9 +59,8 @@
   max-width: 600px;
   width: min(100%, 600px);
 }
-
-.search-input{ 
-  order: 1;          /* input primero */
+.search-input{
+  order: 1;
   border: none;
   outline: none;
   flex: 1;
@@ -68,9 +68,8 @@
   font-family: Inter, -apple-system, Roboto, Helvetica, sans-serif;
   background: transparent;
 }
-
 .search-icon{
-  order: 2;          /* lupa al final (derecha) */
+  order: 2;
   width: 25px;
   height: 26px;
   flex-shrink: 0;
@@ -90,134 +89,93 @@
 }
 .categorias-btn:hover{ opacity: .9; }
 
-/* ================== Nav ================== */
-.navigation-menu{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  justify-content: center;
-  align-items: center;
-  max-width: 800px;
-  width: 100%;
-}
-
-.nav-btn{
-  padding: 14px 48px;
-  border: none;
-  border-radius: 28px;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: transform .2s, opacity .2s;
-  font-family: Inter, -apple-system, Roboto, Helvetica, sans-serif;
-  white-space: nowrap;
-}
-.nav-btn:hover{ transform: translateY(-2px); opacity: .9; }
-.nav-btn.purple{ background: #9B43FF; }
-.nav-btn.red{ background: #FF0400; }
-.nav-btn.yellow{ background: #FFAB02; }
-.nav-btn.green{ background: #00CF76; }
-
-/* ================== Recientes ================== */
-.overlay-recents{
-  width: 100%;
-  max-width: 900px;
-}
-.recents-title{
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-.recents-chips{
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.chip{
-  border-radius: 999px;
-  background: #000;
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-/* ================== Resultados ================== */
+/* =========================
+   Resultados / viewport
+   ========================= */
 .overlay-results{
   width: 100%;
   max-width: 900px;
 }
 .results-count{
   color:#111;
-  margin-bottom: 8px;
+  margin: 6px 0 8px 0;
+  font-weight: 600;
 }
+
+.results-viewport{
+  position: relative;
+  max-height: min(60vh, 640px);
+  overflow: auto;
+  padding-right: 8px;
+  scroll-behavior: smooth;
+  background: #fff; /* para que el fade funcione bien */
+  border-radius: 12px;
+}
+
+.results-fade-bottom{
+  position: sticky;
+  bottom: 0;
+  height: 32px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), #fff 70%);
+  pointer-events: none;
+}
+.results-sentinel{
+  width: 100%;
+  height: 1px;
+}
+
 .results-list{
   list-style: none;
   padding: 0;
-  margin: 12px 0 0 0;
+  margin: 0;
 }
 .result-item{
-  padding: 12px 14px;
-  border-radius: 12px;
-  transition: background .15s;
-}
-.result-item:hover{ background: #f3f3f3; }
-.result-item.highlighted{ background: #ececec; }
-.result-link{
-  color: inherit;
-  text-decoration: none;
   display: flex;
-  gap: 8px;
-  align-items: baseline;
+  gap: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 64px;
 }
-.result-title{ font-weight: 600; }
-.result-meta{ opacity: .8; }
-
-/* ================== Responsive ================== */
-@media (max-width: 1024px){
-  .overlay-content{ gap: 40px; }
-  .categorias-btn{ font-size: 24px; padding: 10px 28px; }
-  .nav-btn{ font-size: 22px; padding: 12px 36px; }
+.result-item:hover{ background: #f8f8f8; transform: translateX(4px); }
+.result-item.highlighted{ background: #f0f0f0; }
+.item-img{
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.item-content{ flex: 1; }
+.item-title{
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+.item-meta{ display: flex; gap: 8px; flex-wrap: wrap; }
+.type-badge, .cat-badge{
+  padding: 4px 10px; border-radius: 20px; color: #fff;
+  font-size: 12px; font-weight: 500;
 }
 
-@media (max-width: 768px){
-  .overlay-content{ gap: 30px; padding: 30px 20px; }
-  .search-section{ flex-direction: column; width: 100%; }
-  .search-bar{ width: 100%; max-width: 100%; }
-  .categorias-btn{ font-size: 20px; padding: 10px 24px; width: 100%; max-width: 300px; }
-  .navigation-menu{ gap: 16px; width: 100%; }
-  .nav-btn{ font-size: 18px; padding: 10px 28px; width: 100%; max-width: 300px; }
+.results-actions{
+  display: flex; justify-content: center; margin-top: 12px;
 }
-
-@media (max-width: 480px){
-  .categorias-btn{ font-size: 18px; }
-  .nav-btn{ font-size: 16px; padding: 10px 24px; }
+.show-more-btn{
+  padding: 10px 18px;
+  border: 1px solid #ddd; border-radius: 999px;
+  background: #fff; cursor: pointer;
+  font-weight: 500;
+  transition: background .2s, transform .05s;
 }
+.show-more-btn:hover{ background: #f7f7f7; }
+.show-more-btn:active{ transform: translateY(1px); }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* SKELETON */
+/* =========================
+   Skeleton
+   ========================= */
 .skeleton { display: flex; gap: 12px; align-items: center; padding: 16px 0; }
 .skeleton-img { width: 48px; height: 48px; background: #eee; border-radius: 8px; animation: pulse 1.5s infinite; }
 .skeleton-text { flex: 1; }
@@ -226,28 +184,9 @@
 .short { width: 40%; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 
-/* RESULTADOS */
-.overlay-results { width: 100%; max-width: 800px; }
-.results-count { font-weight: 600; color: #333; margin-bottom: 12px; }
-.results-list { list-style: none; padding: 0; margin: 0; }
-.result-item {
-  display: flex; gap: 14px; padding: 14px;
-  border-radius: 12px; cursor: pointer;
-  transition: all 0.2s;
-}
-.result-item:hover { background: #f8f8f8; transform: translateX(4px); }
-.result-item.highlighted { background: #f0f0f0; }
-.item-img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; flex-shrink: 0; }
-.item-content { flex: 1; }
-.item-title { font-weight: 600; font-size: 16px; margin-bottom: 4px; }
-.item-meta { display: flex; gap: 8px; flex-wrap: wrap; }
-.type-badge, .cat-badge {
-  padding: 4px 10px; border-radius: 20px; color: white;
-  font-size: 12px; font-weight: 500;
-}
-.no-results { color: #666; text-align: center; padding: 40px; }
-
-/* MODAL */
+/* =========================
+   Modal filtros
+   ========================= */
 .filter-modal-backdrop {
   position: fixed; inset: 0; background: rgba(0,0,0,0.6);
   display: flex; align-items: center; justify-content: center;
@@ -287,4 +226,22 @@
 .apply-btn { background: #000; color: white; }
 .reset-btn, .apply-btn {
   padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+@media (max-width: 1024px){
+  .categorias-btn{ font-size: 24px; padding: 10px 28px; }
+}
+@media (max-width: 768px){
+  .overlay-backdrop{ padding-top: clamp(20px, 6vh, 64px); }
+  .overlay-content{ gap: 16px; padding: 12px 16px 20px; }
+  .search-section{ flex-direction: column; }
+  .search-bar{ width: 100%; max-width: 100%; }
+  .categorias-btn{ font-size: 20px; padding: 10px 24px; width: 100%; max-width: 300px; }
+  .results-viewport{ max-height: min(56vh, 520px); }
+}
+@media (max-width: 480px){
+  .categorias-btn{ font-size: 18px; }
 }

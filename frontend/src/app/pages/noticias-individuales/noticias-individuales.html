@@ -1,157 +1,167 @@
 <main class="container mt-8" *ngIf="noticia$ | async as noticia; else loading">
+  <!-- HERO: full-bleed (covers whole screen horizontally) -->
+  <section
+    class="hero-section hero-fullbleed mb-5"
+    *ngIf="noticia?.meta?.image"
+    [style.--hero-url]="'url(' + (noticia?.meta?.image || '') + ')'"
+  >
+    <!-- Real img kept for SEO/SSR (itemprop) but visually hidden -->
+    <img
+      class="sr-only"
+      [src]="noticia?.meta?.image || ''"
+      [alt]="noticia?.meta?.imageAltGlobal || noticia?.title || 'Noticia'"
+      itemprop="image"
+    />
+    <div class="hero-overlay">
+      <!-- Category line (keeps SEO articleSection below) -->
+      <span class="category-label" *ngIf="(noticia?.categories?.length || 0) > 0">
+        {{ getCategoryNames(noticia?.categories || []) }}
+      </span>
+      <h1 class="hero-title" itemprop="headline">
+        {{ noticia?.title || 'Título no disponible' }}
+      </h1>
+    </div>
+  </section>
+  <!-- Optional caption under hero (stays within container) -->
+  <ng-container *ngIf="noticia?.meta?.imageCaptionHtml as capHtml">
+    <div class="featured-caption mb-4">
+      <small [innerHTML]="capHtml"></small>
+    </div>
+  </ng-container>
   <div class="row">
     <!-- Contenido principal -->
-    <div class="col-lg-9 col-md-12 mb-4">
+    <div class="col-lg-9 col-md-12 mb-4 content-column">
       <article class="noticia-card" itemscope itemtype="https://schema.org/NewsArticle">
-
-        <p class="categories" *ngIf="noticia && noticia.categories && noticia.categories.length > 0" itemprop="articleSection">
-          Categorías: {{ getCategoryNames(noticia.categories) }}
+        <!-- Categories for SEO (articleSection) 
+        <p class="categories" *ngIf="(noticia?.categories?.length || 0) > 0" itemprop="articleSection">
+          Categorías: {{ getCategoryNames(noticia?.categories || []) }}
         </p>
-
-        <h1 class="noticia-title" itemprop="headline">{{ noticia.title || 'Título no disponible' }}</h1>
-
+        -->
+        <!-- Title fallback if no hero image -->
+        <h1 class="noticia-title no-hero" *ngIf="!noticia?.meta?.image" itemprop="headline">
+          {{ noticia?.title || 'Título no disponible' }}
+        </h1>
         <div class="noticia-meta mb-3">
-          <span *ngIf="noticia.authorName" itemprop="author" itemscope itemtype="https://schema.org/Person">
-            <span itemprop="name">{{ noticia.authorName || 'Anónimo' }}</span>
+          <span *ngIf="noticia?.authorName" itemprop="author" itemscope itemtype="https://schema.org/Person">
+            <span itemprop="name">{{ noticia?.authorName || 'Anónimo' }}</span>
           </span>
-          <time *ngIf="noticia.createdAt" class="ms-2" [attr.datetime]="noticia.createdAt" itemprop="datePublished">
-            {{ noticia.createdAt | date: 'mediumDate' }}
+          <time
+            *ngIf="noticia?.createdAt"
+            class="ms-2"
+            [attr.datetime]="noticia?.createdAt || null"
+            itemprop="datePublished"
+          >
+            {{ noticia?.createdAt | date: 'mediumDate' }}
           </time>
-          <span *ngIf="noticia.updatedAt" class="ms-2" [attr.datetime]="noticia.updatedAt" itemprop="dateModified">
-            (Actualizado: {{ noticia.updatedAt | date: 'mediumDate' }})
+          <span
+            *ngIf="noticia?.updatedAt"
+            class="ms-2"
+            [attr.datetime]="noticia?.updatedAt || null"
+            itemprop="dateModified"
+          >
+            (Actualizado: {{ noticia?.updatedAt | date: 'mediumDate' }})
           </span>
         </div>
-
-        <p class="noticia-summary" itemprop="description">{{ noticia.summary || 'Sin resumen' }}</p>
-
-        <p class="tags" *ngIf="noticia && noticia.tags && noticia.tags.length > 0" itemprop="keywords">
-          Tags: {{ noticia.tags.join(', ') }}
+        <p class="noticia-summary" itemprop="description">{{ noticia?.summary || 'Sin resumen' }}</p>
+        <p class="tags" *ngIf="(noticia?.tags?.length || 0) > 0" itemprop="keywords">
+          Tags: {{ (noticia?.tags || []).join(', ') }}
         </p>
-
-        <!-- Imagen destacada -->
-        <div *ngIf="noticia && noticia.meta && noticia.meta.image" class="noticia-imagen mb-2">
-          <img
-            [src]="noticia.meta.image"
-            [alt]="noticia.meta.imageAltGlobal || noticia.title || 'Noticia'"
-            class="img-fluid rounded featured-image"
-            itemprop="image" />
-        </div>
-
-        <!-- Pie de foto de la imagen destacada (HTML combinado ya saneado en backend) -->
-        <ng-container *ngIf="noticia?.meta?.imageCaptionHtml as capHtml">
-          <div class="featured-caption mb-3">
-            <small [innerHTML]="capHtml"></small>
-          </div>
-        </ng-container>
-
-
         <!-- Cuerpo con bloques -->
         <div class="content" itemprop="articleBody">
-          <ng-container *ngFor="let block of noticia.content; trackBy: trackByIndex">
-            <ng-container [ngSwitch]="block.type">
-
-              <!-- TEXT: usa HTML saneado para respetar enlaces -->
+          <ng-container *ngFor="let block of (noticia?.content || []); trackBy: trackByIndex">
+            <ng-container [ngSwitch]="block?.type">
+              <!-- TEXT (HTML-safe) -->
               <ng-container *ngSwitchCase="'text'">
-                <ng-container [ngSwitch]="block.tag">
+                <ng-container [ngSwitch]="block?.tag">
                   <h2 *ngSwitchCase="'h2'"
-                      [style.fontSize]="block.style?.fontSize"
-                      [style.fontWeight]="block.style?.fontWeight"
-                      [style.fontFamily]="block.style?.fontFamily"
-                      [style.textAlign]="block.style?.textAlign"
-                      [innerHTML]="block.html || block.text">
+                      [style.fontSize]="block?.style?.fontSize"
+                      [style.fontWeight]="block?.style?.fontWeight"
+                      [style.fontFamily]="block?.style?.fontFamily"
+                      [style.textAlign]="block?.style?.textAlign"
+                      [innerHTML]="block?.html || block?.text">
                   </h2>
-
                   <h3 *ngSwitchCase="'h3'"
-                      [style.fontSize]="block.style?.fontSize"
-                      [style.fontWeight]="block.style?.fontWeight"
-                      [style.fontFamily]="block.style?.fontFamily"
-                      [style.textAlign]="block.style?.textAlign"
-                      [innerHTML]="block.html || block.text">
+                      [style.fontSize]="block?.style?.fontSize"
+                      [style.fontWeight]="block?.style?.fontWeight"
+                      [style.fontFamily]="block?.style?.fontFamily"
+                      [style.textAlign]="block?.style?.textAlign"
+                      [innerHTML]="block?.html || block?.text">
                   </h3>
-
                   <h4 *ngSwitchCase="'h4'"
-                      [style.fontSize]="block.style?.fontSize"
-                      [style.fontWeight]="block.style?.fontWeight"
-                      [style.fontFamily]="block.style?.fontFamily"
-                      [style.textAlign]="block.style?.textAlign"
-                      [innerHTML]="block.html || block.text">
+                      [style.fontSize]="block?.style?.fontSize"
+                      [style.fontWeight]="block?.style?.fontWeight"
+                      [style.fontFamily]="block?.style?.fontFamily"
+                      [style.textAlign]="block?.style?.textAlign"
+                      [innerHTML]="block?.html || block?.text">
                   </h4>
-
                   <p *ngSwitchDefault
-                     [style.fontSize]="block.style?.fontSize"
-                     [style.fontWeight]="block.style?.fontWeight"
-                     [style.fontFamily]="block.style?.fontFamily"
-                     [style.textAlign]="block.style?.textAlign"
-                     [innerHTML]="block.html || block.text">
+                     [style.fontSize]="block?.style?.fontSize"
+                     [style.fontWeight]="block?.style?.fontWeight"
+                     [style.fontFamily]="block?.style?.fontFamily"
+                     [style.textAlign]="block?.style?.textAlign"
+                     [innerHTML]="block?.html || block?.text">
                   </p>
                 </ng-container>
               </ng-container>
-
-              <!-- LIST: renderiza itemsHtml si existe para conservar <a> -->
+              <!-- LIST (itemsHtml preserved) -->
               <ng-container *ngSwitchCase="'list'">
-                <ul *ngIf="!block.ordered; else orderedList"
-                    [style.fontSize]="block.style?.fontSize"
-                    [style.fontWeight]="block.style?.fontWeight"
-                    [style.fontFamily]="block.style?.fontFamily"
-                    [style.textAlign]="block.style?.textAlign">
-                  <li *ngFor="let item of block.items; let i = index; trackBy: trackByIndex"
-                      [innerHTML]="(block.itemsHtml?.[i] || item)">
+                <ul *ngIf="!block?.ordered; else orderedList"
+                    [style.fontSize]="block?.style?.fontSize"
+                    [style.fontWeight]="block?.style?.fontWeight"
+                    [style.fontFamily]="block?.style?.fontFamily"
+                    [style.textAlign]="block?.style?.textAlign">
+                  <li *ngFor="let item of (block?.items || []); let i = index; trackBy: trackByIndex"
+                      [innerHTML]="(block?.itemsHtml?.[i] || item)">
                   </li>
                 </ul>
-
                 <ng-template #orderedList>
                   <ol
-                    [style.fontSize]="block.style?.fontSize"
-                    [style.fontWeight]="block.style?.fontWeight"
-                    [style.fontFamily]="block.style?.fontFamily"
-                    [style.textAlign]="block.style?.textAlign">
-                    <li *ngFor="let item of block.items; let i = index; trackBy: trackByIndex"
-                        [innerHTML]="(block.itemsHtml?.[i] || item)">
+                    [style.fontSize]="block?.style?.fontSize"
+                    [style.fontWeight]="block?.style?.fontWeight"
+                    [style.fontFamily]="block?.style?.fontFamily"
+                    [style.textAlign]="block?.style?.textAlign">
+                    <li *ngFor="let item of (block?.items || []); let i = index; trackBy: trackByIndex"
+                        [innerHTML]="(block?.itemsHtml?.[i] || item)">
                     </li>
                   </ol>
                 </ng-template>
               </ng-container>
-
-              <!-- LINK suelto -->
+              <!-- LINK -->
               <a *ngSwitchCase="'link'"
-                 [href]="block.href"
+                 [href]="block?.href || ''"
                  target="_blank"
                  rel="noopener"
-                 [style.fontSize]="block.style?.fontSize"
-                 [style.fontWeight]="block.style?.fontWeight"
-                 [style.fontFamily]="block.style?.fontFamily"
-                 [style.textAlign]="block.style?.textAlign">
-                {{ block.textLink || block.href }}
+                 [style.fontSize]="block?.style?.fontSize"
+                 [style.fontWeight]="block?.style?.fontWeight"
+                 [style.fontFamily]="block?.style?.fontFamily"
+                 [style.textAlign]="block?.style?.textAlign">
+                {{ block?.textLink || block?.href }}
               </a>
-
               <!-- QUOTE -->
               <blockquote *ngSwitchCase="'quote'" class="blockquote">
-                <p [innerHTML]="block.html || block.quote"></p>
-                <cite *ngIf="block.authorQuote">{{ block.authorQuote }}</cite>
+                <p [innerHTML]="block?.html || block?.quote"></p>
+                <cite *ngIf="block?.authorQuote">{{ block?.authorQuote }}</cite>
               </blockquote>
-
               <!-- IMAGE -->
               <figure *ngSwitchCase="'image'">
                 <img
-                  [src]="block.url"
-                  [alt]="block.alt || noticia.meta?.imageAltGlobal || noticia.title || 'Noticia'"
+                  [src]="block?.url || ''"
+                  [alt]="block?.alt || noticia?.meta?.imageAltGlobal || noticia?.title || 'Noticia'"
                   class="img-fluid" />
-                <figcaption *ngIf="block.captionHtml || block.caption"
-                            [innerHTML]="block.captionHtml || block.caption">
+                <figcaption *ngIf="block?.captionHtml || block?.caption"
+                            [innerHTML]="block?.captionHtml || block?.caption">
                 </figcaption>
               </figure>
-
               <!-- Fallback -->
-              <p *ngSwitchDefault>Sin soporte para este tipo de bloque: {{ block.type }}</p>
+              <p *ngSwitchDefault>Sin soporte para este tipo de bloque: {{ block?.type }}</p>
             </ng-container>
           </ng-container>
         </div>
       </article>
     </div>
-
-    <!-- Sidebar -->
-    <div class="col-lg-3 col-md-12">
-      <aside class="sidebar">
+    <!-- Sidebar (glued right, sticky, full-bleed to viewport right) -->
+    <div class="col-lg-3 col-md-12 sidebar-column">
+      <aside class="sidebar sidebar-bleed">
         <div class="sidebar-search mb-4">
           <input
             type="text"
@@ -162,44 +172,59 @@
             aria-label="Buscar noticias"
           />
         </div>
-
-        <h4 class="mb-3 mt-5">Entradas Recientes</h4>
-        <ul class="sidebar-recientes">
-          <li *ngFor="let n of recientes; trackBy: trackBySlug">
-            <a *ngIf="n?.slug" [routerLink]="['/noticia', n.slug]" class="enlace-reciente"
-               [attr.aria-label]="'Leer noticia: ' + (n.title || 'Sin título')">
-              {{ n.title || 'Sin título' }}
+        <!-- CATEGORÍAS (TOP) -->
+        <section class="sidebar-section categories-section">
+          <h3 class="sidebar-title categories-head">CATEGORÍAS</h3>
+          <div class="category-tags">
+            <a *ngFor="let cat of (categorias || []); trackBy: trackByCat"
+               [routerLink]="['/categoria', cat?.slug]"
+               class="category-tag"
+               [style.--cat-color]="cat?.color || '#8F50F8'"
+               [attr.aria-label]="'Ver categoría: ' + (cat?.name || 'Sin nombre')">
+              {{ cat?.name || 'Sin nombre' }}
             </a>
-            <ng-template #noSlug>
-              <span>{{ n.title || 'Sin título' }}</span>
-            </ng-template>
-          </li>
-        </ul>
-
-        <h4 class="mb-3 mt-5">Archivos</h4>
-        <ul class="sidebar-archivos">
-          <li *ngFor="let mes of archivos; trackBy: trackByIndex">
-            <a [routerLink]="['/archivo', mes.anio, mes.mes]" class="archivo-link"
-               [attr.aria-label]="'Ver archivo: ' + mes.nombre">
-              {{ mes.nombre }}
-            </a>
-          </li>
-        </ul>
-
-        <h4 class="mb-3 mt-5">Categorías</h4>
-        <ul class="sidebar-categorias">
-          <li *ngFor="let cat of categorias; trackBy: trackByCat" class="categoria-item">
-            <a *ngIf="cat?.slug" [routerLink]="['/categoria', cat.slug]" class="enlace-categoria"
-               [attr.aria-label]="'Ver categoría: ' + (cat.name || 'Sin nombre')">
-              {{ cat.name || 'Sin nombre' }}
-            </a>
-          </li>
-        </ul>
+          </div>
+        </section>
+        <!-- Entradas recientes -->
+        <section class="sidebar-section recent-entries">
+          <div class="section-header">
+            <div class="plus-icon" aria-hidden="true">+</div>
+            <h3 class="sidebar-title white">ENTRADAS RECIENTES</h3>
+          </div>
+          <ul class="entries-list">
+            <li *ngFor="let n of (recientes || []); trackBy: trackBySlug" class="entry-item">
+              <a *ngIf="n?.slug"
+                 [routerLink]="['/noticia', n?.slug]"
+                 class="enlace-reciente"
+                 [attr.aria-label]="'Leer noticia: ' + (n?.title || 'Sin título')">
+                {{ n?.title || 'Sin título' }}
+              </a>
+              <ng-template #noSlug>
+                <span>{{ n?.title || 'Sin título' }}</span>
+              </ng-template>
+            </li>
+          </ul>
+        </section>
+        <!-- Archivos -->
+        <section class="sidebar-section archives">
+          <div class="section-header">
+            <div class="plus-icon" aria-hidden="true">+</div>
+            <h3 class="sidebar-title white">ARCHIVOS</h3>
+          </div>
+          <ul class="archives-list">
+            <li *ngFor="let mes of (archivos || []); trackBy: trackByIndex" class="archive-item">
+              <a [routerLink]="['/archivo', mes?.anio, mes?.mes]"
+                 class="archivo-link"
+                 [attr.aria-label]="'Ver archivo: ' + (mes?.nombre || '')">
+                {{ mes?.nombre || '' }}
+              </a>
+            </li>
+          </ul>
+        </section>
       </aside>
     </div>
   </div>
 </main>
-
 <ng-template #loading>
   <div class="container mt-8">
     <p aria-live="polite">Cargando noticia...</p>
