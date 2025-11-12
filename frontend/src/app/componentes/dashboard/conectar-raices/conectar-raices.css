@@ -599,3 +599,45 @@
 }
 
 
+ comportamiento base para TODAS las piezas “tile” */
+  .tile{
+    transform-box: fill-box;        /* usa el bbox real del grupo */
+    transform-origin: 50% 50%;
+    transition: transform .18s ease, filter .18s ease, opacity .18s ease;
+    cursor: pointer;
+    pointer-events: bounding-box;   /* hace clic aunque haya máscaras/transparencias */
+    isolation: isolate;             /* evita que el drop-shadow se mezcle raro si hay blend */
+    will-change: transform;
+  }
+
+  /* hover/click “salta” */
+  .tile:hover{
+    transform: translateY(-2px) scale(1.02);
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,.18));
+  }
+
+  /* estado “activo” por teclado/JS (añade .active al g) */
+  .tile.active{
+    transform: translateY(-1px) scale(1.015);
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,.18));
+  }
+
+  /* accesibilidad por teclado */
+  .tile[tabindex="0"]{
+    outline: none;
+  }
+  .tile[tabindex="0"]:focus-visible{
+    outline: 2px solid #8F50F8;      /* tu morado */
+    outline-offset: 2px;
+  }
+
+  /* si usas blend en el grupo, muévelo a un hijo para no afectar la sombra */
+  .tile .bleed{
+    mix-blend-mode: multiply;
+    opacity: .25;
+  }
+
+  /* respeta reducción de movimiento del usuario */
+  @media (prefers-reduced-motion: reduce){
+    .tile{ transition: none; }
+  }

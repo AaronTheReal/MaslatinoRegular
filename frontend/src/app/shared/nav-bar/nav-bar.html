@@ -5,6 +5,7 @@
      class="lupa"
      role="button"
      tabindex="0"
+
      (click)="onSearchClick($event)"
      (keydown.enter)="onSearchClick($event)" />
 
@@ -20,7 +21,7 @@
 <!-- Nav -->
 <nav class="navbar">
   <div class="navbar-center">
-    <img src="assets/iconosnavbar/maslatinologo.png" alt="Logo Más Latino" class="logo" />
+    <img src="assets/iconosnavbar/maslatinologo.png" [routerLink]="['/']" alt="Logo Más Latino" class="logo" />
   </div>
 </nav>
 

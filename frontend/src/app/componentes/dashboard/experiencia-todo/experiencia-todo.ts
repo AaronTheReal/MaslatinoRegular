@@ -14,8 +14,8 @@ export class ExperienciaTodo {
   // Acción botón "PLAY WITH" Facebook
   onPlayFacebook(): void {
     console.log('▶️ Play con Facebook Live / Radio');
-    // Aquí puedes hacer:
-    // window.open('https://facebook.com/tu-stream', '_blank');
+
+   window.open('https://www.facebook.com/maslatino99.9fm/', '_blank');
     // o routerLink a tu página interna de player
   }
 
@@ -23,7 +23,7 @@ export class ExperienciaTodo {
   onPlayYouTube(): void {
     console.log('▶️ Play con YouTube Live');
     // Ejemplo:
-    // window.open('https://youtube.com/@maslatino/live', '_blank');
+    window.open('https://www.youtube.com/@Mas.Latino', '_blank');
   }
 
 }

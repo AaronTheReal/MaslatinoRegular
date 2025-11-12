@@ -46,6 +46,8 @@
     rgba(0,0,0,0.4) 65%,
     rgba(0,0,0,0.08) 100%
   );
+    align-items: center;     /* centra horizontalmente todo lo interno */
+  text-align: center; 
 }
 .category-label {
   display: inline-block;
@@ -57,6 +59,8 @@
   font-weight: 600;
   letter-spacing: .4px;
   align-self: flex-start;
+    align-self: center;      /* en caso de que otra regla la empuje a la izquierda */
+
 }
 .hero-title {
   color: #fff;
@@ -64,8 +68,9 @@
   font-weight: 800;
   line-height: 1.15;
   margin: 0;
-  max-width: 1100px;
+  max-width: 610px;
 }
+
 /* Keep caption under hero */
 .featured-caption small { color: #555; }
 .featured-caption a { color: inherit; text-decoration: underline; }
@@ -152,17 +157,15 @@
 }
 /* ====== HEADERS ROJOS (con altura mínima + gap bajo ellos) ====== */
 .section-header {
+  position: relative;            /* clave */
   background: #f44336;
-  color: #fff;
+  color: #000000;
   padding: 12px 20px;
   display: flex;
   align-items: center;
   gap: 12px;
-  border-radius: 0; /* Sin esquinas redondeadas */
+  border-radius: 0;
   width: 100%;
-  /* min-height: var(--section-header-minh); removed to match example auto-sizing */
-  margin: 0; /* sin márgenes extra */
-  box-sizing: border-box;
 }
 .categories-section .categories-head {
   color: #000000;
@@ -174,8 +177,15 @@
   margin: 0; /* sin márgenes extra */
   box-sizing: border-box;
 }
-.plus-icon { font-size: 24px; font-weight: 700; line-height: 1; }
-.sidebar-title { font-size: 18px; font-weight: 600; margin: 0; }
+.plus-icon {
+  position: absolute;
+  left: -35px;                       /* esquina izquierda */
+  top: -55px;                        /* esquina superior  */
+  font-size: 80px;
+  font-weight: bold;
+  line-height: 1;
+  padding: 6px;                  /* opcional: respiración interna */
+}.sidebar-title { font-size: 18px; font-weight: 600; margin: 0; }
 .sidebar-title.white { color: #fff; }
 /* ===== Espacio ≈1/4 debajo de cada rectángulo rojo ===== */
 /* Listas (“Entradas recientes”, “Archivos”) */
@@ -213,7 +223,7 @@
 .entry-item a::before,
 .archive-item a::before {
   content: '• ';
-  color: #f44336;
+  color: #000000;
   font-weight: 700;
   margin-right: 6px;
 }
