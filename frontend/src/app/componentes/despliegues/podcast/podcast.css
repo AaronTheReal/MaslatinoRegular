@@ -10,6 +10,7 @@
   min-height: 580px;
   overflow: hidden;
   background: #dbe5fe;
+  margin-top: 50px;
 }
 
 .hero-background {
@@ -124,10 +125,14 @@
 }
 
 .player-section {
-  padding: 80px 40px;
-  background: #fff;
+  padding: 0;
+  background: transparent;
   display: flex;
   justify-content: center;
+  position: relative;
+  margin-top: -100px;
+  z-index: 10;
+  padding-bottom: 80px;
 }
 
 .player-card {
@@ -137,6 +142,7 @@
   border-radius: 24px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   padding: 40px;
+  margin: 0 40px;
 }
 
 .player-content {
@@ -270,6 +276,11 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .podcast-thumbnail {
@@ -397,6 +408,13 @@
 
   .player-card {
     padding: 30px;
+    margin: 0 30px;
+  }
+
+  .player-section {
+    margin-top: -100px;
+    padding: 0;
+    padding-bottom: 60px;
   }
 }
 
@@ -448,6 +466,12 @@
     justify-content: center;
   }
 
+  .player-section {
+    margin-top: -80px;
+    padding: 0;
+    padding-bottom: 50px;
+  }
+
   .more-podcasts-grid {
     gap: 30px;
   }
@@ -476,11 +500,14 @@
   }
 
   .player-section {
-    padding: 60px 20px;
+    padding: 0;
+    padding-bottom: 60px;
+    margin-top: -60px;
   }
 
   .player-card {
     padding: 24px;
+    margin: 0 20px;
   }
 
   .album-art {

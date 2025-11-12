@@ -68,339 +68,6 @@
   max-width: 320px;
 }
 
-/* GRID de features con tarjetas flotantes tipo "icono 3D" */
-.features-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  max-width: 3000px; /* Aumenta de 600px a 1200px para dar espacio al SVG más grande */
-  position: relative;
-  overflow: hidden; /* Evita scroll horizontal recortando si es necesario */
-}
-
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-}
-
-/* Colocación/calendario de cada card en la cuadricula */
-.card-podcast {
-  background: linear-gradient(135deg, #9D7BEE 0%, #7C5FD3 100%);
-  grid-column: 1;
-  grid-row: 1 / 3; /* ocupa 2 filas */
-}
-
-.card-calendar {
-  background: linear-gradient(135deg, #5DD6C3 0%, #3CB89F 100%);
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.card-news {
-  background: linear-gradient(135deg, #F9C06A 0%, #E8A844 100%);
-  grid-column: 1;
-  grid-row: 3;
-}
-
-.card-audio {
-  background: linear-gradient(135deg, #FF7B7B 0%, #F55555 100%);
-  grid-column: 2;
-  grid-row: 2 / 4; /* ocupa 2 filas */
-}
-
-/* Contenido interno de cada tarjeta */
-.card-content {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 30px;
-  position: relative;
-}
-
-/* ===== PODCAST ICON - micrófono 3D + barra de controles ===== */
-
-.card-podcast .card-content {
-  flex-direction: column;
-  justify-content: flex-start;
-  padding-top: 50px;
-}
-
-.card-podcast .card-content::before {
-  content: '';
-  position: absolute;
-  top: 25%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70px;
-  height: 90px;
-  background: linear-gradient(135deg, #B8A0F5 0%, #9B7FE8 100%);
-  border-radius: 35px 35px 15px 15px;
-  box-shadow:
-    inset -5px -5px 15px rgba(0, 0, 0, 0.15),
-    inset 5px 5px 15px rgba(255, 255, 255, 0.15),
-    0 10px 25px rgba(0, 0, 0, 0.2);
-}
-
-.card-podcast .card-content::after {
-  content: '';
-  position: absolute;
-  top: 18%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 25px;
-  height: 35px;
-  background: linear-gradient(135deg, #C5B3F7 0%, #AE93F0 100%);
-  border-radius: 50% 50% 45% 45%;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-}
-
-/* barra "player" flotante en la card podcast */
-.card-podcast::before {
-  content: '';
-  position: absolute;
-  bottom: 35%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 180px;
-  height: 50px;
-  background: rgba(155, 127, 232, 0.3);
-  border-radius: 25px;
-  display: flex;
-  gap: 20px;
-  box-shadow:
-    inset 0 2px 5px rgba(0, 0, 0, 0.1),
-    0 5px 15px rgba(0, 0, 0, 0.15);
-}
-
-.card-podcast::after {
-  content: '';
-  position: absolute;
-  bottom: 36.5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 160px;
-  height: 30px;
-  background:
-    radial-gradient(circle at 25% 50%, rgba(184, 160, 245, 0.5) 8px, transparent 8px),
-    radial-gradient(circle at 50% 50%, rgba(184, 160, 245, 0.5) 12px, transparent 12px),
-    radial-gradient(circle at 75% 50%, rgba(184, 160, 245, 0.5) 8px, transparent 8px);
-  filter: blur(0.5px);
-}
-
-/* ===== CALENDAR ICON - tarjetita con "puntos de día" ===== */
-
-.calendar-icon {
-  width: 75%;
-  height: 75%;
-  background: linear-gradient(135deg, #7FE6D8 0%, #5DD6C8 100%);
-  border-radius: 16px;
-  position: relative;
-  box-shadow:
-    inset -3px -3px 10px rgba(0, 0, 0, 0.1),
-    inset 3px 3px 10px rgba(255, 255, 255, 0.2),
-    0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-.calendar-icon::before {
-  content: '';
-  position: absolute;
-  top: -15px;
-  left: 18%;
-  width: 15px;
-  height: 30px;
-  background: linear-gradient(135deg, #6DD4C4 0%, #4FC4B4 100%);
-  border-radius: 8px 8px 0 0;
-  box-shadow:
-    35px 0 0 0 #6DD4C4,
-    70px 0 0 0 #6DD4C4,
-    0 5px 10px rgba(0, 0, 0, 0.2);
-}
-
-.calendar-icon::after {
-  content: '';
-  position: absolute;
-  top: 35%;
-  left: 15%;
-  right: 15%;
-  bottom: 15%;
-  background:
-    radial-gradient(circle at 17% 20%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 83% 20%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 17% 50%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 83% 50%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 17% 80%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.4) 10px, transparent 10px),
-    radial-gradient(circle at 83% 80%, rgba(255, 255, 255, 0.4) 10px, transparent 10px);
-}
-
-/* ===== NEWS ICON - "periódico 3D" ===== */
-
-.news-icon {
-  width: 90%;
-  height: 80%;
-  background: linear-gradient(135deg, #F5D89A 0%, #EFC570 100%);
-  border-radius: 12px;
-  position: relative;
-  transform: perspective(800px) rotateY(-20deg) rotateX(5deg);
-  box-shadow:
-    inset -5px -5px 15px rgba(0, 0, 0, 0.1),
-    inset 5px 5px 15px rgba(255, 255, 255, 0.2),
-    8px 8px 25px rgba(0, 0, 0, 0.25);
-}
-
-.news-icon::before {
-  content: 'NEWS';
-  position: absolute;
-  top: 18%;
-  left: 12%;
-  font-size: clamp(22px, 3vw, 32px);
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 1.5px;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.news-icon::after {
-  content: '';
-  position: absolute;
-  bottom: 18%;
-  left: 12%;
-  right: 12%;
-  height: 45%;
-  background:
-    linear-gradient(to right,
-      rgba(255, 255, 255, 0.5) 0%,
-      rgba(255, 255, 255, 0.5) 48%,
-      transparent 48%,
-      transparent 52%,
-      rgba(255, 255, 255, 0.5) 52%,
-      rgba(255, 255, 255, 0.5) 100%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.6) 0%,
-      rgba(255, 255, 255, 0.6) 18%,
-      transparent 18%,
-      transparent 22%,
-      rgba(255, 255, 255, 0.6) 22%,
-      rgba(255, 255, 255, 0.6) 40%,
-      transparent 40%,
-      transparent 44%,
-      rgba(255, 255, 255, 0.6) 44%,
-      rgba(255, 255, 255, 0.6) 62%,
-      transparent 62%,
-      transparent 66%,
-      rgba(255, 255, 255, 0.6) 66%,
-      rgba(255, 255, 255, 0.6) 84%
-    );
-  border-radius: 4px;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-/* ===== AUDIO ICON - "bocina" y ondas ===== */
-
-.audio-icon {
-  width: 70%;
-  height: 70%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.audio-icon::before {
-  content: '';
-  width: 90px;
-  height: 90px;
-  background: radial-gradient(circle at 35% 35%, #FFB4B4 0%, #FF9090 50%, #FF7B7B 100%);
-  border-radius: 50%;
-  position: absolute;
-  box-shadow:
-    inset -5px -5px 15px rgba(0, 0, 0, 0.15),
-    inset 5px 5px 15px rgba(255, 255, 255, 0.2),
-    0 0 0 12px rgba(255, 255, 255, 0.2),
-    0 0 0 24px rgba(255, 255, 255, 0.1),
-    0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-.audio-icon::after {
-  content: '';
-  position: absolute;
-  width: 35px;
-  height: 35px;
-  background: radial-gradient(circle at 40% 40%, #FFD4D4 0%, #FFA8A8 100%);
-  border-radius: 50%;
-  box-shadow:
-    inset -2px -2px 5px rgba(0, 0, 0, 0.1),
-    inset 2px 2px 5px rgba(255, 255, 255, 0.3);
-}
-
-/* ondas / barras laterales simulando audio */
-.card-audio::before {
-  content: '';
-  position: absolute;
-  left: 15%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 25%;
-  height: 60%;
-  background:
-    linear-gradient(
-      to right,
-      transparent 0%,
-      transparent 45%,
-      rgba(255, 255, 255, 0.25) 50%,
-      transparent 55%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to right,
-      transparent 0%,
-      transparent 20%,
-      rgba(255, 255, 255, 0.2) 25%,
-      transparent 30%,
-      transparent 70%,
-      rgba(255, 255, 255, 0.2) 75%,
-      transparent 80%
-    );
-  border-radius: 4px;
-}
-
-.card-audio::after {
-  content: '';
-  position: absolute;
-  right: 15%;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 25%;
-  height: 60%;
-  background:
-    linear-gradient(
-      to right,
-      transparent 0%,
-      transparent 45%,
-      rgba(255, 255, 255, 0.25) 50%,
-      transparent 55%,
-      transparent 100%
-    ),
-    linear-gradient(
-      to right,
-      transparent 0%,
-      transparent 20%,
-      rgba(255, 255, 255, 0.2) 25%,
-      transparent 30%,
-      transparent 70%,
-      rgba(255, 255, 255, 0.2) 75%,
-      transparent 80%
-    );
-  border-radius: 4px;
-}
 
 /* ===== CTA DESCARGA LA APP ===== */
 
@@ -490,9 +157,7 @@
     margin: 0 auto;
   }
 
-  .features-grid {
-    max-width: 500px;
-  }
+
 }
 
 @media (max-width: 640px) {
@@ -500,14 +165,6 @@
     gap: 40px;
   }
 
-  .features-grid {
-    gap: 15px;
-    max-width: 400px;
-  }
-
-  .feature-card {
-    border-radius: 16px;
-  }
 
   .card-content {
     padding: 20px;
@@ -538,106 +195,68 @@
   }
 }
 
-@media (max-width: 480px) {
-  .features-grid {
-    max-width: 300px;
-  }
 
-  .main-heading {
-    font-size: 32px;
-  }
 
-  .description {
-    font-size: 14px;
-  }
+
+
+
+
+  /* Contenedor para centrar el cuadrado */
+.features-wrapper {
+  width: 100%;
+  max-width: 480px;      /* ajústalo a tu layout */
+  margin: 0 auto;
+}
+
+/* Cuadrado con grid 2 columnas x 3 filas  */
+.features-grid.solo-imagenes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* antes: repeat(3, 1fr) */
+  grid-template-rows: 1.1fr 0.8fr 1.1fr 0.5fr;  /* ajusta estos números a tu gusto */
+  grid-template-areas:
+    "mic calendar"
+    "mic megaphone"
+    "news megaphone";
+  gap: 10px;
+  aspect-ratio: 1 / 1;
 }
 
 
-
-
-
-/* ====== SOLO-IMÁGENES: quitar hueco por transparencia con clip ====== */
-.features-grid.solo-imagenes{
-  gap: 0 20px !important; /* sin espacio vertical entre filas */
-  align-items: stretch;
-  justify-items: stretch;
-  overflow: hidden; /* para recortar seguro */
+/* Todas las imágenes llenan su celda */
+.slot {
+  width: 100%;
+  height: 100%;
+  display: block;
+  /* si tus PNG ya vienen recortados perfecto, no necesitas object-fit */
+  /* object-fit: cover;  <- puedes probarlo si quieres que se recorten un poquito */
+}
+.slot {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: pointer; /* opcional */
 }
 
-.slot{
-  width:100%; height:100%; display:block; line-height:0;
+/* Efecto al pasar el mouse */
+.slot:hover,
+.slot:focus-visible {
+  transform: translateY(-10px) scale(1.05);
 }
 
-/* Mic/Mega: ya los tienes en cover (sin aire) */
-.slot.morado   { object-fit: cover !important; object-position: 50% 42% !important; }
-.slot.megafono { object-fit: cover !important; object-position: top center !important; }
+/* Mapeo de áreas */
+.slot.mic        { grid-area: mic; }
+.slot.calendar   { grid-area: calendar; }
+.slot.news       { grid-area: news; }
+.slot.megaphone  { grid-area: megaphone; }
 
-/* --- Recorte visual de los pequeños --- */
-/* Ajusta estos % si hace falta; 6–10% suele bastar según el PNG */
-:root{
-  --trim-cal-bottom: 6%; /* recortar parte inferior del calendario */
-  --trim-noti-top:   6%; /* recortar parte superior de noticia   */
+/* Opcional: responsive, un poco menos gap en móvil */
+@media (max-width: 600px) {
+  .features-wrapper {
+    max-width: 100%;
+  }
+  .features-grid.solo-imagenes {
+    gap: 8px;
+  }
 }
-
-/* Calendario: pegarlo a micrófono/arriba y “cortar” su borde inferior transparente */
-.slot.calendario{
-  object-fit: contain; object-position: top center;
-  /* recorta la parte de abajo (top right bottom left) */
-  clip-path: inset(0 0 var(--trim-cal-bottom) 0);
-}
-
-/* Noticia: pegarla abajo de micrófono y “cortar” su borde superior transparente */
-.slot.noticia{
-  object-fit: contain; object-position: bottom center;
-  /* recorta la parte de arriba */
-  clip-path: inset(var(--trim-noti-top) 0 0 0);
-}
-
-/* Opcional: desactivar el recorte en móvil muy chico */
-@media (max-width:480px){
-  .slot.calendario, .slot.noticia{ clip-path: inset(0); }
-}
-
-
- comportamiento base para TODAS las piezas “tile” */
-  .tile{
-    transform-box: fill-box;        /* usa el bbox real del grupo */
-    transform-origin: 50% 50%;
-    transition: transform .18s ease, filter .18s ease, opacity .18s ease;
-    cursor: pointer;
-    pointer-events: bounding-box;   /* hace clic aunque haya máscaras/transparencias */
-    isolation: isolate;             /* evita que el drop-shadow se mezcle raro si hay blend */
-    will-change: transform;
-  }
-
-  /* hover/click “salta” */
-  .tile:hover{
-    transform: translateY(-2px) scale(1.02);
-    filter: drop-shadow(0 6px 12px rgba(0,0,0,.18));
-  }
-
-  /* estado “activo” por teclado/JS (añade .active al g) */
-  .tile.active{
-    transform: translateY(-1px) scale(1.015);
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,.18));
-  }
-
-  /* accesibilidad por teclado */
-  .tile[tabindex="0"]{
-    outline: none;
-  }
-  .tile[tabindex="0"]:focus-visible{
-    outline: 2px solid #8F50F8;      /* tu morado */
-    outline-offset: 2px;
-  }
-
-  /* si usas blend en el grupo, muévelo a un hijo para no afectar la sombra */
-  .tile .bleed{
-    mix-blend-mode: multiply;
-    opacity: .25;
-  }
-
-  /* respeta reducción de movimiento del usuario */
-  @media (prefers-reduced-motion: reduce){
-    .tile{ transition: none; }
-  }
