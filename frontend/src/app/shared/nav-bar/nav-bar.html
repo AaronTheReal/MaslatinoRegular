@@ -1,22 +1,78 @@
 <!-- Floating actions -->
 <div class="floating-icons">
-<img src="assets/iconosnavbar/lupa.png"
-     alt="Buscar"
-     class="lupa"
-     role="button"
-     tabindex="0"
+  <img
+    src="assets/iconosnavbar/lupa.png"
+    alt="Buscar"
+    class="lupa"
+    role="button"
+    tabindex="0"
+    (click)="onSearchClick($event)"
+    (keydown.enter)="onSearchClick($event)"
+  />
 
-     (click)="onSearchClick($event)"
-     (keydown.enter)="onSearchClick($event)" />
-
-     <svg  class="sabor" width="37" height="32" viewBox="0 0 37 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M34 32H3C1.343 32 0 30.657 0 29C0 27.343 1.343 26 3 26H34C35.657 26 37 27.343 37 29C37 30.657 35.657 32 34 32Z" fill="black"/>
-<path d="M34 19H3C1.343 19 0 17.657 0 16C0 14.343 1.343 13 3 13H34C35.657 13 37 14.343 37 16C37 17.657 35.657 19 34 19Z" fill="black"/>
-<path d="M34 6H3C1.343 6 0 4.657 0 3C0 1.343 1.343 0 3 0H34C35.657 0 37 1.343 37 3C37 4.657 35.657 6 34 6Z" fill="black"/>
-</svg>
-
-  <!--<img src="assets/iconosnavbar/sabor.png" alt="Sabor" class="sabor" />-->
+  <!-- Botón hamburguesa accesible -->
+  <button
+    class="hamburger-btn"
+    aria-label="Abrir menú"
+    aria-haspopup="true"
+    [attr.aria-expanded]="isMenuOpen"
+    aria-controls="nav-quick-menu"
+    (click)="toggleMenu($event)"
+    (keydown.enter)="toggleMenu($event)"
+  >
+    <!-- Tu mismo ícono SVG -->
+    <svg class="sabor" width="37" height="32" viewBox="0 0 37 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M34 32H3C1.343 32 0 30.657 0 29C0 27.343 1.343 26 3 26H34C35.657 26 37 27.343 37 29C37 30.657 35.657 32 34 32Z" fill="black"/>
+      <path d="M34 19H3C1.343 19 0 17.657 0 16C0 14.343 1.343 13 3 13H34C35.657 13 37 14.343 37 16C37 17.657 35.657 19 34 19Z" fill="black"/>
+      <path d="M34 6H3C1.343 6 0 4.657 0 3C0 1.343 1.343 0 3 0H34C35.657 0 37 1.343 37 3C37 4.657 35.657 6 34 6Z" fill="black"/>
+    </svg>
+  </button>
 </div>
+
+<!-- Panel dropdown (anclado a la derecha) -->
+<div
+  id="nav-quick-menu"
+  class="menu-panel"
+  [class.open]="isMenuOpen"
+  role="menu"
+  aria-labelledby="nav-quick-menu"
+  (click)="$event.stopPropagation()"
+>
+  <div class="menu-section">
+    <div class="menu-title">Navegación</div>
+    <ul class="menu-list">
+      <li role="menuitem">
+        <a [routerLink]="['/sobre-nosotros']">Quienes somos</a>
+      </li>
+      <li role="menuitem">
+        <a [routerLink]="['/podcast-show']" >Podcasts</a>
+      </li>
+      <li role="menuitem">
+        <a [routerLink]="['/noticias-todas']" >Noticias</a>
+      </li>
+      <li role="menuitem">
+        <a [routerLink]="['/eventos-show']" >Eventos</a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-title">Productos</div>
+    <ul class="menu-list">
+      <li role="menuitem">
+        <!--<button type="button"[routerLink]="['https://maslatinonetwork.com/']" ></button>-->
+        <a href="https://maslatinonetwork.com">Más Latino Network</a>
+      </li>
+      <li role="menuitem">
+        <a href="https://www.youtube.com/@Mas.Latino">Morning show</a>
+      </li>
+      <li role="menuitem">
+        <a [routerLink]="['/contactanos']" >Contáctanos.</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
 
 <!-- Nav -->
 <nav class="navbar">
