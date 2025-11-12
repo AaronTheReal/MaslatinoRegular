@@ -50,38 +50,46 @@
 
     
   </div>
+
+
   <div class="descarga-container">
-    <div class="content-wrapper">
-      <h1 class="main-title">DESCARGA LA APP</h1>
-     
-      <p class="subtitle">
-        ¡Lleva el sabor latino contigo y<br>
-        no pierdas conexión con tus<br>
-        raíces, estés donde estés!
-      </p>
-      <div class="app-stores">
-        <p class="disponible-text">DISPONIBLE EN</p>
-       
-        <div class="store-buttons">
-          <a href="#" class="store-btn" aria-label="Descargar en Google Play">
-            <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/6250e2fb7a5e51afc3a15e225b66eafb2922ae5f?width=395"
-              alt="Disponible en Google Play"
-              class="store-badge"
-            />
-          </a>
-         
-          <a href="#" class="store-btn" aria-label="Descargar en App Store">
-            <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/5b485cb741f7462ecb0aea22a7bdc267eec8ead9?width=395"
-              alt="Disponible en App Store"
-              class="store-badge"
-            />
-          </a>
-        </div>
+  <div class="content-wrapper">
+    <h1 class="main-title">DESCARGA LA APP</h1>
+
+    <p class="subtitle">
+      ¡Lleva el sabor latino contigo y<br>
+      no pierdas conexión con tus<br>
+      raíces, estés donde estés!
+    </p>
+
+    <div class="app-stores">
+      <p class="disponible-text">DISPONIBLE EN</p>
+
+      <div class="store-buttons">
+        <!-- ANDROID -->
+        <a class="store-btn"
+           aria-label="Abrir/descargar en Google Play"
+           (click)="openAndroid($event)">
+          <img
+            src="https://api.builder.io/api/v1/image/assets/TEMP/6250e2fb7a5e51afc3a15e225b66eafb2922ae5f?width=395"
+            alt="Disponible en Google Play"
+            class="store-badge" />
+        </a>
+
+        <!-- iOS -->
+        <a class="store-btn"
+           aria-label="Abrir/descargar en App Store"
+           (click)="openIOS($event)">
+          <img
+            src="https://api.builder.io/api/v1/image/assets/TEMP/5b485cb741f7462ecb0aea22a7bdc267eec8ead9?width=395"
+            alt="Disponible en App Store"
+            class="store-badge" />
+        </a>
       </div>
     </div>
   </div>
+</div>
+
 </section>
 
 

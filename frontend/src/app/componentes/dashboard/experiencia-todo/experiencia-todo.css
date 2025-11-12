@@ -326,21 +326,50 @@ button {
 .play-button:active {
   transform: translateY(0);
 }
-
-.facebook-button {
-  background: var(--facebook);
-}
-.facebook-button:hover {
-  background: var(--facebook-hover);
-}
-
-.youtube-button {
-  background: var(--youtube);
-}
-.youtube-button:hover {
-  background: var(--youtube-hover);
+/* Mantener color siempre azul en cualquier estado */
+.facebook-button,
+.facebook-button:hover,
+.facebook-button:active,
+.facebook-button:focus,
+.facebook-button:focus-visible {
+  background-color: #1877F2 !important;
+  color: #fff !important;         /* el SVG usa currentColor → sigue blanco */
 }
 
+/* Opcional: mismo criterio para YouTube */
+.youtube-button,
+.youtube-button:hover,
+.youtube-button:active,
+.youtube-button:focus,
+.youtube-button:focus-visible {
+  background-color: #FF0033 !important;
+  color: #fff !important;
+}
+
+
+
+
+/* Evitar el “parpadeo” gris al tocar en móviles */
+.play-button,
+.play-button * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Quitar estilos nativos que oscurecen en iOS */
+.play-button {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/* Mantén la sombra/transform sin cambiar el color */
+.play-button:hover { transform: translateY(-2px); }
+.play-button:active { transform: translateY(0); }
+
+/* A11y: mostrar foco sin cambiar color */
+.play-button:focus-visible {
+  outline: 2px solid #fff;        /* o un ring que prefieras */
+  outline-offset: 2px;
+}
 .button-text {
   text-transform: uppercase;
 }
