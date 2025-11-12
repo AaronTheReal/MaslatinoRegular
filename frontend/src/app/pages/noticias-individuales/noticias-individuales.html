@@ -191,9 +191,11 @@
 
         <!-- Entradas recientes -->
         <section class="sidebar-section recent-entries">
+          <div class="header-bleed-wrapper">
           <div class="section-header">
             <div class="plus-icon" aria-hidden="true">+</div>
             <h3 class="sidebar-title white">ENTRADAS RECIENTES</h3>
+          </div>
           </div>
           <ul class="entries-list">
             <li *ngFor="let n of (recientes || []); trackBy: trackBySlug" class="entry-item">
@@ -212,9 +214,11 @@
 
         <!-- Archivos -->
         <section class="sidebar-section archives">
+         <div class="header-bleed-wrapper">
           <div class="section-header">
             <div class="plus-icon" aria-hidden="true">+</div>
             <h3 class="sidebar-title white">ARCHIVOS</h3>
+          </div>
           </div>
           <ul class="archives-list">
             <li *ngFor="let mes of (archivos || []); trackBy: trackByIndex" class="archive-item">
