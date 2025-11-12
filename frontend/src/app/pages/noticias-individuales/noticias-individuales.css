@@ -6,6 +6,30 @@
   --container-max-width: 1200px;
 }
 
+/* Wrapper que permite al header rojo extenderse a la derecha */
+.header-bleed-wrapper {
+  margin-right: calc(50% - 50vw); /* Extiende hasta el borde derecho */
+  margin-left: 0;
+  width: fit-content;
+}
+
+/* Asegura que el header ocupe todo el ancho disponible */
+.header-bleed-wrapper .section-header {
+  width: 50vw;
+  max-width: none;
+  margin-left: calc(50vw - 50%);
+  border-radius: 0;
+  padding-right: 32px; /* opcional: padding interno a la derecha */
+  box-sizing: border-box;
+}
+
+/* El contenido de la lista mantiene su padding */
+.entries-list,
+.archives-list {
+  padding-right: clamp(20px, 2.2vw, 32px); /* margen derecho del contenido */
+}
+
+
 /* Fuente base del artículo: Noir Pro en todo */
 .container, .content, .sidebar, .hero-title, .category-label, .sidebar-title,
 .entries-list, .archives-list, .category-tag, .noticia-card, .noticia-title,
@@ -216,7 +240,7 @@
   padding-left: clamp(20px, 2.2vw, 32px);
   padding-right: 0;
   background: transparent;
-  overflow-x: hidden;
+  overflow-x: visible; /* Cambiar de hidden a visible */
 }
 
 /* ===== Headers rojos ===== */
@@ -234,7 +258,7 @@
 .categories-section .categories-head {
   color: #000000;
   padding: 12px 20px;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 600;  /* 600 real */
   border-radius: 0;
   width: 100%;
@@ -244,8 +268,8 @@
 
 .plus-icon {
   position: absolute;
-  left: -35px;
-  top: -55px;
+  left: -30px;
+  top: -50px;
   font-size: 80px;
   font-weight: 600;
   line-height: 1;
@@ -289,6 +313,9 @@
   gap: 12px;
   padding: 0;
   box-sizing: border-box;
+  margin-top: clamp(2rem, 2.5vw, 1.5rem); /* 16px → 24px */
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem); /* 16px → 24px */
+
 }
 .entry-item a, .archive-item a {
   color: #000;
@@ -314,6 +341,7 @@
 
 /* Layout tweaks */
 .row > .col-lg-9, .row > .col-lg-3 { margin-top: 0; padding-top: 0; }
+
 
 /* ===== Responsive ===== */
 @media (max-width: 1200px) {
