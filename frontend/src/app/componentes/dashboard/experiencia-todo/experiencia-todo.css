@@ -515,8 +515,8 @@ button {
 }
 
 .play-button .social-icon {
-  width: clamp(18px, 2.2vw, 22px);
-  height: clamp(18px, 2.2vw, 22px);
+  width: clamp(30px, 2.2vw, 22px);
+  height: clamp(30px, 2.2vw, 22px);
 }
 
 /* Colores por red (ajústalos a tu sistema de tokens) */
