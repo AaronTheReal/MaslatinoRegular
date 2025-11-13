@@ -3,14 +3,15 @@
   padding: 6rem 2rem;
   position: relative;
   overflow: visible;
-  position: relative;
   z-index: 1; /* abajo */
 }
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
   position: relative;
 }
+
 .decorative-marker {
   position: absolute;
   left: min(calc(-50vw + 600px), -50px);
@@ -21,10 +22,12 @@
   z-index: 1;
   pointer-events: none;
 }
+
 .decorative-marker svg {
   width: 100%;
   height: 100%;
 }
+
 .decorative-ribbon {
   position: absolute;
   left: min(calc(-50vw + 600px), -80px);
@@ -34,6 +37,7 @@
   z-index: 2;
   pointer-events: none;
 }
+
 .ribbon-path {
   position: absolute;
   top: 0;
@@ -41,11 +45,13 @@
   width: 100%;
   height: 100%;
 }
+
 .ribbon-text {
   position: relative;
   width: 100%;
   height: 100%;
 }
+
 .ribbon-text span {
   position: absolute;
   color: #fff;
@@ -55,6 +61,7 @@
   transform-origin: center;
   letter-spacing: 0.5px;
 }
+
 .ribbon-text span:nth-child(1) { left: -13px; top: 91px; }
 .ribbon-text span:nth-child(2) { left: 7px; top: 103px; }
 .ribbon-text span:nth-child(3) { left: 24px; top: 108px; }
@@ -75,6 +82,7 @@
 .ribbon-text span:nth-child(18) { left: 211px; top: 146px; }
 .ribbon-text span:nth-child(19) { left: 215px; top: 164px; }
 .ribbon-text span:nth-child(20) { left: 215px; top: 179px; }
+
 .content-wrapper {
   display: flex;
   align-items: center;
@@ -84,6 +92,7 @@
   z-index: 3;
   padding: 2rem 0;
 }
+
 .text-content {
   flex: 1;
   max-width: 600px;
@@ -92,6 +101,7 @@
   flex-direction: column;
   align-items: center;
 }
+
 .main-heading {
   color: #000;
   font-size: 2.25rem;
@@ -100,6 +110,7 @@
   margin: 0 0 1.5rem 0;
   text-align: center;
 }
+
 .description {
   color: #000;
   font-size: 1.125rem;
@@ -109,6 +120,7 @@
   text-align: center;
   max-width: 540px;
 }
+
 .cta-outlined-button {
   display: inline-block;
   padding: 0.75rem 2.5rem;
@@ -121,15 +133,18 @@
   cursor: pointer;
   transition: all 0.3s ease;
 }
+
 .cta-outlined-button:hover {
   background: #000;
   color: #fff;
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
+
 .cta-outlined-button:active {
   transform: translateY(0);
 }
+
 .decorative-image {
   position: absolute;
   right: min(calc(-50vw + 600px), -80px);
@@ -139,83 +154,258 @@
   z-index: 1;
   pointer-events: none;
 }
+
 .decorative-image img {
   width: 100%;
   height: auto;
   display: block;
 }
-@media (max-width: 968px) {
-  .experience-section {
-    padding: 3rem 1.5rem;
+
+/* Improved responsive design with more breakpoints and fluid adjustments */
+
+/* Large screens (desktops > 1200px) - base styles already cover this */
+
+/* Medium-large screens (tablets landscape, small desktops: 1024px - 1200px) */
+@media (max-width: 1200px) {
+  .container {
+    max-width: 100%;
+    padding: 0 2rem;
   }
-  .content-wrapper {
-    flex-direction: column;
-    gap: 2rem;
-  }
+
   .decorative-marker {
-    left: min(calc(-50vw + 600px), -30px);
-    top: 0;
-    width: 180px;
+    left: -40px;
+    top: -80px;
+    width: 200px;
     height: auto;
   }
+
   .decorative-ribbon {
-    left: min(calc(-50vw + 600px), -60px);
-    bottom: 20px;
-    width: 180px;
+    left: -60px;
+    bottom: -20px;
+    width: 200px;
     height: auto;
   }
-  .main-heading {
-    font-size: 1.875rem;
-  }
-  .description {
+
+  .ribbon-text span {
     font-size: 1rem;
   }
-  .cta-outlined-button {
-    font-size: 1.25rem;
+
+  .content-wrapper {
+    gap: 3rem;
   }
+
+  .text-content {
+    max-width: 500px;
+  }
+
+  .main-heading {
+    font-size: 2rem;
+  }
+
+  .description {
+    font-size: 1rem;
+    max-width: 450px;
+  }
+
   .decorative-image {
-    position: static;
+    right: -60px;
+    max-width: 220px;
+  }
+}
+
+/* Medium screens (tablets: 768px - 1023px) */
+@media (max-width: 1023px) {
+  .experience-section {
+    padding: 4rem 1.5rem;
+  }
+
+  .decorative-marker {
+    left: -30px;
+    top: -60px;
+    width: 180px;
+    height: auto;
+  }
+
+  .decorative-ribbon {
+    left: -50px;
+    bottom: -15px;
+    width: 180px;
+    height: auto;
+  }
+
+  .ribbon-text span {
+    font-size: 0.875rem;
+  }
+
+  .content-wrapper {
+    flex-direction: column;
+    gap: 2.5rem;
+    padding: 1.5rem 0;
+  }
+
+  .text-content {
+    max-width: 100%;
+    order: 1;
+  }
+
+  .decorative-image {
+    position: relative;
     right: auto;
     top: auto;
     transform: none;
-    margin-right: min(calc(-50vw + 600px), -60px);
     max-width: 200px;
-    pointer-events: none;
-    z-index: 1;
+    margin: 0 auto;
+    order: 2;
+  }
+
+  .main-heading {
+    font-size: 1.875rem;
+  }
+
+  .description {
+    font-size: 1rem;
+    max-width: 100%;
+  }
+
+  .cta-outlined-button {
+    font-size: 1.375rem;
+    padding: 0.75rem 2.25rem;
   }
 }
-@media (max-width: 640px) {
+
+/* Small-medium screens (mobile landscape, small tablets: 481px - 767px) */
+@media (max-width: 767px) {
   .experience-section {
-    padding: 2.5rem 1rem;
+    padding: 3rem 1rem;
   }
+
   .decorative-marker {
-    display: none;
-  }
-  .decorative-ribbon {
-    left: min(calc(-50vw + 600px), -40px);
-    bottom: 10px;
-    width: 140px;
+    left: -20px;
+    top: -40px;
+    width: 150px;
     height: auto;
     opacity: 0.8;
   }
+
+  .decorative-ribbon {
+    left: -40px;
+    bottom: -10px;
+    width: 150px;
+    height: auto;
+    opacity: 0.8;
+  }
+
   .ribbon-text span {
     font-size: 0.75rem;
   }
-  .main-heading {
-    font-size: 1.5rem;
+
+  .content-wrapper {
+    gap: 2rem;
+    padding: 1rem 0;
   }
+
+  .main-heading {
+    font-size: 1.625rem;
+  }
+
   .description {
     font-size: 0.9375rem;
   }
-  .description br {
-    display: none;
-  }
+
   .cta-outlined-button {
-    font-size: 1.125rem;
+    font-size: 1.25rem;
     padding: 0.625rem 2rem;
   }
+
   .decorative-image {
-    max-width: 160px;
-    margin-right: min(calc(-50vw + 600px), -40px);
+      display: none !important;
+    }
+}
+
+/* Small screens (mobile portrait: <= 480px) */
+@media (max-width: 480px) {
+  .experience-section {
+    padding: 2rem 0.75rem;
+  }
+
+  .decorative-marker {
+    display: none; /* Hide on very small screens to avoid overlap */
+  }
+
+  .decorative-ribbon {
+    left: -30px;
+    bottom: 0;
+    width: 120px;
+    height: auto;
+    opacity: 0.7;
+  }
+
+  .ribbon-text span {
+    font-size: 0.625rem;
+  }
+
+  .content-wrapper {
+    gap: 1.5rem;
+    padding: 0.75rem 0;
+  }
+
+  .main-heading {
+    font-size: 1.375rem;
+  }
+
+  .description {
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+
+  .description br {
+    display: none; /* Remove line breaks for better flow on small screens */
+  }
+
+  .cta-outlined-button {
+    font-size: 1.125rem;
+    padding: 0.5rem 1.75rem;
+    width: 100%; /* Full width button on mobile */
+  }
+
+  .decorative-image {
+    max-width: 140px;
+  }
+}
+
+/* Extra large screens (> 1400px) - optional enhancements */
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1300px;
+  }
+
+  .decorative-marker {
+    left: min(calc(-50vw + 650px), -60px);
+    width: 250px;
+    height: auto;
+  }
+
+  .decorative-ribbon {
+    left: min(calc(-50vw + 650px), -90px);
+    width: 250px;
+    height: auto;
+  }
+
+  .ribbon-text span {
+    font-size: 1.25rem;
+  }
+
+  .main-heading {
+    font-size: 2.5rem;
+  }
+
+  .description {
+    font-size: 1.25rem;
+    max-width: 600px;
+  }
+
+  .decorative-image {
+    right: min(calc(-50vw + 650px), -90px);
+    max-width: 280px;
   }
 }

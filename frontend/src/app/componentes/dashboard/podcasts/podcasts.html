@@ -21,7 +21,7 @@
 
         <!-- Tarjetas dinámicas -->
         <div class="podcast-cards" *ngIf="!loading && !errorMessage">
-          @for (p of podcastsLimited(); track trackById; let idx = $index) {
+          @for (p of podcastsLimited(); track p._id; let idx = $index) {
             <div class="podcast-card" [ngClass]="getSizeClass(idx)">
               <div class="card-container">
                 <div class="card-image-wrapper">

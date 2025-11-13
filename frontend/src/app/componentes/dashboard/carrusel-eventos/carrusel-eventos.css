@@ -186,3 +186,22 @@
     justify-content: center;
   }
 }
+
+/* ===== Responsivo adicional ===== */
+@media (max-width: 1024px) {
+  .noticia-imagen { max-width: 300px; }
+}
+
+@media (max-width: 768px) {
+  .fade-left, .fade-right { width: 56px; }
+  .noticia-card { min-height: 280px; padding: 1.25rem; gap: 1rem; }
+  .noticia-titulo { font-size: 1.2rem; }
+  .boton-contacto { font-size: 1rem; padding: 12px 28px; }
+}
+
+@media (max-width: 480px) {
+  .fade-left, .fade-right { width: 40px; }
+  .noticia-card { min-height: 240px; padding: 1rem; }
+  .noticia-titulo { font-size: 1.1rem; }
+  .noticia-descripcion { font-size: 0.9rem; }
+}

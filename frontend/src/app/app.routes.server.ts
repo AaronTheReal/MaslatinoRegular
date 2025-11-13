@@ -38,6 +38,8 @@ export const serverRoutes: ServerRoute[] = [
   {path: 'nosotros-pagina', renderMode: RenderMode.Client},
   {path: 'noticias-todas', renderMode: RenderMode.Client},
     {path: 'prueba-component', renderMode: RenderMode.Client},
+        {path: 'contactanos', renderMode: RenderMode.Client},
+
   
               
       

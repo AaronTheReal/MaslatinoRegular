@@ -5,20 +5,39 @@
   font-family: Arial, sans-serif;
 }
 
+/* GRID: 
+   Fila 1: redes sociales centradas
+   Fila 2: logo (izq) | nav (der/centro) */
 .footer-container {
   max-width: 1280px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: 1.5rem;
-  align-items: center;
-  justify-content: space-between;
+  justify-items: center;
+  text-align: center;
+
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "social"
+    "logo"
+    "nav";
 }
 
 @media (min-width: 768px) {
   .footer-container {
-    flex-direction: row;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "social social"
+      "logo   nav";
+    align-items: center;
+    text-align: left;
   }
+}
+
+/* LOGO */
+.footer-logo {
+  grid-area: logo;
 }
 
 .footer-logo img {
@@ -29,9 +48,15 @@
   .footer-logo img {
     width: 9rem;
   }
+
+  .footer-logo {
+    justify-self: flex-start;
+  }
 }
 
+/* NAV */
 .footer-nav {
+  grid-area: nav;
   display: flex;
   gap: 1.5rem;
   font-weight: bold;
@@ -47,9 +72,21 @@
   text-decoration: underline;
 }
 
+/* 🔁 AQUÍ EL CAMBIO IMPORTANTE */
+@media (min-width: 768px) {
+  .footer-nav {
+    justify-self: center; /* antes: flex-end → ahora se mueve hacia el centro */
+    transform: translateX(-140px); /* 👈 mueve todo el bloque 40px a la izquierda */
+
+  }
+}
+
+/* REDES SOCIALES */
 .footer-social {
+  grid-area: social;
   display: flex;
   gap: 1.5rem;
+  justify-content: center;
 }
 
 .footer-social a svg {
@@ -77,11 +114,4 @@
 
 .footer-social a:hover[aria-label="Twitter"] svg {
   fill: #1DA1F2;
-}
-
-.footer-bottom {
-  text-align: center;
-  font-size: 0.85rem;
-  color: #aaa;
-  margin-top: 2rem;
 }
