@@ -64,249 +64,6 @@ body {
     background-color: black;
 }
 
-/* Sección Nosotros */
-.nosotros-section {
-    position: relative;
-    height: 875.92px;
-    padding-top: 100px;
-}
-
-.nosotros-title {
-    font-size: 55.60px;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 50px;
-}
-
-.content-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 50px;
-}
-
-.text-content {
-    flex: 1;
-}
-
-.hero-title {
-    font-size: 43.61px;
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 30px;
-}
-
-.highlight-red {
-    color: #FE3824;
-}
-
-.hero-description {
-    font-size: 17.31px;
-    font-weight: 300;
-    line-height: 1.5;
-}
-
-.graphic-content {
-    flex: 1;
-    position: relative;
-}
-
-.floating-shapes {
-    position: relative;
-    height: 400px;
-}
-
-.shape {
-    position: absolute;
-    border-radius: 50%;
-}
-
-.shape-1 {
-    width: 350.49px;
-    height: 289.67px;
-    background-color: #FAAF3E;
-    top: 50px;
-    right: 0;
-}
-
-.shape-2 {
-    width: 339.62px;
-    height: 332.12px;
-    background-color: #00CB7E;
-    top: 100px;
-    right: 100px;
-}
-
-.shape-3 {
-    width: 427.19px;
-    height: 203.54px;
-    background-color: #FE3824;
-    top: 200px;
-    right: 50px;
-}
-
-/* Sección Plataforma */
-.platform-section {
-    padding: 80px 0;
-    text-align: center;
-}
-
-.platform-title {
-    font-size: 45.06px;
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 40px;
-}
-
-.platform-image {
-    position: left;
-    width: 142.87px;
-    height: 142.86px;
-    border-radius: 71px;
-    overflow: hidden;
-    margin: 0 auto;
-}
-.platform-image-1 {
-    position: left;
-    width: 142.87px;
-    height: 142.86px;
-    border-radius: 71px;
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-.platform-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Sección Pilares */
-.pillars-section {
-    padding: 80px 0;
-    text-align: center;
-}
-
-.pillars-title {
-    font-size: 44.89px;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-.pillars-description {
-    font-size: 17.15px;
-    font-weight: 300;
-    line-height: 1.5;
-    margin-bottom: 60px;
-}
-
-.pillars-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    align-items: center;
-}
-
-.pillar-card {
-    width: 577.26px;
-    background-color: #8F50F8;
-    border-radius: 55.5px;
-    padding: 30px;
-    color: white;
-    text-align: center;
-}
-
-.pillar-card h3 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 15px;
-}
-
-.pillar-card p {
-    font-size: 16px;
-    font-weight: 300;
-    line-height: 1.5;
-}
-
-/* Sección Tecnología */
-.technology-section {
-    background-color: #fe3824;
-    padding: 80px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-}
-
-.tech-content {
-    flex: 1;
-    padding-left: 40px;
-}
-
-.tech-title {
-    font-size: 42.97px;
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 30px;
-}
-
-.highlight-white {
-    color: white;
-}
-
-.tech-description {
-    font-size: 17.81px;
-    font-weight: 500;
-    line-height: 1.5;
-    margin-bottom: 20px;
-}
-
-.tech-features {
-    list-style-type: none;
-}
-
-.tech-features li {
-    font-size: 17.63px;
-    font-weight: 500;
-    line-height: 1.5;
-    margin-bottom: 10px;
-}
-
-.tech-image {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-}
-
-.tech-image img {
-    width: 160.50px;
-    height: 160.50px;
-    border-radius: 83px;
-    object-fit: cover;
-}
-
-/* Sección Movimiento */
-.movement-section {
-    padding: 80px 0;
-    text-align: center;
-    position: relative;
-}
-
-.movement-title {
-    font-size: 44.84px;
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 40px;
-}
-
-.movement-graphics {
-    position: relative;
-    height: 404.58px;
-    background-color: #000000;
-    border-radius: 20px;
-    margin: 0 40px;
-}
-
 
 
 /* ---------- Color pyramid (frascos apilados) - reemplazar reglas antiguas ---------- */
@@ -734,3 +491,58 @@ body {
         font-size: 28px;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

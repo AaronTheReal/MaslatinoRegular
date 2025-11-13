@@ -1,0 +1,57 @@
+
+/* Sección Tecnología */
+.technology-section {
+    background-color: #fe3824;
+    padding: 80px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.tech-content {
+    flex: 1;
+    padding-left: 40px;
+}
+
+.tech-title {
+    font-size: 42.97px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 30px;
+}
+
+.highlight-white {
+    color: white;
+}
+
+.tech-description {
+    font-size: 17.81px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.tech-features {
+    list-style-type: none;
+}
+
+.tech-features li {
+    font-size: 17.63px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.tech-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.tech-image img {
+    width: 160.50px;
+    height: 160.50px;
+    border-radius: 83px;
+    object-fit: cover;
+}
