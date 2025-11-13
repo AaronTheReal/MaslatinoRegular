@@ -11,11 +11,13 @@ import {
   CalendarioService,
   CalendarItem,
 } from '../../../services/calendario-service';
+import { RouterModule } from '@angular/router';
+
 
 @Component({
   selector: 'app-carrusel-eventos',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,RouterModule],
   templateUrl: './carrusel-eventos.html',
   styleUrls: ['./carrusel-eventos.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
