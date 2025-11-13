@@ -1,0 +1,12 @@
+.megaphone-wrapper {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.megaphone-iframe {
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  overflow: hidden;
+}

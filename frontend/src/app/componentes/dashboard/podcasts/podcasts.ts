@@ -1,7 +1,11 @@
+// src/app/.../podcasts.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PodcastPCService, PodcastDesktopPayload } from './../../../services/podcast-servicePC';
+
+// 👇 Asegúrate de que esta ruta corresponde a tu archivo real:
+import { MegaphonePlayerService } from './../../../shared/megaphone-player/megaphone.service';
 
 @Component({
   selector: 'app-podcasts',
@@ -15,7 +19,14 @@ export class Podcasts implements OnInit  {
   errorMessage: string | null = null;
   loading = true;
 
-  constructor(private podcastServicePC: PodcastPCService) {}
+  // URL de tu playlist Megaphone
+  private readonly megaphoneEmbedUrl = 'https://playlist.megaphone.fm?p=MTSTA4599725524';
+
+  // 👇 INYECTA AQUÍ el servicio (no lo declares aparte)
+  constructor(
+    private podcastServicePC: PodcastPCService,
+    private megaphonePlayerService: MegaphonePlayerService
+  ) {}
 
   ngOnInit(): void {
     this.podcastServicePC.obtenerPodcastsHome().subscribe({
@@ -32,19 +43,13 @@ export class Podcasts implements OnInit  {
     });
   }
 
-  /**
-   * Limitamos a 5 podcasts para que respete el layout visual Builder
-   * (small, medium, large, medium, small).
-   */
   podcastsLimited(): PodcastDesktopPayload[] {
     return this.podcasts.slice(0, 5);
   }
 
-    // trackBy para @for
-    trackById = (_: number, p: PodcastDesktopPayload) =>
-      (p as any)._id ?? (p as any).id ?? (p as any).slug ?? _;
+  trackById = (_: number, p: PodcastDesktopPayload) =>
+    (p as any)._id ?? (p as any).id ?? (p as any).slug ?? _;
 
-  // imagen de portada
   getCover(p: PodcastDesktopPayload): string {
     return (
       (p as any).coverImage ||
@@ -54,7 +59,6 @@ export class Podcasts implements OnInit  {
     );
   }
 
-  // título
   getTitle(p: PodcastDesktopPayload): string {
     return (
       (p as any).title ||
@@ -63,30 +67,19 @@ export class Podcasts implements OnInit  {
     );
   }
 
-  // acción play
+  // ▶️ acción play -> abrir player global
   onPlay(p: PodcastDesktopPayload) {
-    // Aquí conectas con tu reproductor global / guardar "last played" / etc.
     console.log('▶️ Play:', this.getTitle(p), p);
+
+    // abrir el player global con tu playlist de Megaphone
+    this.megaphonePlayerService.open(this.megaphoneEmbedUrl);
   }
 
-  /**
-   * Builder mostró distintos tamaños visuales de card:
-   * - small
-   * - medium
-   * - large
-   * - medium
-   * - small
-   * Mapeamos por índice.
-   */
   getSizeClass(idx: number): string {
     const map = ['podcast-card-small', 'podcast-card-medium', 'podcast-card-large', 'podcast-card-medium', 'podcast-card-small'];
     return map[idx] || 'podcast-card-medium';
   }
 
-  /**
-   * El botón Play en Builder cambiaba de tamaño (40,45,55).
-   * Aquí devolvemos medidas coherentes con el índice.
-   */
   getPlaySize(idx: number): number {
     switch (this.getSizeClass(idx)) {
       case 'podcast-card-small':
@@ -98,38 +91,28 @@ export class Podcasts implements OnInit  {
     }
   }
 
-  /**
-   * Necesitamos viewBox y radios que correspondan a cada SVG.
-   * Builder usó:
-   *  - small: 40x40 r=20 path "M15 12L28 20L15 28V12Z"
-   *  - med:   45x45 r=22.5 path "M17 13L31 22.5L17 32V13Z"
-   *  - large: 55x55 r=27.5 path "M21 17L39 27.5L21 38V17Z"
-   */
   getPlayViewBox(idx: number): string {
     const sizeClass = this.getSizeClass(idx);
     if (sizeClass === 'podcast-card-small') return '0 0 40 40';
     if (sizeClass === 'podcast-card-large') return '0 0 55 55';
-    return '0 0 45 45'; // medium / default
+    return '0 0 45 45';
   }
 
   getPlayRadius(idx: number): number {
     const sizeClass = this.getSizeClass(idx);
     if (sizeClass === 'podcast-card-small') return 20;
     if (sizeClass === 'podcast-card-large') return 27.5;
-    return 22.5; // medium / default
+    return 22.5;
   }
 
   getPlayPath(idx: number): string {
     const sizeClass = this.getSizeClass(idx);
     if (sizeClass === 'podcast-card-small') {
-      // small path
       return 'M15 12L28 20L15 28V12Z';
     }
     if (sizeClass === 'podcast-card-large') {
-      // large path
       return 'M21 17L39 27.5L21 38V17Z';
     }
-    // medium path
     return 'M17 13L31 22.5L17 32V13Z';
   }
 }
