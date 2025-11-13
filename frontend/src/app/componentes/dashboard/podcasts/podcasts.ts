@@ -40,9 +40,9 @@ export class Podcasts implements OnInit  {
     return this.podcasts.slice(0, 5);
   }
 
-  // trackBy para @for
-  trackById = (_: number, p: PodcastDesktopPayload) =>
-    (p as any)._id ?? (p as any).id ?? (p as any).slug ?? _;
+    // trackBy para @for
+    trackById = (_: number, p: PodcastDesktopPayload) =>
+      (p as any)._id ?? (p as any).id ?? (p as any).slug ?? _;
 
   // imagen de portada
   getCover(p: PodcastDesktopPayload): string {
