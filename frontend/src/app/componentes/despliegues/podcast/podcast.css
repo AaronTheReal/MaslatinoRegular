@@ -35,7 +35,7 @@
   z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 60px 40px;
+  padding: clamp(32px, 4.5vw, 60px) clamp(20px, 3vw, 40px);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -48,14 +48,14 @@
 }
 
 .hero-label {
-  font-size: 31px;
+  font-size: clamp(18px, 2.6vw, 31px);
   font-weight: 500;
   color: #000;
   margin: 0 0 20px 0;
 }
 
 .hero-title {
-  font-size: 59px;
+  font-size: clamp(32px, 6vw, 59px);
   font-weight: 700;
   line-height: 1.1;
   color: #000;
@@ -64,7 +64,7 @@
 }
 
 .hero-description {
-  font-size: 17px;
+  font-size: clamp(14px, 2vw, 17px);
   font-weight: 300;
   line-height: 1.42;
   color: #000;
@@ -91,8 +91,8 @@
 }
 
 .badge-wrapper {
-  width: 122px;
-  height: 34px;
+  width: clamp(110px, 12vw, 160px);
+  height: clamp(30px, 3.5vw, 40px);
   border: 1px solid #000;
   border-radius: 12px;
   overflow: hidden;
@@ -130,31 +130,31 @@
   display: flex;
   justify-content: center;
   position: relative;
-  margin-top: -100px;
+  margin-top: -60px;
   z-index: 10;
   padding-bottom: 80px;
 }
 
 .player-card {
   width: 100%;
-  max-width: 900px;
+  max-width: clamp(900px, 70vw, 1100px);
   background: #fff;
   border-radius: 24px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  padding: 40px;
+  padding: clamp(24px, 3.2vw, 40px);
   margin: 0 40px;
 }
 
 .player-content {
   display: flex;
-  gap: 40px;
+  gap: clamp(16px, 3vw, 40px);
   align-items: flex-start;
 }
 
 .album-art {
-  flex: 0 0 215px;
-  width: 215px;
-  height: 215px;
+  flex: 0 0 clamp(160px, 18vw, 240px);
+  width: clamp(160px, 18vw, 240px);
+  height: clamp(160px, 18vw, 240px);
   border-radius: 24px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -174,7 +174,7 @@
 }
 
 .episode-title {
-  font-size: 29px;
+  font-size: clamp(18px, 3.2vw, 29px);
   font-weight: 500;
   line-height: 1.26;
   color: #000;
@@ -265,7 +265,7 @@
 .more-podcasts-grid {
   display: flex;
   justify-content: center;
-  gap: 40px;
+  gap: clamp(20px, 3.5vw, 40px);
   flex-wrap: wrap;
   max-width: 1000px;
   margin: 0 auto;
@@ -392,6 +392,9 @@
   transform: translateY(0);
 }
 
+@media (min-width: 1280px){ .hero-content-wrapper { max-width: 1400px; } }
+@media (min-width: 1536px){ .hero-content-wrapper { max-width: 1600px; } }
+
 @media screen and (max-width: 1024px) {
   .hero-content-wrapper {
     padding: 40px 30px;
@@ -412,7 +415,7 @@
   }
 
   .player-section {
-    margin-top: -100px;
+    margin-top: -50px;
     padding: 0;
     padding-bottom: 60px;
   }
@@ -467,7 +470,7 @@
   }
 
   .player-section {
-    margin-top: -80px;
+    margin-top: -40px;
     padding: 0;
     padding-bottom: 50px;
   }
@@ -502,7 +505,7 @@
   .player-section {
     padding: 0;
     padding-bottom: 60px;
-    margin-top: -60px;
+    margin-top: -30px;
   }
 
   .player-card {
