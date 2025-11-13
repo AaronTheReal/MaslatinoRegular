@@ -1,0 +1,11 @@
+<div class="megaphone-wrapper" *ngIf="safeSrc">
+  <iframe
+    class="megaphone-iframe"
+    frameborder="no"
+    scrolling="no"
+    [attr.height]="height"
+    width="100%"
+    [src]="safeSrc"
+    allow="autoplay; encrypted-media"
+  ></iframe>
+</div>

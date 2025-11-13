@@ -1,13 +1,13 @@
-// src/app/app.ts
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavBar } from './shared/nav-bar/nav-bar';
 import { Footer } from './shared/footer/footer';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
+import { Overlay } from './shared/overlay/overlay';
 
-// 👇 Asegúrate de apuntar a la ruta correcta del Overlay
-import { Overlay } from './shared/overlay/overlay'; // <-- path real
+// 👇 IMPORTA TU PLAYER GLOBAL AQUÍ
+import { MegaphoneGlobalPlayerComponent } from './shared/megaphone-player/megaphone-player-global/megaphone-player-global';
 
 @Component({
   selector: 'app-root',
@@ -18,7 +18,8 @@ import { Overlay } from './shared/overlay/overlay'; // <-- path real
     Footer,
     CommonModule,
     ReactiveFormsModule,
-    Overlay, // <-- IMPORTAR AQUÍ
+    Overlay,
+    MegaphoneGlobalPlayerComponent, // 👈 AÑADIDO
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

@@ -1,0 +1,29 @@
+<!-- src/app/shared/megaphone-player/megaphone-player-global/megaphone-player-global.html -->
+
+<div
+  class="global-player-shell"
+  *ngIf="(megaphoneService.isOpen$ | async) && (megaphoneService.url$ | async) as url"
+>
+  <div class="global-player-container">
+    <div class="global-player-header">
+      <div class="global-player-title">
+        <span class="dot"></span>
+        <span class="label">Reproduciendo desde Megaphone</span>
+      </div>
+      <button
+        class="close-btn"
+        type="button"
+        (click)="close()"
+        aria-label="Cerrar reproductor"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Pasamos la URL directamente al player -->
+    <app-megaphone-player
+      [embedUrl]="url"
+      [height]="120"
+    ></app-megaphone-player>
+  </div>
+</div>
