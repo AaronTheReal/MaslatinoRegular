@@ -1,0 +1,22 @@
+
+/* Sección Movimiento */
+.movement-section {
+    padding: 80px 0;
+    text-align: center;
+    position: relative;
+}
+
+.movement-title {
+    font-size: 44.84px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 40px;
+}
+
+.movement-graphics {
+    position: relative;
+    height: 404.58px;
+    background-color: #000000;
+    border-radius: 20px;
+    margin: 0 40px;
+}
