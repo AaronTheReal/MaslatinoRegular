@@ -320,70 +320,89 @@
 
 @media screen and (max-width: 640px) {
   .hero-content { padding: 60px 20px 40px; }
-  .hero-title { font-size: 36px; }
-  .podcast-container { padding: 40px 20px 60px; }
-  .podcast-carousel { padding-inline: 0; } /* Ajuste para centrar */
-  .carousel-viewport { overflow: hidden; } /* Oculta tarjetas extras */
-  .carousel-arrow { display: flex; } /* Muestra flechas solo en mobile */
+  
+  /* MÁS ALTO el bloque negro en mobile */
+  .podcast-container {
+    padding: 60px 20px 90px; /* antes 40px 20px 60px */
+  }
+
+  .podcast-carousel { padding-inline: 0; }
+  .carousel-viewport { overflow: hidden; }
+  .carousel-arrow { display: flex; }
   .carousel-arrow-previous { left: 12px; }
   .carousel-arrow-next { right: 12px; }
 
   .podcast-cards {
-    --slide-width: calc(100vw - 40px); /* Ancho para 1 tarjeta centrada */
-    --slide-gap: 10px;
+    --slide-width: calc(100vw - 40px); /* era -40px, lo dejo igual para que ocupe casi todo */
+    --slide-gap: 12px;
     gap: var(--slide-gap);
     max-width: 100%;
-    flex-wrap: nowrap; /* No wrap, para deslizar */
+    flex-wrap: nowrap;
     justify-content: flex-start;
-    transform: translateX(calc(var(--active-index, 0) * -1 * (var(--slide-width) + var(--slide-gap)))); /* Deslizamiento */
+    transform: translateX(calc(var(--active-index, 0) * -1 * (var(--slide-width) + var(--slide-gap))));
     transition: transform 0.4s ease;
-    padding-bottom: 0; /* Sin padding extra en mobile */
+    padding-bottom: 0;
   }
 
   .podcast-card {
-    flex: 0 0 var(--slide-width); /* Tamaño fijo para 1 visible */
+    flex: 0 0 var(--slide-width);
     opacity: 0.45;
-    transform: scale(0.9);
-    transition: transform 0.35s ease, opacity 0.35s ease;
+    transform: scale(0.95); /* un poquito más grande */
   }
 
   .podcast-card.podcast-card-active {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1.02); /* destaca más la activa */
   }
 
-  /* Tamaños uniformes en mobile (para no variar) */
+  /* CONTENEDOR MÁS GRANDE */
   .podcast-card-small .card-container,
   .podcast-card-medium .card-container,
-  .podcast-card-large .card-container { padding: 16px; }
+  .podcast-card-large .card-container {
+    padding: 20px; /* antes 16px */
+  }
 
   .podcast-card-small .card-image-wrapper,
   .podcast-card-medium .card-image-wrapper,
-  .podcast-card-large .card-image-wrapper { width: 100px; height: 100px; } /* Uniforme */
+  .podcast-card-large .card-image-wrapper {
+    width: 120px;
+    height: 120px; /* antes 100px */
+  }
 
-  .play-button svg { transform: scale(0.75); }
-  .card-title { font-size: 14px; max-width: 90px; }
+  .play-button svg { transform: scale(0.85); }
+  .card-title { font-size: 15px; max-width: 120px; }
   .cta-button { font-size: 20px; padding: 10px 36px; }
   .content-title { font-size: 28px; }
   .additional-content { padding: 60px 20px; }
 }
-
 @media screen and (max-width: 480px) {
   .hero-title { font-size: 30px; }
   .hero-description { font-size: 15px; }
   .section-title { font-size: 24px; }
   .section-subtitle { font-size: 15px; }
-  .podcast-cards { --slide-width: calc(100vw - 30px); --slide-gap: 8px; }
-  .carousel-arrow { width: 40px; height: 40px; font-size: 20px; }
-  .podcast-card { opacity: 0.4; }
+
+  .podcast-cards {
+    --slide-width: calc(100vw - 36px); /* un pelín más ancho */
+    --slide-gap: 10px;
+  }
+
+  .podcast-card { opacity: 0.5; }
+
   .podcast-card.podcast-card-active { opacity: 1; }
-  .podcast-card-small .card-image-wrapper { width: 55px; height: 55px; }
-  .podcast-card-medium .card-image-wrapper { width: 70px; height: 70px; }
-  .podcast-card-large .card-image-wrapper { width: 90px; height: 90px; }
-  .play-button svg { transform: scale(0.65); }
-  .card-title { font-size: 13px; max-width: 80px; }
+
+  /* Ya no los hagas tan mini */
+  .podcast-card-small .card-image-wrapper,
+  .podcast-card-medium .card-image-wrapper,
+  .podcast-card-large .card-image-wrapper {
+    width: 110px;
+    height: 110px; /* antes 55/70/90 */
+  }
+
+  .play-button svg { transform: scale(0.75); }
+  .card-title { font-size: 14px; max-width: 110px; }
   .content-title { font-size: 24px; }
 }
+
 
 /* Desktop: Ocultar flechas y forzar wrap */
 @media screen and (min-width: 641px) {
