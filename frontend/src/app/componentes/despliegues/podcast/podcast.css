@@ -642,13 +642,13 @@
     font-size: 22px;
   }
 }
-
-/* =========================
-   <= 480px
-   ========================= */
 @media screen and (max-width: 480px) {
   .hero-title {
     font-size: 30px;
+  }
+
+  .hero-background {
+    margin-top: -230px;
   }
 
   .hero-description {
@@ -656,25 +656,12 @@
   }
 
   .hero-bg-image {
-    max-height: 340px;
+    width: 100%;
+    height: 70vh;
+    max-height: none;
     object-fit: cover;
+    /* X (horizontal)   Y (vertical)  */
+    object-position: 45% 10%;  /* más a la derecha y un poco arriba */
   }
 
-  .badge-group {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .more-podcasts-grid {
-    gap: 24px;
-  }
-
-  .podcast-thumbnail {
-    width: 150px;
-    height: 149px;
-  }
-
-  .podcast-item-title {
-    font-size: 14px;
-  }
 }
