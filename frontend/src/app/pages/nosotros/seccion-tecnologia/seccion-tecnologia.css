@@ -1,11 +1,26 @@
-/* Sección Tecnología */
+/* =========================
+   WRAPPER (ya NO full-width)
+   ========================= */
+
+.technology-wrapper {
+  position: relative;
+  width: 100%;  /* ocupa el ancho de su contenedor, no de la pantalla */
+  margin: clamp(24px, 4vw, 40px) auto;  /* margen vertical y centrado */
+  box-sizing: border-box;
+}
+
+/* =========================
+   Sección Tecnología (rectángulo rojo)
+   ========================= */
+
 .technology-section {
   background-color: #FE3824;
-  padding: clamp(36px, 6vw, 80px) clamp(12px, 3%, 40px);
+  padding: clamp(28px, 6vw, 80px) clamp(16px, 4vw, 40px);
   color: #FFF;
   position: relative;
   overflow: hidden;
   border-radius: clamp(18px, 2vw, 28px);
+  /* sin margin-block aquí, ya lo lleva el wrapper */
 }
 
 /* Burbujita en esquina superior derecha, como en el Figma */
@@ -20,6 +35,7 @@
   border-radius: 50%;
 }
 
+/* Layout interno: título a la izquierda, texto a la derecha */
 .tech-layout {
   display: flex;
   justify-content: space-between;
@@ -35,7 +51,6 @@
   position: relative;
 }
 
-/* Decorativo posicionado a mitad del borde izquierdo del rectángulo rojo */
 .tech-decorative-stack {
   width: clamp(180px, 32vw, 320px);
   height: auto;
@@ -44,9 +59,9 @@
 
 .tech-title {
   font-family: Inter, -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: clamp(32px, 4.3vw, 43px);
+  font-size: clamp(28px, 5vw, 43px);
   font-weight: 600;
-  line-height: clamp(36px, 4.1vw, 41.2px);
+  line-height: clamp(32px, 5vw, 42px);
   letter-spacing: 0.08px;
   margin-bottom: clamp(20px, 3vw, 40px);
 }
@@ -74,10 +89,10 @@
 
 .tech-description {
   font-family: Inter, -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: clamp(16px, 1.8vw, 18px);
+  font-size: clamp(15px, 2vw, 18px);
   font-weight: 500;
   line-height: clamp(22px, 2.6vw, 26.23px);
-  margin-bottom: clamp(24px, 3vw, 36px);
+  margin-bottom: clamp(20px, 3vw, 32px);
   color: #FFF;
 }
 
@@ -89,10 +104,10 @@
 
 .tech-features li {
   font-family: Inter, -apple-system, Roboto, Helvetica, sans-serif;
-  font-size: 18px;
+  font-size: clamp(14px, 2.1vw, 18px);
   font-weight: 500;
-  line-height: 28px;
-  margin-bottom: 12px;
+  line-height: clamp(22px, 3vw, 28px);
+  margin-bottom: 10px;
   padding-left: 23px;
   position: relative;
   color: #FFF;
@@ -107,11 +122,35 @@
   color: #FFF;
 }
 
-/* Responsive */
+/* =========================
+   Burbuja/imagen debajo del rectángulo rojo
+   ========================= */
+
+.technology-bubble-left {
+  position: absolute;
+  left: -50px;              /* pegada al borde IZQUIERDO del rectángulo */
+  top: 100%;            /* arranca donde termina el rectángulo */
+  transform: translateY(-50%);  /* mitad arriba, mitad abajo del borde */
+  width: min(10vw, 360px);
+  max-width: 360px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.technology-bubble-left img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* =========================
+   Responsive Tecnología
+   ========================= */
+
 @media (max-width: 768px) {
   .tech-layout {
     flex-direction: column;
-    gap: 40px;
+    gap: 28px;
   }
 
   .tech-left,
@@ -119,18 +158,45 @@
     max-width: 100%;
   }
 
+  .tech-title {
+    text-align: left;
+  }
+
   .tech-decorative-stack {
-    width: clamp(160px, 50vw, 280px);
-    margin: 30px auto 0;
+    width: clamp(160px, 50vw, 260px);
+    margin: 20px auto 0;
+  }
+
+  .tech-description {
+    margin-bottom: 20px;
+  }
+
+  .technology-bubble-left {
+    width: min(40vw, 260px);
+    max-width: 260px;
+    transform: translateY(-40%); /* un poco menos metida en el rectángulo en tablet */
   }
 }
 
 @media (max-width: 480px) {
   .technology-section {
-    padding: 28px 16px;
+    padding: 24px 16px;
+    border-radius: 18px;
   }
 
-  .tech-decorative-stack {
-    width: 200px;
+  .tech-title {
+    font-size: 26px;
+    line-height: 1.15;
+  }
+
+  .tech-features li {
+    padding-left: 18px;
+  }
+
+  .technology-bubble-left {
+    width: min(20vw, 220px);
+    max-width: 220px;
+    transform: translateY(-30%); /* más fuera del rectángulo en cel */
+    left: 0px;              /* pegada al borde IZQUIERDO del rectángulo */
   }
 }
