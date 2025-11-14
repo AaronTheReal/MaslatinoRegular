@@ -4,6 +4,9 @@
   font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
 }
 
+/* =========================
+   HERO
+   ========================= */
 .hero-section {
   position: relative;
   width: 100%;
@@ -13,22 +16,27 @@
   margin-top: 50px;
 }
 
+/* Fondo ESCRITORIO: alineado al contenedor, no al viewport */
 .hero-background {
   position: absolute;
-  top: -300px;
-  left: 150px;
-  width: 100%;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1200px;       /* igual que el max-width base del contenido */
+  max-width: 100%;     /* en pantallas más chicas se adapta */
   height: 100%;
   z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
-/*
+
 .hero-bg-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: right center;  /* ajusta el “punto” de la imagen */
   opacity: 0.3;
 }
-  */
 
 .hero-content-wrapper {
   position: relative;
@@ -124,6 +132,9 @@
   display: block;
 }
 
+/* =========================
+   PLAYER
+   ========================= */
 .player-section {
   padding: 0;
   background: transparent;
@@ -249,6 +260,9 @@
   opacity: 0.8;
 }
 
+/* =========================
+   MÁS PODCASTS
+   ========================= */
 .more-podcasts-section {
   padding: 80px 40px;
   background: #fff;
@@ -313,6 +327,9 @@
   margin: 0;
 }
 
+/* =========================
+   CONTACTO
+   ========================= */
 .contact-section {
   padding: 80px 40px 100px;
   background: #fff;
@@ -392,9 +409,33 @@
   transform: translateY(0);
 }
 
-@media (min-width: 1280px){ .hero-content-wrapper { max-width: 1400px; } }
-@media (min-width: 1536px){ .hero-content-wrapper { max-width: 1600px; } }
+/* =========================
+   BREAKPOINTS GRANDES
+   ========================= */
 
+/* Aumentamos tamaño del contenedor Y del fondo juntos,
+   para que nunca se “desalineen” al hacer zoom */
+@media (min-width: 1280px) {
+  .hero-content-wrapper {
+    max-width: 1400px;
+  }
+  .hero-background {
+    width: 1400px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .hero-content-wrapper {
+    max-width: 1600px;
+  }
+  .hero-background {
+    width: 1600px;
+  }
+}
+
+/* =========================
+   <= 1024px
+   ========================= */
 @media screen and (max-width: 1024px) {
   .hero-content-wrapper {
     padding: 40px 30px;
@@ -421,15 +462,53 @@
   }
 }
 
+/* =========================
+   <= 768px
+   ========================= */
 @media screen and (max-width: 768px) {
+  /* HERO como columna para poder ordenar hijos */
+  .hero-section {
+    min-height: auto;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: visible;
+  }
+
   .hero-content-wrapper {
+    position: relative;
+    z-index: 1;
+    order: 1;
     flex-direction: column;
     text-align: center;
-    padding: 40px 20px;
+    padding: 32px 20px 0;
+    gap: 24px;
   }
 
   .hero-text {
     max-width: 100%;
+  }
+
+  /* Imagen se vuelve bloque debajo del contenido */
+  .hero-background {
+    position: static;
+    order: 2;
+    width: 100%;
+    max-width: none;
+    height: auto;
+    margin-top: 24px;
+    z-index: 0;
+    pointer-events: none;
+    transform: none;
+  }
+
+  .hero-bg-image {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    opacity: 1;
   }
 
   .hero-title {
@@ -484,6 +563,9 @@
   }
 }
 
+/* =========================
+   <= 640px
+   ========================= */
 @media screen and (max-width: 640px) {
   .hero-section {
     min-height: auto;
@@ -563,6 +645,9 @@
   }
 }
 
+/* =========================
+   <= 480px
+   ========================= */
 @media screen and (max-width: 480px) {
   .hero-title {
     font-size: 30px;
@@ -570,6 +655,11 @@
 
   .hero-description {
     font-size: 15px;
+  }
+
+  .hero-bg-image {
+    max-height: 340px;
+    object-fit: cover;
   }
 
   .badge-group {
