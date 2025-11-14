@@ -8,7 +8,12 @@
 
     <!-- Navegación -->
     <nav class="footer-nav">
-      <a [routerLink]="['/nosotros-pagina']">Sobre nosotros</a>
+        <a
+    [routerLink]="['/nosotros-pagina']"
+    (click)="scrollToTop()"
+  >
+    Sobre nosotros
+  </a>
       <a href="#">Contacto</a>
     </nav>
 
