@@ -1,5 +1,5 @@
 /* =========================
-   EXPERIENCIA TODO - RESPONSIVE SVG HERO
+   EXPERIENCIA TODO - HERO IMAGEN + BOTONES
    ========================= */
 
 *,
@@ -14,56 +14,65 @@
 .feature-visual {
   position: relative;
   background-color: #FD9D04;
-  width: 100%;
-  min-height: clamp(300px, 50vw, 600px);
+  width: 100vw;                 /* ocupa todo el ancho */
+  margin-left: 50%;             /* rompe contenedor centrado */
+  transform: translateX(-50%);  /* centra el bloque de 100vw */
   isolation: isolate;
   overflow: hidden;
 }
 
-/* SVG Wrapper */
+/* Wrapper */
 .svg-wrap {
   position: relative;
   width: 100%;
-  height: 100%;
 }
 
+/* Contenedor de la imagen */
 .svg-container {
   position: relative;
   width: 100%;
-  max-width: 100%;
-  margin: 0 auto;
+  margin: 0;
 }
 
-/* SVG responsive */
-.bg-hero-svg {
+/* IMÁGENES BASE */
+.feature-bg-image {
   display: block;
   width: 100%;
   height: auto;
-  min-height: 300px;
+  object-fit: cover;
+}
+
+/* Desktop por defecto: solo se ve la grande */
+.feature-bg-image--desktop {
+  display: block;
+}
+
+.feature-bg-image--mobile {
+  display: none;
 }
 
 /* =========================
-   BOTONES CTA SOBRE EL SVG
+   BOTONES CTA SOBRE LA IMAGEN
    ========================= */
 .cta-on-visual {
   position: absolute;
-  left: 66%;
+  left: 50%;          /* desktop: donde ya te gustaron */
   top: 82%;
   transform: translate(-50%, -50%);
   display: flex;
-  gap: 0.8rem;
+  gap: 0.9rem;
   z-index: 10;
   pointer-events: auto;
   max-width: 95%;
 }
 
-/* Botón base */
+/* Botón base – grande y responsivo */
 .play-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.75rem 1.25rem;
+  gap: clamp(0.5rem, 0.8vw, 1.2rem);
+  padding: clamp(1rem, 1.4vw, 1.8rem) clamp(1.8rem, 2.2vw, 3rem);
   border: none;
   border-radius: 999px;
   font-weight: 700;
@@ -93,17 +102,17 @@
   outline-offset: 2px;
 }
 
-/* Button text */
+/* Texto del botón */
 .button-text {
   text-transform: uppercase;
-  font-size: 0.85rem;
+  font-size: clamp(1rem, 1.2vw, 1.4rem);
   line-height: 1;
 }
 
-/* Social icon */
+/* Icono social */
 .social-icon {
-  width: 20px;
-  height: 20px;
+  width: clamp(22px, 1.8vw, 32px);
+  height: clamp(22px, 1.8vw, 32px);
   fill: currentColor;
   flex-shrink: 0;
 }
@@ -129,83 +138,49 @@
 }
 
 /* =========================
-   RESPONSIVE BREAKPOINTS
+   DESKTOP / LARGE
    ========================= */
-
-/* Large Desktop (1920px+) */
-@media (min-width: 1920px) {
-  .feature-visual {
-    min-height: 700px;
-  }
-
-  .svg-container {
-    max-width: 1920px;
-  }
-
-  .cta-on-visual {
-    left: 66%;
-    top: 82%;
-    gap: 1rem;
-  }
-
-  .play-button {
-    padding: 0.95rem 1.5rem;
-  }
-
-  .button-text {
-    font-size: 0.95rem;
-  }
-
-  .social-icon {
-    width: 24px;
-    height: 24px;
-  }
-}
-
-/* Desktop (1200px - 1919px) */
-@media (min-width: 1200px) and (max-width: 1919px) {
+@media (min-width: 1200px) {
   .feature-visual {
     min-height: 550px;
   }
+}
 
-  .cta-on-visual {
-    left: 66%;
-    top: 82%;
-    gap: 0.9rem;
+/* =========================
+   MÓVIL (USAR OTRA IMAGEN + CENTRAR BOTONES ABAJO)
+   ========================= */
+@media (max-width: 767px) {
+  /* Cambiamos de imagen */
+  .feature-bg-image--desktop {
+    display: none;
   }
 
+  .feature-bg-image--mobile {
+    display: block;
+  }
+
+  .feature-visual {
+    min-height: auto;
+  }
+
+  /* Botones centrados y un poco abajo del centro */
+  .cta-on-visual {
+    left: 50%;
+    top: 70%; /* ajusta 68–75% si los quieres más abajo */
+    transform: translate(-50%, -50%);
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  /* Un pelín más compactos en móvil */
   .play-button {
-    padding: 0.85rem 1.35rem;
+    padding: 0.7rem 1.6rem;
+    gap: 0.5rem;
   }
 
   .button-text {
     font-size: 0.9rem;
-  }
-
-  .social-icon {
-    width: 22px;
-    height: 22px;
-  }
-}
-
-/* Tablet Large (1024px - 1199px) */
-@media (min-width: 1024px) and (max-width: 1199px) {
-  .feature-visual {
-    min-height: 500px;
-  }
-
-  .cta-on-visual {
-    left: 65%;
-    top: 81%;
-    gap: 0.75rem;
-  }
-
-  .play-button {
-    padding: 0.75rem 1.2rem;
-  }
-
-  .button-text {
-    font-size: 0.85rem;
   }
 
   .social-icon {
@@ -214,20 +189,15 @@
   }
 }
 
-/* Tablet (768px - 1023px) */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .feature-visual {
-    min-height: 450px;
-  }
-
+/* Extra pequeño (por si acaso) */
+@media (max-width: 480px) {
   .cta-on-visual {
-    left: 64%;
-    top: 80%;
-    gap: 0.7rem;
+    top: 86%;
+    gap: 0.5rem;
   }
 
   .play-button {
-    padding: 0.7rem 1.15rem;
+    padding: 0.6rem 1.4rem;
   }
 
   .button-text {
@@ -235,273 +205,12 @@
   }
 
   .social-icon {
-    width: 19px;
-    height: 19px;
+    width: 18px;
+    height: 18px;
   }
 }
 
-/* Mobile Large (640px - 767px) */
-@media (min-width: 640px) and (max-width: 767px) {
-  .feature-visual {
-    min-height: 400px;
-  }
-
-  .cta-on-visual {
-    left: 60%;
-    top: 76%;
-    gap: 0.4rem;
-  }
-
-  .play-button {
-    padding: 0.4rem 0.7rem;
-    gap: 0.25rem;
-    letter-spacing: 0.2px;
-  }
-
-  .button-text {
-    font-size: 0.55rem;
-  }
-
-  .social-icon {
-    width: 14px;
-    height: 14px;
-  }
-}
-
-/* Mobile Medium (540px - 639px) */
-@media (min-width: 540px) and (max-width: 639px) {
-  .feature-visual {
-    min-height: 370px;
-  }
-
-  .cta-on-visual {
-    left: 56%;
-    top: 74%;
-    gap: 0.35rem;
-  }
-
-  .play-button {
-    padding: 0.38rem 0.65rem;
-    gap: 0.22rem;
-    letter-spacing: 0.15px;
-  }
-
-  .button-text {
-    font-size: 0.52rem;
-  }
-
-  .social-icon {
-    width: 13px;
-    height: 13px;
-  }
-}
-
-/* Mobile Small (480px - 539px) */
-@media (min-width: 480px) and (max-width: 539px) {
-  .feature-visual {
-    min-height: 350px;
-  }
-
-  .cta-on-visual {
-    left: 50%;
-    top: 72%;
-    gap: 0.3rem;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: nowrap;
-    justify-content: center;
-    max-width: 90vw;
-  }
-
-  .play-button {
-    padding: 0.35rem 0.6rem;
-    gap: 0.2rem;
-    letter-spacing: 0.1px;
-    flex: 0 1 auto;
-  }
-
-  .button-text {
-    font-size: 0.5rem;
-  }
-
-  .social-icon {
-    width: 12px;
-    height: 12px;
-  }
-}
-
-/* Mobile Extra Small (< 480px) */
-@media (max-width: 479px) {
-  .feature-visual {
-    min-height: 320px;
-  }
-
-  .cta-on-visual {
-    left: 75%;
-    top: 75%;
-    gap: 0.3rem;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: nowrap;
-    justify-content: center;
-    transform: translate(-50%, -50%);
-    max-width: 90vw;
-  }
-
-  .play-button {
-    padding: 0.32rem 0.55rem;
-    gap: 0.18rem;
-    letter-spacing: 0px;
-    flex: 0 1 auto;
-  }
-
-  .button-text {
-    font-size: 0.48rem;
-  }
-
-  .social-icon {
-    width: 11px;
-    height: 11px;
-  }
-}
-
-/* Mobile Tiny (< 360px) */
-@media (max-width: 359px) {
-  .feature-visual {
-    min-height: 300px;
-  }
-
-  .cta-on-visual {
-    left: 50%;
-    top: 68%;
-    gap: 0.25rem;
-    max-width: 95vw;
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: nowrap;
-    justify-content: center;
-  }
-
-  .play-button {
-    padding: 0.3rem 0.5rem;
-    gap: 0.15rem;
-    letter-spacing: 0px;
-    flex: 0 1 auto;
-  }
-
-  .button-text {
-    font-size: 0.45rem;
-  }
-
-  .social-icon {
-    width: 10px;
-    height: 10px;
-  }
-}
-
-/* iPhone specific breakpoints */
-@media (min-width: 375px) and (max-width: 390px) {
-  .cta-on-visual {
-    left: 50%;
-    top: 70%;
-    gap: 0.3rem;
-  }
-
-  .play-button {
-    padding: 0.32rem 0.55rem;
-    gap: 0.18rem;
-    letter-spacing: 0px;
-  }
-
-  .button-text {
-    font-size: 0.48rem;
-  }
-
-  .social-icon {
-    width: 11px;
-    height: 11px;
-  }
-}
-
-@media (min-width: 414px) and (max-width: 430px) {
-  .cta-on-visual {
-    left: 50%;
-    top: 71%;
-    gap: 0.32rem;
-  }
-
-  .play-button {
-    padding: 0.34rem 0.58rem;
-    gap: 0.2rem;
-    letter-spacing: 0.1px;
-  }
-
-  .button-text {
-    font-size: 0.5rem;
-  }
-
-  .social-icon {
-    width: 12px;
-    height: 12px;
-  }
-}
-
-/* =========================
-   LANDSCAPE ORIENTATION
-   ========================= */
-@media (max-height: 600px) and (orientation: landscape) {
-  .feature-visual {
-    min-height: 350px;
-  }
-
-  .cta-on-visual {
-    left: 60%;
-    top: 75%;
-    gap: 0.5rem;
-  }
-
-  .play-button {
-    padding: 0.55rem 0.95rem;
-  }
-
-  .button-text {
-    font-size: 0.7rem;
-  }
-
-  .social-icon {
-    width: 17px;
-    height: 17px;
-  }
-}
-
-@media (max-height: 450px) and (orientation: landscape) {
-  .feature-visual {
-    min-height: 280px;
-  }
-
-  .cta-on-visual {
-    left: 58%;
-    top: 72%;
-    gap: 0.4rem;
-  }
-
-  .play-button {
-    padding: 0.45rem 0.8rem;
-  }
-
-  .button-text {
-    font-size: 0.65rem;
-  }
-
-  .social-icon {
-    width: 15px;
-    height: 15px;
-  }
-}
-
-/* =========================
-   ACCESSIBILITY
-   ========================= */
+/* ACCESIBILIDAD */
 @media (prefers-reduced-motion: reduce) {
   .play-button {
     transition: none;
@@ -516,7 +225,6 @@
   }
 }
 
-/* High contrast mode */
 @media (prefers-contrast: high) {
   .play-button {
     border: 2px solid currentColor;
@@ -527,7 +235,7 @@
   }
 }
 
-/* Print styles */
+/* PRINT */
 @media print {
   .cta-on-visual {
     display: none;
