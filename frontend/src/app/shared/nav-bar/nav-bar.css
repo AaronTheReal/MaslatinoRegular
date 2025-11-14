@@ -188,3 +188,11 @@ html, body {
 .floating-icons { position: fixed; top: 30px; right: 30px; display: flex; align-items: center; gap: 35px; z-index: 9999; }
 .lupa { height: 44px; width: auto; opacity: .6; }
 .sabor { height: 44px; width: auto; }
+@media (max-width: 768px) {
+.floating-icons {
+left: 30px;
+right: 30px;
+justify-content: space-between;
+gap: 0;
+}
+}
