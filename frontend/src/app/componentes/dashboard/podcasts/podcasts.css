@@ -414,3 +414,35 @@
   }
   .podcast-card { opacity: 1 !important; transform: translateY(var(--offset)) scale(var(--scale)) !important; } /* Escalonado */
 }
+
+.badge-coming-soon {
+  position: absolute;
+  top: 50%;
+  left: -35%;
+  width: 170%;
+  transform: translateY(-50%) rotate(-18deg);
+  background: #fe3824;
+  color: #fff;
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  padding: 6px 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+  pointer-events: none; /* no bloquea clics */
+  z-index: 2;
+}
+
+.badge-coming-soon span {
+  font-size: 11px;
+}
+
+/* Ajuste un poco más chico en mobile */
+@media screen and (max-width: 640px) {
+  .badge-coming-soon {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    width: 180%;
+    left: -40%;
+  }
+}

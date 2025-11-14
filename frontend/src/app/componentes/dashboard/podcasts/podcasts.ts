@@ -119,6 +119,10 @@ export class Podcasts implements OnInit {
     if (size === 'podcast-card-large') return 'M21 17L39 27.5L21 38V17Z';
     return 'M17 13L31 22.5L17 32V13Z';
   }
+isComingSoon(idx: number): boolean {
+  // 0 sí, 1 sí, 2 no, 3 sí, 4 sí
+  return idx !== 2;
+}
 
   private ensureIndexInBounds(): void {
     if (this.totalSlides === 0) {
