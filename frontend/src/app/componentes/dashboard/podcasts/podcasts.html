@@ -38,48 +38,54 @@
           [ngStyle]="{'--active-index': currentIndex}"
         >
           @for (p of podcastsLimited(); track trackById($index, p); let idx = $index) {
-            <div
-              class="podcast-card"
-              role="listitem"
-              [ngClass]="getSizeClass(idx)"
-              [class.podcast-card-active]="currentIndex === idx"
-              [attr.aria-label]="getSlideAriaLabel(idx)"
-            >
-              <div class="card-container">
-                <div class="card-image-wrapper">
-                  <img
-                    class="card-image"
-                    [src]="getCover(p)"
-                    [alt]="getTitle(p)"
-                    loading="lazy"
-                  />
-                </div>
+<div
+  class="podcast-card"
+  role="listitem"
+  [ngClass]="getSizeClass(idx)"
+  [class.podcast-card-active]="currentIndex === idx"
+  [attr.aria-label]="getSlideAriaLabel(idx)"
+>
+  <div class="card-container">
+    <div class="card-image-wrapper">
+      <img
+        class="card-image"
+        [src]="getCover(p)"
+        [alt]="getTitle(p)"
+        loading="lazy"
+      />
 
-                <button
-                  class="play-button"
-                  aria-label="Reproducir podcast"
-                  type="button"
-                  (click)="onPlay(p)"
-                >
-                  <svg
-                    [attr.width]="getPlaySize(idx)"
-                    [attr.height]="getPlaySize(idx)"
-                    [attr.viewBox]="getPlayViewBox(idx)"
-                    fill="none"
-                  >
-                    <circle
-                      [attr.cx]="getPlayRadius(idx)"
-                      [attr.cy]="getPlayRadius(idx)"
-                      [attr.r]="getPlayRadius(idx)"
-                      fill="rgba(255,255,255,0.3)"
-                    />
-                    <path [attr.d]="getPlayPath(idx)" fill="white" />
-                  </svg>
-                </button>
-              </div>
+      <!-- BANDA PRÓXIMAMENTE -->
+      <div *ngIf="isComingSoon(idx)" class="badge-coming-soon">
+        <span>PRÓXIMAMENTE</span>
+      </div>
+    </div>
 
-              <h3 class="card-title">{{ getTitle(p) }}</h3>
-            </div>
+    <button
+      class="play-button"
+      aria-label="Reproducir podcast"
+      type="button"
+      (click)="onPlay(p)"
+    >
+      <svg
+        [attr.width]="getPlaySize(idx)"
+        [attr.height]="getPlaySize(idx)"
+        [attr.viewBox]="getPlayViewBox(idx)"
+        fill="none"
+      >
+        <circle
+          [attr.cx]="getPlayRadius(idx)"
+          [attr.cy]="getPlayRadius(idx)"
+          [attr.r]="getPlayRadius(idx)"
+          fill="rgba(255,255,255,0.3)"
+        />
+        <path [attr.d]="getPlayPath(idx)" fill="white" />
+      </svg>
+    </button>
+  </div>
+
+  <h3 class="card-title">{{ getTitle(p) }}</h3>
+</div>
+
           }
         </div>
       </div>
