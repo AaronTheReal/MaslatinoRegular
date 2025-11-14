@@ -172,6 +172,46 @@ function normalizeContent(arr) {
 class noticiasController {
 
 
+   async getNoticiasPaginadas(req, res) {
+    try {
+      const rawPage  = req.query.page;
+      const rawLimit = req.query.limit;
+
+      let page  = parseInt(rawPage, 10);
+      let limit = parseInt(rawLimit, 10);
+
+      if (isNaN(page) || page < 1) page = 1;
+      if (isNaN(limit) || limit < 1) limit = 5;
+      // límite de seguridad para no matar el server
+      if (limit > 50) limit = 50;
+
+      const skip = (page - 1) * limit;
+
+      const filtro = { autorizada: true }; // ajusta si quieres mostrar también no autorizadas
+
+      const [items, total] = await Promise.all([
+        Noticia.find(filtro)
+          .sort({ createdAt: -1 }) // más recientes primero
+          .skip(skip)
+          .limit(limit)
+          .lean(),
+        Noticia.countDocuments(filtro)
+      ]);
+
+      return res.json({
+        items,
+        total,
+        page,
+        limit,
+      });
+    } catch (err) {
+      console.error('Error en getNoticiasPaginadas:', err);
+      return res.status(500).json({
+        error: 'Error al obtener noticias paginadas'
+      });
+    }
+  }
+
   async updateNoticia(req, res) {
     try {
       const { id } = req.params;

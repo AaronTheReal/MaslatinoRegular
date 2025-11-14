@@ -160,7 +160,10 @@ export default class MainRoute {
     router.put('/noticia/:id', NoticiasController.updateNoticia);
     router.delete('/noticia/:id', NoticiasController.deleteNoticia);
     router.patch('/noticia/:id/autorizar', NoticiasController.toggleAutorizarNoticia);
+    router.get('/noticias/paginadas', NoticiasController.getNoticiasPaginadas);
 
+    
+    
     
     router.route('/registrarUsuario').post(UsuariosController.postNuevoUsuario);
     router.route('/IdiomaUsuarioInicio').put(UsuariosController.postIdiomaUsuario);

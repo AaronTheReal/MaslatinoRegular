@@ -47,6 +47,7 @@ export class NoticiasTodas implements OnInit {
   };
 
   ngOnInit(): void {
+    console.log("si llega?");
     // 1) Cargar categorías
     this.categoriasService.obtenerCategorias().subscribe({
       next: (res: CategoriaPayload[]) => {
@@ -73,9 +74,10 @@ export class NoticiasTodas implements OnInit {
     });
 
     // 2) Cargar noticias
-    this.noticiasService.getNoticiasRecientes(0).subscribe({
+    this.noticiasService.getNoticiasRecientes(30).subscribe({
       next: (data) => {
         this.noticias = Array.isArray(data) ? data : [];
+        console.log("estas",this.noticias);
       },
       error: (err) => {
         console.error('Error cargando noticias recientes', err);
