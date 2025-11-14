@@ -1,28 +1,50 @@
-  <main class="podcast-section">
+<main class="podcast-section">
+  <!-- PODCASTS BLOCK -->
+  <div class="podcast-container">
+    <h2 class="section-title">PODCAST</h2>
 
-      <!-- PODCASTS BLOCK -->
-      <div class="podcast-container">
-        <h2 class="section-title">PODCAST</h2>
+    <p class="section-subtitle">
+      Programas que informan, inspiran y acompañan tu día.<br>
+      Encuentra el podcast que va contigo.
+    </p>
 
-        <p class="section-subtitle">
-            Programas que informan, inspiran y acompañan tu día.<br>
-            Encuentra el podcast que va contigo.
-        </p>
+    <!-- Estado de carga / error -->
+    <div *ngIf="loading || errorMessage" class="status-block">
+      <div *ngIf="loading">
+        <p class="status-loading-text">Cargando podcasts...</p>
+      </div>
+      <div *ngIf="!loading && errorMessage">
+        <p class="status-error-text">{{ errorMessage }}</p>
+      </div>
+    </div>
 
-        <!-- Estado de carga / error -->
-        <div *ngIf="loading || errorMessage" style="color:#fff; text-align:center; margin-bottom:2rem;">
-          <div *ngIf="loading">
-            <p style="opacity:.8; font-size:0.9rem;">Cargando podcasts...</p>
-          </div>
-          <div *ngIf="!loading && errorMessage">
-            <p style="color:#ff6b6b; font-weight:600;">{{ errorMessage }}</p>
-          </div>
-        </div>
+    <!-- Carrusel dinámico -->
+    <div class="podcast-carousel" *ngIf="!loading && !errorMessage">
+      <button
+        class="carousel-arrow carousel-arrow-previous"
+        type="button"
+        aria-label="Ver podcast anterior"
+        (click)="onPrevious()"
+        [disabled]="!canNavigate"
+      >
+        <span aria-hidden="true">&#10094;</span>
+      </button>
 
-        <!-- Tarjetas dinámicas -->
-        <div class="podcast-cards" *ngIf="!loading && !errorMessage">
-          @for (p of podcastsLimited(); track p._id; let idx = $index) {
-            <div class="podcast-card" [ngClass]="getSizeClass(idx)">
+      <div class="carousel-viewport">
+        <div
+          class="podcast-cards"
+          role="list"
+          aria-live="polite"
+          [ngStyle]="{'--active-index': currentIndex}"
+        >
+          @for (p of podcastsLimited(); track trackById($index, p); let idx = $index) {
+            <div
+              class="podcast-card"
+              role="listitem"
+              [ngClass]="getSizeClass(idx)"
+              [class.podcast-card-active]="currentIndex === idx"
+              [attr.aria-label]="getSlideAriaLabel(idx)"
+            >
               <div class="card-container">
                 <div class="card-image-wrapper">
                   <img
@@ -35,11 +57,10 @@
 
                 <button
                   class="play-button"
-                  aria-label="Play podcast"
+                  aria-label="Reproducir podcast"
                   type="button"
                   (click)="onPlay(p)"
                 >
-                  <!-- SVG escalable según tamaño -->
                   <svg
                     [attr.width]="getPlaySize(idx)"
                     [attr.height]="getPlaySize(idx)"
@@ -52,31 +73,33 @@
                       [attr.r]="getPlayRadius(idx)"
                       fill="rgba(255,255,255,0.3)"
                     />
-                    <path
-                      [attr.d]="getPlayPath(idx)"
-                      fill="white"
-                    />
+                    <path [attr.d]="getPlayPath(idx)" fill="white" />
                   </svg>
                 </button>
               </div>
 
-              <h3 class="card-title">
-                {{ getTitle(p) }}
-              </h3>
+              <h3 class="card-title">{{ getTitle(p) }}</h3>
             </div>
           }
         </div>
-        <!-- CTA -->
-        <button
-          class="cta-button"
-          [routerLink]="['/podcast-show']"
-          type="button"
-        >
-          ver más
-        </button>
       </div>
 
+      <button
+        class="carousel-arrow carousel-arrow-next"
+        type="button"
+        aria-label="Ver podcast siguiente"
+        (click)="onNext()"
+        [disabled]="!canNavigate"
+      >
+        <span aria-hidden="true">&#10095;</span>
+      </button>
+    </div>
 
-    </main>
+    <!-- CTA -->
+    <button class="cta-button" [routerLink]="['/podcast-show']" type="button">
+      ver más
+    </button>
+  </div>
+</main>
 
-    <router-outlet />
+<router-outlet />

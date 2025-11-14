@@ -1,10 +1,7 @@
-// src/app/.../podcasts.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { PodcastPCService, PodcastDesktopPayload } from './../../../services/podcast-servicePC';
-
-// 👇 Asegúrate de que esta ruta corresponde a tu archivo real:
 import { MegaphonePlayerService } from './../../../shared/megaphone-player/megaphone.service';
 
 @Component({
@@ -14,15 +11,15 @@ import { MegaphonePlayerService } from './../../../shared/megaphone-player/megap
   templateUrl: './podcasts.html',
   styleUrls: ['./podcasts.css'],
 })
-export class Podcasts implements OnInit  {
+export class Podcasts implements OnInit {
+  private readonly maxVisible = 5;
+  private readonly megaphoneEmbedUrl = 'https://playlist.megaphone.fm?p=MTSTA4599725524'; // Verifica este URL
+
   podcasts: PodcastDesktopPayload[] = [];
   errorMessage: string | null = null;
   loading = true;
+  currentIndex = 0; // Índice para el carrusel
 
-  // URL de tu playlist Megaphone
-  private readonly megaphoneEmbedUrl = 'https://playlist.megaphone.fm?p=MTSTA4599725524';
-
-  // 👇 INYECTA AQUÍ el servicio (no lo declares aparte)
   constructor(
     private podcastServicePC: PodcastPCService,
     private megaphonePlayerService: MegaphonePlayerService
@@ -33,6 +30,7 @@ export class Podcasts implements OnInit  {
       next: (data) => {
         this.podcasts = data ?? [];
         this.loading = false;
+        this.ensureIndexInBounds();
         console.log('✅ Podcasts recibidos:', this.podcasts);
       },
       error: (err) => {
@@ -44,35 +42,55 @@ export class Podcasts implements OnInit  {
   }
 
   podcastsLimited(): PodcastDesktopPayload[] {
-    return this.podcasts.slice(0, 5);
+    return this.podcasts.slice(0, this.maxVisible);
+  }
+
+  get totalSlides(): number {
+    return this.podcastsLimited().length;
+  }
+
+  get canNavigate(): boolean {
+    return this.totalSlides > 1;
+  }
+
+  onPrevious(): void {
+    if (!this.canNavigate) return;
+    this.currentIndex = (this.currentIndex - 1 + this.totalSlides) % this.totalSlides;
+    console.log('← Prev: currentIndex', this.currentIndex); // Debug
+  }
+
+  onNext(): void {
+    if (!this.canNavigate) return;
+    this.currentIndex = (this.currentIndex + 1) % this.totalSlides;
+    console.log('→ Next: currentIndex', this.currentIndex); // Debug
+  }
+
+  getSlideAriaLabel(index: number): string {
+    const list = this.podcastsLimited();
+    const item = list[index];
+    const title = item ? this.getTitle(item) : 'Podcast';
+    return `Podcast ${index + 1} de ${this.totalSlides}: ${title}`;
   }
 
   trackById = (_: number, p: PodcastDesktopPayload) =>
     (p as any)._id ?? (p as any).id ?? (p as any).slug ?? _;
 
   getCover(p: PodcastDesktopPayload): string {
-    return (
-      (p as any).coverImage ||
-      (p as any).image ||
-      (p as any).bannerImage ||
-      'assets/placeholders/podcast-cover.png'
-    );
+    return (p as any).coverImage || (p as any).image || (p as any).bannerImage || 'assets/placeholders/podcast-cover.png';
   }
 
   getTitle(p: PodcastDesktopPayload): string {
-    return (
-      (p as any).title ||
-      (p as any).name ||
-      'Podcast'
-    );
+    return (p as any).title || (p as any).name || 'Podcast';
   }
 
-  // ▶️ acción play -> abrir player global
   onPlay(p: PodcastDesktopPayload) {
     console.log('▶️ Play:', this.getTitle(p), p);
-
-    // abrir el player global con tu playlist de Megaphone
-    this.megaphonePlayerService.open(this.megaphoneEmbedUrl);
+    try {
+      this.megaphonePlayerService.open(this.megaphoneEmbedUrl);
+      console.log('Player abierto con éxito');
+    } catch (error) {
+      console.error('Error al abrir player:', error);
+    }
   }
 
   getSizeClass(idx: number): string {
@@ -81,38 +99,32 @@ export class Podcasts implements OnInit  {
   }
 
   getPlaySize(idx: number): number {
-    switch (this.getSizeClass(idx)) {
-      case 'podcast-card-small':
-        return 40;
-      case 'podcast-card-large':
-        return 55;
-      default:
-        return 45;
-    }
+    const size = this.getSizeClass(idx);
+    return size === 'podcast-card-small' ? 40 : size === 'podcast-card-large' ? 55 : 45;
   }
 
   getPlayViewBox(idx: number): string {
-    const sizeClass = this.getSizeClass(idx);
-    if (sizeClass === 'podcast-card-small') return '0 0 40 40';
-    if (sizeClass === 'podcast-card-large') return '0 0 55 55';
-    return '0 0 45 45';
+    const size = this.getSizeClass(idx);
+    return size === 'podcast-card-small' ? '0 0 40 40' : size === 'podcast-card-large' ? '0 0 55 55' : '0 0 45 45';
   }
 
   getPlayRadius(idx: number): number {
-    const sizeClass = this.getSizeClass(idx);
-    if (sizeClass === 'podcast-card-small') return 20;
-    if (sizeClass === 'podcast-card-large') return 27.5;
-    return 22.5;
+    const size = this.getSizeClass(idx);
+    return size === 'podcast-card-small' ? 20 : size === 'podcast-card-large' ? 27.5 : 22.5;
   }
 
   getPlayPath(idx: number): string {
-    const sizeClass = this.getSizeClass(idx);
-    if (sizeClass === 'podcast-card-small') {
-      return 'M15 12L28 20L15 28V12Z';
-    }
-    if (sizeClass === 'podcast-card-large') {
-      return 'M21 17L39 27.5L21 38V17Z';
-    }
+    const size = this.getSizeClass(idx);
+    if (size === 'podcast-card-small') return 'M15 12L28 20L15 28V12Z';
+    if (size === 'podcast-card-large') return 'M21 17L39 27.5L21 38V17Z';
     return 'M17 13L31 22.5L17 32V13Z';
+  }
+
+  private ensureIndexInBounds(): void {
+    if (this.totalSlides === 0) {
+      this.currentIndex = 0;
+      return;
+    }
+    this.currentIndex = ((this.currentIndex % this.totalSlides) + this.totalSlides) % this.totalSlides;
   }
 }
