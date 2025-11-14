@@ -51,7 +51,7 @@
 Noticias, podcast, eventos y radio en vivo, todo lo que importa en tu idioma y en un solo lugar.<br />
  Infórmate sobre salud, política, entretenimiento, finanzas y mucho más, cuando quieras y como quieras.
         </p>
-        <button [routerLink]="['/nosotros-pagina']"  class="cta-outlined-button">Conócenos</button>
+        <a [routerLink]="['/nosotros-pagina']" (click)="scrollToTop()" class="cta-outlined-button">Conócenos</a>
       </div>
       <div class="decorative-image">
         <img

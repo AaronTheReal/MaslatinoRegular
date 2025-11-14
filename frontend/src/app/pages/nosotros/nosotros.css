@@ -1,67 +1,94 @@
-
-
-/* Reset y estilos base */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Inter', sans-serif;
-    color: #000;
-    background-color: #fff;
-    overflow-x: hidden;
+  font-family: 'Inter', sans-serif;
+  color: #000;
+  background-color: #fff;
+  overflow-x: hidden;
 }
 
+/* CONTENEDOR GENERAL: ahora responsivo */
 .container {
-    width: 1080px;
-    margin: 0 auto;
-    position: relative;
+  width: 100%;
+  max-width: 1080px;          /* tu ancho de diseño */
+  margin: 0 auto;
+  position: relative;
+  padding-inline: 16px;       /* respiración lateral en móviles */
+}
+
+/* En pantallas grandes quitamos padding lateral */
+@media (min-width: 1024px) {
+  .container {
+    padding-inline: 0;
+  }
 }
 
 /* Header */
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    position: absolute;
-    top: 50.46px;
-    left: 0;
-    width: 100%;
-    z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  position: absolute;
+  top: 50.46px;
+  left: 0;
+  width: 100%;
+  z-index: 100;
 }
 
 .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .logo-circle {
-    width: 44px;
-    height: 44px;
-    border: 0.75px solid black;
-    border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border: 0.75px solid black;
+  border-radius: 50%;
 }
 
 .logo-letter {
-    font-size: 24px;
-    font-weight: bold;
+  font-size: 24px;
+  font-weight: bold;
 }
 
 .menu-icon {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
 }
 
 .menu-line {
-    width: 37px;
-    height: 6px;
-    background-color: black;
+  width: 37px;
+  height: 6px;
+  background-color: black;
 }
 
-    
+/* Ajuste header en móvil */
+@media (max-width: 600px) {
+  .header {
+    padding: 10px 12px;
+    top: 24px;
+  }
+
+  .logo-circle {
+    width: 36px;
+    height: 36px;
+  }
+
+  .logo-letter {
+    font-size: 20px;
+  }
+
+  .menu-line {
+    width: 28px;
+    height: 5px;
+  }
+}

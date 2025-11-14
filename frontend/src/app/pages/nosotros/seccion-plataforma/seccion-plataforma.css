@@ -1,53 +1,113 @@
 /* Sección Plataforma */
 .platform-section {
   position: relative;
-  padding: 80px 0;
+  padding: clamp(48px, 8vw, 80px) 0;
   text-align: center;
-
-  /* antes teníamos overflow: hidden; quítalo */
-  overflow: visible;
-
-  /* para que esta sección quede por encima de las demás */
+  overflow: visible; /* que se vean las burbujas */
   z-index: 1;
+
+  /* 💥 Hacerla full-bleed, pegada a la pantalla */
+  width: 100vw;              /* ancho igual al viewport */
+  margin-left: 50%;          /* centramos respecto al padre */
+  transform: translateX(-50%); /* pero la desplazamos para ocupar todo el viewport */
+  box-sizing: border-box;
 }
 
 /* Título centrado SIEMPRE arriba de todo */
 .platform-title {
   position: relative;
   z-index: 3;          /* texto arriba */
-  font-size: 45.06px;
+  font-size: clamp(26px, 4.3vw, 45.06px);
   font-weight: 600;
   line-height: 1.2;
   margin: 0;
+  padding: 0 16px;     /* respiración lateral en cel */
 }
 
 /* Imágenes decorativas */
 .platform-image {
   position: absolute;
-  width: 220px;
-  height: 220px;
-  border-radius: 50%;
-  overflow: hidden;
+  /* ANCHO RESPONSIVO, SIN ALTURA FIJA PARA NO CORTAR */
+  width: min(28vw, 400px);
+  max-width: 400px;
+  /* height: auto => altura proporcional a la imagen */
+  height: auto;
 
-  /* por delante del fondo blanco, pero debajo del texto */
-  z-index: 2;
+  /* que no recorte la imagen interna */
+  overflow: visible;
+
+  z-index: 1;          /* debajo del texto, encima del fondo */
   pointer-events: none;
 }
 
-/* Abajo izquierda */
+/* Abajo izquierda - PEGADA A LA PANTALLA */
 .platform-image--left {
-  bottom: -40px;
-  left: -40px;
+  bottom: 0;   /* la pegas a la parte baja */
+  left: -130px;     /* pegada al borde izquierdo */
 }
 
-/* Arriba derecha */
+/* Arriba derecha - PEGADA A LA PANTALLA */
 .platform-image--right {
-  top: -40px;
-  right: -40px;
+  top: 0;      /* pegada arriba */
+  right: -130px;    /* pegada al borde derecho */
 }
 
+/* Imagen interna: siempre completa, sin recorte */
 .platform-image img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;  /* no recorta nada */
+  display: block;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 768px) {
+  .platform-section {
+    padding: 56px 0 72px;
+  }
+
+  /* En tablet/cel, un poco más grandes pero siempre dentro de la pantalla */
+  .platform-image {
+    width: min(40vw, 220px);
+    max-width: 220px;
+  }
+
+  .platform-image--left {
+    bottom: 0;
+    left: 0;
+  }
+
+  .platform-image--right {
+    top: 0;
+    right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .platform-section {
+    padding: 56px 0 64px;
+  }
+
+  .platform-title {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .platform-image {
+    width: min(44vw, 190px);
+    max-width: 190px;
+  }
+
+  .platform-image--left {
+    bottom: -10px;
+    left: -95px;
+  }
+
+  .platform-image--right {
+    top: -10px;
+    right: -95px;
+  }
 }

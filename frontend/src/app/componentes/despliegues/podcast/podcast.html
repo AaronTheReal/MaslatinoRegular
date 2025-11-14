@@ -33,14 +33,105 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
 <!--        <img src="https://api.builder.io/api/v1/image/assets/TEMP/bd17cdfc93d7c5b97152a962abce74a6149e6c89?width=3095" alt="Podcast host with headphones" class="hero-person-image">
 -->
 <section class="player-section overlap-on-hero">
+  <div class="player-card">
+    <div class="player-content">
+      <div class="album-art">
+        <img src="https://maslatino.com/wp-content/uploads/New-England-Deportes-2048x2048.png"
+             alt="Episode cover"
+             class="album-image">
+      </div>
+      <div class="player-info">
+        <h2 class="episode-title">New England<br>Deportes</h2>
+        <p class="episode-number">Episodio 1</p>
+        <div class="player-controls">
+          <!-- 👇 AQUI AGREGAMOS (click)="onPlay()" -->
+          <button class="play-btn"
+                  aria-label="Play episode"
+                  (click)="onPlay()">
+            <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
+              <circle cx="34" cy="34" r="34" fill="black"/>
+              <path d="M25 47.9V19.7L49.4 33.8L25 47.9Z" fill="white"/>
+            </svg>
+          </button>
+
+          <div class="progress-bar">
+            <div class="progress-track"></div>
+            <div class="progress-indicator"></div>
+          </div>
+
+          <button class="volume-btn" aria-label="Volume control">
+            <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
+              <path d="M21 0C9.402 0 0 9.402 0 21C0 32.598 9.402 42 21 42C32.598 42 42 32.598 42 21C42 9.402 32.598 0 21 0Z" fill="black"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+
+
+
+
+
+
+
+
+
+
+<section class="player-section overlap-on-hero">
     <div class="player-card">
       <div class="player-content">
         <div class="album-art">
-          <img src="https://api.builder.io/api/v1/image/assets/TEMP/ff58d9189b36f5aad253933fd9cc8a359b13ad4c?width=959" alt="Episode cover" class="album-image">
+          <img src="https://maslatino.com/wp-content/uploads/New-England-Deportes-2048x2048.png" alt="Episode cover" class="album-image">
         </div>
         <div class="player-info">
-          <h2 class="episode-title">Lorem ipsum dolor<br>sit amet, consectetuer</h2>
-          <p class="episode-number">Episode 10</p>
+          <h2 class="episode-title">New England<br>Deportes</h2>
+          <p class="episode-number">Episodio 1</p>
           <div class="player-controls">
             <button class="play-btn" aria-label="Play episode">
               <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
@@ -62,7 +153,13 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
       </div>
     </div>
   </section>
-<!--
+
+
+
+
+
+
+
   <section class="more-podcasts-section">
     <h2 class="section-title">MAS PODCAST</h2>
     <div class="more-podcasts-grid">

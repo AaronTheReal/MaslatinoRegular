@@ -42,4 +42,10 @@ export class Recomendadas {
       }
     })
   );
+  scrollToTop() {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth' // puedes quitar 'smooth' si lo quieres instantáneo
+  });
+}
 }

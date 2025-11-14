@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { PodcastPCService, PodcastDesktopPayload } from '../../../services/podcast-servicePC';
+import { MegaphonePlayerService } from '../../../shared/megaphone-player/megaphone.service';
 
 type Lang =
   | 'es'|'es-MX'|'es-AR'|'es-BO'|'es-CL'|'es-CO'|'es-CR'|'es-CU'|'es-DO'
@@ -96,6 +97,7 @@ export class Podcast {
   // ====== LINKS A APP (Play Store / App Store) ======
   private readonly ANDROID_PACKAGE = 'com.maslatino.app';
   private readonly IOS_APP_ID      = '6698865116';
+  private readonly megaphoneEmbedUrl = 'https://playlist.megaphone.fm?p=MTSTA4599725524';
 
   // Si luego tienes deep link (ej: 'maslatino://'), lo pones aquí.
   private readonly CUSTOM_SCHEME   = '';
@@ -115,7 +117,8 @@ export class Podcast {
     return `intent://open#Intent;scheme=${scheme};package=${pkg};S.browser_fallback_url=${fallback};end`;
   }
 
-  constructor(private api: PodcastPCService) {
+  constructor(private api: PodcastPCService,  private megaphonePlayerService: MegaphonePlayerService
+) {
     this.fetchAll();
 
     // Reset de página al cambiar filtros
@@ -246,6 +249,26 @@ export class Podcast {
     if (!this.hasMore()) return;
     this.page.update(p => p + 1);
   }
+onPlay() {
+  console.log('▶️ [Podcast detalle] click en PLAY');
+
+  try {
+    // 1) Intentar usar el mismo servicio que en el home
+    if (this.megaphonePlayerService) {
+      console.log('Intentando MegaphonePlayerService.open(...)');
+      this.megaphonePlayerService.open(this.megaphoneEmbedUrl);
+      return;
+    }
+  } catch (err) {
+    console.error('Error usando MegaphonePlayerService:', err);
+  }
+
+  // 2) Fallback DEFINITIVO: abrir en nueva pestaña/ventana
+  if (typeof window !== 'undefined') {
+    console.log('⚠️ Usando fallback window.open hacia Megaphone');
+    window.open(this.megaphoneEmbedUrl, '_blank', 'noopener');
+  }
+}
 
   // Utils presentación
   trackById(_i: number, p: PodcastDoc) { return p._id; }
@@ -300,4 +323,5 @@ export class Podcast {
       }
     }, 800);
   }
+  
 }

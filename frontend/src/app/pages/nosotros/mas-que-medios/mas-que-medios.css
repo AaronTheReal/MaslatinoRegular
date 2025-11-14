@@ -11,6 +11,7 @@
     font-weight: 600;
     line-height: 1.2;
     margin-bottom: 40px;
+    
 }
 
 .movement-graphics {
@@ -20,3 +21,16 @@
     border-radius: 20px;
     margin: 0 40px;
 }
+
+.pillars-description,
+.pillars-description2 {
+  font-size: clamp(14px, 2vw, 17.15px);
+  font-weight: 300;
+  line-height: 1.5;
+  margin-bottom: clamp(32px, 5vw, 60px);
+  max-width: 760px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 16px;      /* respiración lateral en cel */
+}
+

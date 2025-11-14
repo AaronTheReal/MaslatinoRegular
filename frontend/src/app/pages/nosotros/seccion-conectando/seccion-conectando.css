@@ -1,81 +1,90 @@
-
 /* Sección Nosotros */
 .nosotros-section {
-    position: relative;
-    height: 500px;
-    padding-top: 100px;
+  position: relative;
+  padding: clamp(56px, 8vw, 100px) 16px clamp(40px, 6vw, 80px);
+  /* sin height fija para que crezca con el contenido */
 }
 
+/* Título NOSOTROS */
 .nosotros-title {
-    font-size: 55.60px;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 50px;
+  font-size: clamp(28px, 4.5vw, 55.6px);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: clamp(24px, 4vw, 50px);
 }
 
-.content-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 50px;
+/* Wrapper principal */
+.nosotros-section .content-wrapper {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: clamp(24px, 5vw, 50px);
 }
 
-.text-content {
-    flex: 1;
+/* Columna izquierda */
+.nosotros-section .text-content {
+  flex: 1;
 }
 
-.hero-title {
-    font-size: 43.61px;
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: 30px;
+/* Título grande dentro de nosotros (scoped) */
+.nosotros-section .hero-title {
+  font-size: clamp(26px, 4vw, 43.61px);
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 30px;
 }
 
 .highlight-red {
-    color: #FE3824;
+  color: #FE3824;
 }
 
-.hero-description {
+/* Columna derecha: descripción */
+.nosotros-section .hero-description {
+  flex: 1;
+  font-size: clamp(16px, 2.1vw, 24px);
+  font-weight: 300;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* =========================
+   Responsive
+   ========================= */
+
+@media (max-width: 900px) {
+  .nosotros-section .content-wrapper {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .nosotros-section .text-content,
+  .nosotros-section .hero-description {
+    flex: none;
+    max-width: 640px;
+  }
+
+  .nosotros-section .hero-title {
+    margin-bottom: 24px;
+  }
+
+  .nosotros-section .hero-description {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nosotros-section {
+    padding: 48px 16px 40px;
+  }
+
+  .nosotros-section .hero-title {
     font-size: 24px;
-    font-weight: 300;
-    line-height: 1.5;
-}
+  }
 
-.graphic-content {
-    flex: 1;
-    position: relative;
-}
-
-.floating-shapes {
-    position: relative;
-    height: 400px;
-}
-
-.shape {
-    position: absolute;
-    border-radius: 50%;
-}
-
-.shape-1 {
-    width: 350.49px;
-    height: 289.67px;
-    background-color: #FAAF3E;
-    top: 50px;
-    right: 0;
-}
-
-.shape-2 {
-    width: 339.62px;
-    height: 332.12px;
-    background-color: #00CB7E;
-    top: 100px;
-    right: 100px;
-}
-
-.shape-3 {
-    width: 427.19px;
-    height: 203.54px;
-    background-color: #FE3824;
-    top: 200px;
-    right: 50px;
+  .nosotros-section .hero-description {
+    font-size: 15px;
+  }
 }
