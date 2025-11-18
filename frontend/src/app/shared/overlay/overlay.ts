@@ -128,10 +128,12 @@ ngOnInit() {
   }
 
   this.loading = true;
+const NOTICIAS_OVERLAY_LIMIT = 20; // ajusta 100, 150, 200 según se sienta
 
   forkJoin({
     categorias: this.categoriaService.obtenerCategorias(),
-    noticias: this.noticiasService.getNoticias(),
+    // ⬇⬇ ANTES: getNoticias()
+    noticias: this.noticiasService.getNoticiasRecientes(NOTICIAS_OVERLAY_LIMIT),
     podcasts: this.podcastService.obtenerPodcasts()
   }).subscribe({
     next: ({ categorias, noticias, podcasts }) => {

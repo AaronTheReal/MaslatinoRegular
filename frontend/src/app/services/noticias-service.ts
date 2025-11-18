@@ -34,6 +34,34 @@ export class NoticiasService {
     }
     return observable;
   }
+  // ======== Paginación real desde backend ========
+  getNoticiasPaginadas(
+    page = 1,
+    limit = 5
+  ): Observable<{ items: Noticia[]; total: number; page: number; limit: number }> {
+    const key = makeStateKey<{ items: Noticia[]; total: number; page: number; limit: number }>(
+      `noticias-pag-${page}-${limit}`
+    );
+
+    // TransferState: si ya viene del SSR, lo usamos
+    if (this.ts.hasKey(key)) {
+      const data = this.ts.get(key, { items: [], total: 0, page, limit });
+      this.ts.remove(key);
+      return of(data);
+    }
+
+    const observable = this.http
+      .get<{ items: Noticia[]; total: number; page: number; limit: number }>(
+        `${this.baseUrl}/noticias/paginadas?page=${page}&limit=${limit}`
+      )
+      .pipe(shareReplay(1));
+
+    if (isPlatformServer(this.platformId)) {
+      return observable.pipe(tap(data => this.ts.set(key, data)));
+    }
+
+    return observable;
+  }
 
   /** Crear */
   createNoticia(data: Noticia): Observable<Noticia> {

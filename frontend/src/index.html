@@ -1,20 +1,48 @@
 <!doctype html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="utf-8">
-  <title>NombreProyecto</title>
+  <!-- TÍTULO GENERAL DEL SITIO -->
+  <title>Mas Latino - News with Sabor - Noticias con sabor</title>
+
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player" defer></script>
-  <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
-  <!-- Google Fonts: Oswald
-  <link
-    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&display=swap"
-    rel="stylesheet"
-  />
-   -->
 
-  <!-- Bootstrap CSS (puede ser CDN o import vía angular.json) -->
+  <!-- SEO BÁSICO GLOBAL -->
+  <meta name="description"
+        content="Mas Latino es tu espacio de noticias con sabor: economía, política, deportes, familia, entretenimiento y más, en español.">
+  <meta name="robots"
+        content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+
+  <!-- CANONICAL (ajusta al dominio final cuando lo tengas) -->
+  <link rel="canonical" href="https://maslatino.com/">
+
+  <!-- OPEN GRAPH (para Facebook y redes) -->
+  <meta property="og:locale" content="es_ES">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mas Latino - News with Sabor - Noticias con sabor">
+  <meta property="og:description"
+        content="Noticias y contenido en español sobre economía, política, deportes, familia y más.">
+  <meta property="og:url" content="https://maslatino.com/">
+  <meta property="og:site_name" content="Mas Latino - News with Sabor - Noticias con sabor">
+  <!-- Usa una imagen tuya estable; puedes cambiar esta URL cuando migres todo -->
+  <meta property="og:image" content="https://maslatino.com/wp-content/uploads/bannerWEB.jpg">
+
+  <!-- TWITTER CARD BÁSICO -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mas Latino - News with Sabor - Noticias con sabor">
+  <meta name="twitter:description"
+        content="Noticias con sabor: economía, política, deportes, familia, entretenimiento y más.">
+  <meta name="twitter:image" content="https://maslatino.com/wp-content/uploads/bannerWEB.jpg">
+
+  <!-- (Opcional) color del navegador en móvil -->
+  <meta name="theme-color" content="#000000">
+
+  <!-- TUS SCRIPTS YA EXISTENTES -->
+  <script src="https://cdn.jsdelivr.net/npm/@mux/mux-player" defer></script>
+  <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+
+  <!-- Bootstrap CSS -->
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -22,17 +50,15 @@
     crossorigin="anonymous"
   />
 
-  <!-- Bootstrap Icons (CDN) -->
+  <!-- Bootstrap Icons -->
   <link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
   />
 
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/x-icon" href="favicon.png">
 </head>
 <body>
   <app-root></app-root>
 </body>
 </html>
-
-
