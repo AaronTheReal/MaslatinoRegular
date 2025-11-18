@@ -25,6 +25,7 @@ export class NoticiasTodas implements OnInit {
 
   // Datos
   noticias: Noticia[] = [];
+  totalNoticias = 0;             // ⭐ total que viene del backend
 
   // Botones de filtro
   categories: string[] = ['All'];
@@ -46,9 +47,17 @@ export class NoticiasTodas implements OnInit {
     'all': '#000000',
   };
 
+  // =========================
+  //     PAGINACIÓN
+  // =========================
+
+  pageSize = 5;   // ⭐ 5 por página
+  currentPage = 1;
+
   ngOnInit(): void {
     console.log("si llega?");
-    // 1) Cargar categorías
+
+    // 1) Cargar categorías (igual que antes)
     this.categoriasService.obtenerCategorias().subscribe({
       next: (res: CategoriaPayload[]) => {
         const limpias = (res ?? []).filter(c => !!c && !!c.name && !!c.slug);
@@ -73,14 +82,23 @@ export class NoticiasTodas implements OnInit {
       error: (e) => console.error('Error al cargar categorías:', e)
     });
 
-    // 2) Cargar noticias
-    this.noticiasService.getNoticiasRecientes(30).subscribe({
-      next: (data) => {
-        this.noticias = Array.isArray(data) ? data : [];
-        console.log("estas",this.noticias);
+    // 2) Cargar NOTICIAS PAGINADAS desde backend
+    this.loadPage(1);   // ⭐ empezamos en página 1
+  }
+
+  // ⭐ NUEVO: carga una página desde el backend
+  private loadPage(page: number): void {
+    this.noticiasService.getNoticiasPaginadas(page, this.pageSize).subscribe({
+      next: (res) => {
+        this.noticias = Array.isArray(res.items) ? res.items : [];
+        this.totalNoticias = res.total || 0;
+        this.currentPage = res.page || page;
+        console.log('noticias paginadas:', this.noticias, 'total:', this.totalNoticias);
       },
       error: (err) => {
-        console.error('Error cargando noticias recientes', err);
+        console.error('Error cargando noticias paginadas', err);
+        this.noticias = [];
+        this.totalNoticias = 0;
       }
     });
   }
@@ -172,27 +190,32 @@ export class NoticiasTodas implements OnInit {
   setActiveCategory(category: string): void {
     this.activeCategory = category;
     this.currentPage = 1;
+    // OJO: si quisieras filtrar también en backend por categoría,
+    // aquí habría que llamar a otro endpoint. De momento filtramos
+    // solo sobre la página actual.
   }
 
   onSearchInput(value: string | undefined) {
     this.searchQuery = value ?? '';
     this.currentPage = 1;
+    // Igual que arriba: ahora mismo búsqueda = filtro sobre la página actual.
   }
 
-  /** Dado el/** Siempre texto blanco para las etiquetas de categoría. */
-getCategoryTextColor(_: string): string {
-  return '#fff';
-}
-/** Devuelve todas las categorías “display” de una noticia (resueltas por catálogo). */
-getCategoriesFor(n: Noticia): string[] {
-  return this.extraerNombresCategorias(n);
-}
+  /** Siempre texto blanco para las etiquetas de categoría. */
+  getCategoryTextColor(_: string): string {
+    return '#fff';
+  }
 
-/** Luminancia relativa (WCAG) para decidir color de texto. */
-private relativeLuminance(r: number, g: number, b: number): number {
-  const srgb = [r, g, b].map(v => v / 255).map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
-  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
-}
+  /** Devuelve todas las categorías “display” de una noticia (resueltas por catálogo). */
+  getCategoriesFor(n: Noticia): string[] {
+    return this.extraerNombresCategorias(n);
+  }
+
+  /** Luminancia relativa (WCAG) para decidir color de texto (lo dejas por si lo usas después). */
+  private relativeLuminance(r: number, g: number, b: number): number {
+    const srgb = [r, g, b].map(v => v / 255).map(c => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)));
+    return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+  }
 
   // =========================
   //    Derivados de render
@@ -208,6 +231,7 @@ private relativeLuminance(r: number, g: number, b: number): number {
       || 'assets/images/news-fallback.jpg';
   }
 
+  // Filtro se aplica SOLO sobre la página actual (this.noticias)
   get filteredNoticias(): Noticia[] {
     const q = this.searchQuery.trim().toLowerCase();
     const active = (this.activeCategory ?? 'All').toLowerCase();
@@ -224,21 +248,20 @@ private relativeLuminance(r: number, g: number, b: number): number {
   //     PAGINACIÓN SIMPLE
   // =========================
 
-  pageSize = 5;
-  currentPage = 1;
-
+  // ⭐ ahora usamos el total del backend
   get totalPages(): number {
-    return Math.ceil(this.filteredNoticias.length / this.pageSize);
+    const t = Math.ceil((this.totalNoticias || 0) / this.pageSize);
+    return t > 0 ? t : 1;
   }
 
+  // ⭐ ya NO cortamos por slice, el backend ya nos retornó esa página
   get paginatedNoticias(): Noticia[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.filteredNoticias.slice(start, start + this.pageSize);
+    return this.filteredNoticias;
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
+      this.loadPage(page);  // ⭐ pedimos esa página al backend
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }

@@ -37,7 +37,12 @@ const allowedOrigins = [
   'https://18.191.71.237',
   'http://18.191.71.237',
    'https://maslatino-q7fe.onrender.com',
-   'capacitor://localhost'
+   'capacitor://localhost',
+   'https://www.maslatino.com',
+    'https://maslatino.com',
+   'www.maslatino.com',
+
+
 ];
 
 // Configuración avanzada de CORS

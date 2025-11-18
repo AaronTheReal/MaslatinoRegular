@@ -37,7 +37,7 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background: #f8f8f8;
+  background: #ffffff00;
   width: 100%;
   display: flex;
   align-items: center;
@@ -108,7 +108,7 @@
   overflow: auto;
   padding-right: 8px;
   scroll-behavior: smooth;
-  background: #f8f8f8; /* para que el fade funcione bien */
+  background: #ffffffab; /* para que el fade funcione bien */
   border-radius: 12px;
 }
 

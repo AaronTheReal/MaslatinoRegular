@@ -36,17 +36,17 @@ export const routes: Routes = [
 
 
   //admin-panel
-  { path: 'admin-panel', component: PanelAdmin },
-  { path: 'usuarios-panel', component: PanelUsuarios },
-  { path: 'calendario-panel', component: PanelCalendario },
-  { path: 'calendario-panel-pc', component: PanelCalendarioPc },
-  { path: 'multimedia-panel', component: PanelMultimedia },
-  { path: 'noticias-panel', component: PanelNoticias },
-  { path: 'podcast-panel', component: PanelPodcast },
-  { path: 'radio-panel', component: PanelRadio },
-  { path: 'categorias-panel', component: PanelCategorias },
-  { path: 'admin-noticias', component: AdminNoticias },
-  { path: 'admin/noticiaseditar/:id', component: EditarNoticias },
+  //{ path: 'admin-panel', component: PanelAdmin },
+  //{ path: 'usuarios-panel', component: PanelUsuarios },
+  //{ path: 'calendario-panel', component: PanelCalendario },
+  //{ path: 'calendario-panel-pc', component: PanelCalendarioPc },
+  //{ path: 'multimedia-panel', component: PanelMultimedia },
+  //{ path: 'noticias-panel', component: PanelNoticias },
+  //{ path: 'podcast-panel', component: PanelPodcast },
+  //{ path: 'radio-panel', component: PanelRadio },
+  //{ path: 'categorias-panel', component: PanelCategorias },
+  //{ path: 'admin-noticias', component: AdminNoticias },
+  //{ path: 'admin/noticiaseditar/:id', component: EditarNoticias },
 
 
   { path: 'archivo/:anio/:mes', component: NoticiasDespliegue },
