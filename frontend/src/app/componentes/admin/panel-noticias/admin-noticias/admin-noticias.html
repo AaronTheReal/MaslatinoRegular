@@ -160,16 +160,39 @@
                 <ng-template #noDate><span class="text-muted">—</span></ng-template>
               </td>
               <td>{{ author(r) }}</td>
-              <td class="text-end">
-                <a class="btn btn-sm btn-outline-primary me-1" [routerLink]="['/admin/noticiaseditar', r._id]" aria-label="Editar {{r.title}}">Editar</a>
-                <button class="btn btn-sm btn-outline-danger me-1" (click)="onDelete(r)" aria-label="Eliminar {{r.title}}">Eliminar</button>
-                <button class="btn btn-sm" 
-                        [ngClass]="{'btn-success': !r.autorizada, 'btn-warning': r.autorizada}"
-                        (click)="onApprove(r)" 
-                        [attr.aria-label]="r.autorizada ? 'Desautorizar ' + r.title : 'Autorizar ' + r.title">
-                  {{ r.autorizada ? 'Desautorizar' : 'Autorizar' }}
-                </button>
-              </td>
+                <td class="text-end">
+                  <!-- Editar: solo si canEdit(r) -->
+                  <a
+                    *ngIf="canEdit(r)"
+                    class="btn btn-sm btn-outline-primary me-1"
+                    [routerLink]="['/admin/noticiaseditar', r._id]"
+                    aria-label="Editar {{r.title}}"
+                  >
+                    Editar
+                  </a>
+
+                  <!-- Eliminar: solo si canDelete(r) -->
+                  <button
+                    *ngIf="canDelete(r)"
+                    class="btn btn-sm btn-outline-danger me-1"
+                    (click)="onDelete(r)"
+                    aria-label="Eliminar {{r.title}}"
+                  >
+                    Eliminar
+                  </button>
+
+                  <!-- Autorizar / Desautorizar: solo Admin + Periodista (ya lo tenías con canAuthorize) -->
+                  <button
+                    *ngIf="canAuthorize()"
+                    class="btn btn-sm"
+                    [ngClass]="{'btn-success': !r.autorizada, 'btn-warning': r.autorizada}"
+                    (click)="onApprove(r)"
+                    [attr.aria-label]="r.autorizada ? 'Desautorizar ' + r.title : 'Autorizar ' + r.title"
+                  >
+                    {{ r.autorizada ? 'Desautorizar' : 'Autorizar' }}
+                  </button>
+                </td>
+
             </tr>
           </tbody>
         </table>

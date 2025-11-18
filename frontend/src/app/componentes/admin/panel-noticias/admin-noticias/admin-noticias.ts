@@ -7,6 +7,7 @@ import { NoticiasService } from '../../../../services/noticias-service';
 import { CategoriaService, CategoriaPayload } from '../../../../services/categorias-service';
 import { Noticia, Category } from '../../../../../models/noticia.model';
 import { CategorySearchPipe } from '../../../pipe/category-search.pipe';
+type AdminRole = 'Periodista' | 'Escritor' | 'Administrador' | 'Tecnico';
 
 type StateOpt = 'all' | 'draft' | 'published' | 'pending';
 type SortOpt = '-publishAt' | 'publishAt' | 'title' | '-title' | 'createdAt' | '-createdAt';
@@ -34,6 +35,7 @@ export class AdminNoticias {
   private noticiasSvc = inject(NoticiasService);
   private categoriasSvc = inject(CategoriaService);
   private elRef = inject(ElementRef);
+  userRole: AdminRole | null = null;
 
   readonly form = this.fb.nonNullable.group({
     q: [''],
@@ -73,7 +75,22 @@ export class AdminNoticias {
       this.filtersSig.set(this.form.getRawValue());
     });
   }
-
+  ngOnInit(): void {
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('admin_user');
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          this.userRole = parsed?.role as AdminRole;
+        } catch (e) {
+          console.error('Error parsing admin_user', e);
+        }
+      }
+    }
+  }
+    canAuthorize(): boolean {
+    return this.userRole === 'Administrador' || this.userRole === 'Periodista';
+  }
   private loadNoticias() {
     this.loading.set(true);
     this.noticiasSvc.getNoticias().subscribe({
@@ -314,6 +331,23 @@ export class AdminNoticias {
         this.loading.set(false);
       }
     });
+  }
+  // --- Permisos visuales para acciones por noticia ---
+
+  canEdit(row: Noticia): boolean {
+    // Escritor NO puede editar si la noticia ya está autorizada
+    if (this.userRole === 'Escritor' && row.autorizada) {
+      return false;
+    }
+    return true; // los demás roles sí pueden
+  }
+
+  canDelete(row: Noticia): boolean {
+    // Escritor NO puede eliminar si la noticia ya está autorizada
+    if (this.userRole === 'Escritor' && row.autorizada) {
+      return false;
+    }
+    return true; // los demás roles sí pueden
   }
 
   nextPage() {

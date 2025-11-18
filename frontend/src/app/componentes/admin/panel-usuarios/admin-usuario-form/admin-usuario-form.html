@@ -1,0 +1,85 @@
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h2>{{ titulo }}</h2>
+      <p>
+        {{ mode === 'create'
+          ? 'Crea una nueva cuenta para el panel de administración.'
+          : 'Actualiza los datos de acceso del usuario seleccionado.' }}
+      </p>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-body">
+    <div class="form-row">
+      <label for="name">Nombre</label>
+      <input
+        id="name"
+        type="text"
+        formControlName="name"
+        placeholder="Nombre completo"
+      />
+      <div class="error" *ngIf="hasError('name', 'required')">
+        El nombre es obligatorio.
+      </div>
+      <div class="error" *ngIf="hasError('name', 'minlength')">
+        El nombre debe tener al menos 3 caracteres.
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label for="email">Email</label>
+      <input
+        id="email"
+        type="email"
+        formControlName="email"
+        placeholder="correo@ejemplo.com"
+      />
+      <div class="error" *ngIf="hasError('email', 'required')">
+        El email es obligatorio.
+      </div>
+      <div class="error" *ngIf="hasError('email', 'email')">
+        El formato del email no es válido.
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label for="role">Rol</label>
+      <select id="role" formControlName="role">
+        <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label for="password">
+        Contraseña
+        <span class="hint" *ngIf="mode === 'edit'">
+          (deja vacío para no cambiarla)
+        </span>
+      </label>
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        placeholder="{{ mode === 'create' ? 'Contraseña' : 'Nueva contraseña (opcional)' }}"
+      />
+    </div>
+
+    <div class="form-row checkbox-row">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="isActive" />
+        <span>Usuario activo</span>
+      </label>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="onCancel()">
+        Cancelar
+      </button>
+
+      <button type="submit" class="btn-primary" [disabled]="saving">
+        {{ saving ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
+  </form>
+</div>

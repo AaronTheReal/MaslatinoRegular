@@ -1,0 +1,89 @@
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h2>Usuarios del panel</h2>
+      <p>Lista de personas con acceso al administrador.</p>
+    </div>
+    <button class="btn-primary" (click)="onCrearNuevoClick()">
+      + Crear usuario
+    </button>
+  </div>
+
+  <div class="filters-row">
+    <div class="filter-item">
+      <label>Buscar</label>
+      <input
+        type="text"
+        placeholder="Nombre o email"
+        [(ngModel)]="filtroTexto"
+      />
+    </div>
+
+    <div class="filter-item">
+      <label>Rol</label>
+      <select [(ngModel)]="filtroRol">
+        <option value="todos">Todos</option>
+        <option value="Administrador">Administrador</option>
+        <option value="Tecnico">Técnico</option>
+        <option value="Periodista">Periodista</option>
+        <option value="Escritor">Escritor</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-row">
+    Cargando usuarios...
+  </div>
+
+  <div *ngIf="!loading && usuariosFiltrados.length === 0" class="empty-row">
+    No hay usuarios que coincidan con el filtro.
+  </div>
+
+  <div class="table-wrapper" *ngIf="!loading && usuariosFiltrados.length > 0">
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Estado</th>
+          <th class="col-actions">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of usuariosFiltrados">
+          <td>
+            <div class="user-main">
+              <span class="user-name">{{ u.name }}</span>
+              <span class="user-sub">{{ u.createdAt | date: 'shortDate' }}</span>
+            </div>
+          </td>
+          <td>{{ u.email }}</td>
+          <td>
+            <span [class]="roleBadgeClass(u.role)">
+              {{ u.role }}
+            </span>
+          </td>
+          <td>
+            <span
+              class="status-pill"
+              [class.active]="u.isActive !== false"
+              [class.inactive]="u.isActive === false"
+            >
+              {{ u.isActive === false ? 'Inactivo' : 'Activo' }}
+            </span>
+          </td>
+          <td class="col-actions">
+            <button class="btn-link" (click)="onEditarClick(u)">Editar</button>
+            <button class="btn-link" (click)="onToggleActivoClick(u)">
+              {{ u.isActive === false ? 'Reactivar' : 'Desactivar' }}
+            </button>
+            <button class="btn-link btn-link-danger" (click)="onEliminarClick(u)">
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
