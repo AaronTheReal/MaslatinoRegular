@@ -33,7 +33,9 @@ export const routes: Routes = [
   { path: '', component: Dashboard },
   { path: 'noticias-recientes', component: NoticiasRecientes },
 
-  { path: 'noticia/:slug', component: NoticiasIndividuales },
+  { path: ':slug', component: NoticiasIndividuales },
+  //{ path: 'noticia/:slug', component: NoticiasIndividuales },
+
   { path: 'sobre-nosotros', component: SobreNosotros },
 
 
