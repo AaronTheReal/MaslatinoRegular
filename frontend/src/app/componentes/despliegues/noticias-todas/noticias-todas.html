@@ -39,7 +39,7 @@
       <article
         *ngFor="let n of paginatedNoticias; trackBy: trackByNoticia"
         class="news-card"
-        [routerLink]="['/noticia', (n.slug || '')]">
+        [routerLink]="[(n?.slug || '')]">
         <div class="news-image-wrapper">
           <img [src]="getCardImage(n)" [alt]="n.meta?.imageAltGlobal || n.title" class="news-image" />
         </div>
