@@ -34,7 +34,7 @@ export const routes: Routes = [
   { path: 'noticias-recientes', component: NoticiasRecientes },
 
   { path: ':slug', component: NoticiasIndividuales },
-  //{ path: 'noticia/:slug', component: NoticiasIndividuales },
+ { path: 'noticia/:slug', component: NoticiasIndividuales },
 
   { path: 'sobre-nosotros', component: SobreNosotros },
 

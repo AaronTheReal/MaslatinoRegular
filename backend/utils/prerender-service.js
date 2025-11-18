@@ -2,7 +2,8 @@ import axios from 'axios';
 
 export async function recacheNoticia(slug) {
   const prerenderToken = 'rDjdSfG9AiLjP4fYB9Xd';
-  const url = `https://maslatino.netlify.app/${slug}`;
+  //const url = `https://maslatino.netlify.app/noticia/${slug}`;
+     const url = `https://maslatino.com/noticia/${slug}`;
 
   try {
     const res = await axios.post(
