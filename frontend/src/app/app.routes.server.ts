@@ -12,17 +12,17 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'sobre-nosotros',
     renderMode: RenderMode.Prerender
   },
-  /*
+  
   {
     path: 'noticia/*',
     renderMode: RenderMode.Server
   },
-  */
+  /*
   {
     path: ':slug',
     renderMode: RenderMode.Server
   },
-
+*/
   // Admin: solo cliente (sin SSR/SEO)
   { path: 'admin-panel', renderMode: RenderMode.Client },
   { path: 'usuarios-panel', renderMode: RenderMode.Client },
