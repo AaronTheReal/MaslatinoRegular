@@ -1,1 +1,37 @@
-<p>panel-usuarios works!</p>
+<div class="usuarios-wrapper">
+  <header class="usuarios-header">
+    <div>
+      <h1>Gestión de usuarios</h1>
+      <p>Administra quién puede entrar al panel de noticias, podcasts y contenido multimedia.</p>
+    </div>
+  </header>
+
+  <section *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </section>
+
+  <div class="usuarios-content">
+    <!-- LISTA -->
+    <section class="usuarios-list-section">
+      <app-admin-usuario-list
+        [usuarios]="usuarios"
+        [loading]="loading"
+        (crearNuevo)="onCrearNuevo()"
+        (editar)="onEditarUsuario($event)"
+        (toggleActivo)="onToggleActivo($event)"
+        (eliminar)="onEliminarUsuario($event)"
+      ></app-admin-usuario-list>
+    </section>
+
+    <!-- FORMULARIO -->
+    <section class="usuarios-form-section">
+      <app-admin-usuario-form
+        [mode]="mode"
+        [usuario]="usuarioSeleccionado"
+        [saving]="saving"
+        (submit)="onSubmitUsuario($event)"
+        (cancel)="onCancelEdicion()"
+      ></app-admin-usuario-form>
+    </section>
+  </div>
+</div>

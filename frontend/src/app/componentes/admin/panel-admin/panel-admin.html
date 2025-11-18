@@ -1,9 +1,18 @@
 <!-- panel-admin.html -->
 <div class="container py-4">
   <h2 class="mb-4 text-center">Panel de Administrador</h2>
+
+  <p class="text-center mb-3" *ngIf="userRole">
+    Sesión iniciada como:
+    <strong>{{ userRole }}</strong>
+  </p>
+  <p class="text-center text-muted mb-4" *ngIf="!userRole">
+    No se encontró información de usuario. (Asegúrate de iniciar sesión.)
+  </p>
+
   <div class="row g-4">
-    <!-- Noticias -->
-    <div class="col-12 col-sm-6 col-md-4">
+    <!-- Noticias (Admin, Periodista, Escritor) -->
+    <div class="col-12 col-sm-6 col-md-4" *ngIf="canSeeNoticias()">
       <a routerLink="/admin-noticias" class="text-decoration-none">
         <div class="admin-card bg-primary text-white">
           <i class="bi bi-newspaper-fill admin-icon"></i>
@@ -11,8 +20,9 @@
         </div>
       </a>
     </div>
-    <!-- Podcasts -->
-    <div class="col-12 col-sm-6 col-md-4">
+
+    <!-- Podcasts (Admin, Tecnico) -->
+    <div class="col-12 col-sm-6 col-md-4" *ngIf="canSeePodcasts()">
       <a routerLink="/podcast-panel" class="text-decoration-none">
         <div class="admin-card bg-success text-white">
           <i class="bi bi-mic-fill admin-icon"></i>
@@ -20,8 +30,9 @@
         </div>
       </a>
     </div>
-    <!-- Calendario -->
-    <div class="col-12 col-sm-6 col-md-4">
+
+    <!-- Calendario (solo Admin) -->
+    <div class="col-12 col-sm-6 col-md-4" *ngIf="canSeeCalendario()">
       <a routerLink="/calendario-panel" class="text-decoration-none">
         <div class="admin-card bg-warning text-dark">
           <i class="bi bi-calendar-event admin-icon"></i>
@@ -29,17 +40,19 @@
         </div>
       </a>
     </div>
-    <!-- Radio -->
-    <div class="col-12 col-sm-6 col-md-4">
+
+    <!-- Categorías (solo Admin) -->
+    <div class="col-12 col-sm-6 col-md-4" *ngIf="canSeeCategorias()">
       <a routerLink="/categorias-panel" class="text-decoration-none">
         <div class="admin-card bg-info text-white">
-          <i class="bi bi-radio admin-icon"></i>
-          <span class="admin-label">Categorias</span>
+          <i class="bi bi-tags-fill admin-icon"></i>
+          <span class="admin-label">Categorías</span>
         </div>
       </a>
     </div>
-    <!-- Usuarios -->
-    <div class="col-12 col-sm-6 col-md-4">
+
+    <!-- Usuarios (solo Admin) -->
+    <div class="col-12 col-sm-6 col-md-4" *ngIf="canSeeUsuarios()">
       <a routerLink="/usuarios-panel" class="text-decoration-none">
         <div class="admin-card bg-danger text-white">
           <i class="bi bi-people-fill admin-icon"></i>
@@ -47,8 +60,9 @@
         </div>
       </a>
     </div>
-    <!-- Multimedia -->
-    <div class="col-12 col-sm-6 col-md-4">
+
+    <!-- Multimedia (solo Admin) -->
+    <div class="col-12 col-sm-6 col-md-4" *ngIf="canSeeMultimedia()">
       <a routerLink="/multimedia-panel" class="text-decoration-none">
         <div class="admin-card bg-secondary text-white">
           <i class="bi bi-film admin-icon"></i>

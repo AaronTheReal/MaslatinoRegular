@@ -22,6 +22,8 @@ import {DescargaLaApp} from './pages/descarga-la-app/descarga-la-app'
 import {Podcast} from './componentes/despliegues/podcast/podcast'
 import {Nosotros} from './pages/nosotros/nosotros'
 import {NoticiasTodas} from './componentes/despliegues/noticias-todas/noticias-todas'
+import { LoginForm } from './componentes/admin/login-form/login-form'; 
+import { adminAuthGuard } from './guards/admin-auth.guard';
 
 //show
 import {Eventos} from './componentes/despliegues/eventos/eventos'
@@ -36,18 +38,21 @@ export const routes: Routes = [
 
 
   //admin-panel
-  //{ path: 'admin-panel', component: PanelAdmin },
-  //{ path: 'usuarios-panel', component: PanelUsuarios },
-  //{ path: 'calendario-panel', component: PanelCalendario },
-  //{ path: 'calendario-panel-pc', component: PanelCalendarioPc },
-  //{ path: 'multimedia-panel', component: PanelMultimedia },
-  //{ path: 'noticias-panel', component: PanelNoticias },
-  //{ path: 'podcast-panel', component: PanelPodcast },
-  //{ path: 'radio-panel', component: PanelRadio },
-  //{ path: 'categorias-panel', component: PanelCategorias },
-  //{ path: 'admin-noticias', component: AdminNoticias },
-  //{ path: 'admin/noticiaseditar/:id', component: EditarNoticias },
 
+  { path: 'admin-login', component: LoginForm },
+
+  // 🛡️ RUTAS PROTEGIDAS DEL ADMIN PANEL
+  { path: 'admin-panel', component: PanelAdmin, canActivate: [adminAuthGuard] },
+  { path: 'usuarios-panel', component: PanelUsuarios, canActivate: [adminAuthGuard] },
+  { path: 'calendario-panel', component: PanelCalendario, canActivate: [adminAuthGuard] },
+  { path: 'calendario-panel-pc', component: PanelCalendarioPc, canActivate: [adminAuthGuard] },
+  { path: 'multimedia-panel', component: PanelMultimedia, canActivate: [adminAuthGuard] },
+  { path: 'noticias-panel', component: PanelNoticias, canActivate: [adminAuthGuard] },
+  { path: 'podcast-panel', component: PanelPodcast, canActivate: [adminAuthGuard] },
+  { path: 'radio-panel', component: PanelRadio, canActivate: [adminAuthGuard] },
+  { path: 'categorias-panel', component: PanelCategorias, canActivate: [adminAuthGuard] },
+  { path: 'admin-noticias', component: AdminNoticias, canActivate: [adminAuthGuard] },
+  { path: 'admin/noticiaseditar/:id', component: EditarNoticias, canActivate: [adminAuthGuard] },
 
   { path: 'archivo/:anio/:mes', component: NoticiasDespliegue },
   { path: 'categoria/:slug', component: NoticiasDespliegue },

@@ -17,7 +17,7 @@ import CalendarioController from './CalendarioController.js';
 import TaquicardiaController from './TaquiController.js';
 import MuxController from './MuxController.js';
 import Noticia from '../models/Noticias.js'; // ajusta el path
-
+import UserAdminController from './UsuarioAdminController.js'
 import dotenv from 'dotenv';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
@@ -31,6 +31,7 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { flexibleChecksumsMiddlewareOptions } from '@aws-sdk/middleware-flexible-checksums';
 import crypto from 'crypto';
+import { verifyToken, requireRole } from '../authAdmin.js';
 
 dotenv.config();
 
@@ -171,6 +172,44 @@ export default class MainRoute {
     router.route('/verificar-codigo').post(UsuariosController.verificarCodigo);
     router.route('/reset-password').post(UsuariosController.resetPassword);
 
+
+    //UserAdminController
+
+router
+  .route('/admin/login')
+  .post(UserAdminController.login);
+
+// CRUD de usuarios del panel (solo Administrador puede hacer cambios)
+router
+  .route('/admin/usuarios')
+  .post(
+    verifyToken,
+    requireRole(['Administrador']),
+    UserAdminController.crearUsuario
+  )
+  .get(
+    verifyToken,
+    requireRole(['Administrador']),
+    UserAdminController.listarUsuarios
+  );
+
+router
+  .route('/admin/usuarios/:id')
+  .get(
+    verifyToken,
+    requireRole(['Administrador']),
+    UserAdminController.obtenerUsuario
+  )
+  .put(
+    verifyToken,
+    requireRole(['Administrador']),
+    UserAdminController.actualizarUsuario
+  )
+  .delete(
+    verifyToken,
+    requireRole(['Administrador']),
+    UserAdminController.eliminarUsuario
+  );
 
     router.post('/apple-login', async (req, res) => {
   console.log('Solicitud recibida en /apple-login:', req.body);
