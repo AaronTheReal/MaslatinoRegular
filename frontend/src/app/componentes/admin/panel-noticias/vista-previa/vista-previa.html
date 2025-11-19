@@ -1,86 +1,175 @@
 <div *ngIf="data; else noData" class="preview-container">
-  <!-- SEO Feedback -->
+  <!-- =======================
+       BLOQUE: VISTA PREVIA SEO
+       ======================= -->
   <div class="card mb-4">
     <div class="card-body">
       <h3 class="card-title">Vista Previa SEO</h3>
 
-      <!-- Title -->
+      <!-- TÍTULO -->
       <div class="mb-3">
-        <label class="fw-bold">Título</label>
-        <h1 class="preview-title {{ getSeoStatus(data.title, 50, 60) }}" [attr.aria-label]="data.title">
+        <label class="fw-bold">Título SEO</label>
+        <h1
+          class="preview-title"
+          [ngClass]="getSeoStatus(data.title, 50, 60)"
+          [attr.aria-label]="data.title"
+        >
           {{ data.title || '— Sin título —' }}
         </h1>
-        <small class="text-muted">Caracteres: {{ getCharCount(data.title) }} / 60</small>
-        <div *ngIf="getCharCount(data.title) < 50 || getCharCount(data.title) > 60" class="text-danger">
-          <small>Recomendado: 50-60 caracteres para SEO óptimo.</small>
+        <small class="text-muted">
+          Caracteres: {{ getCharCount(data.title) }} / 60
+        </small>
+        <div
+          *ngIf="getCharCount(data.title) < 50 || getCharCount(data.title) > 60"
+          class="text-danger"
+        >
+          <small>Recomendado: 50–60 caracteres para SEO óptimo.</small>
         </div>
       </div>
 
-      <!-- Slug -->
+      <!-- SLUG + URL FINAL -->
       <div class="mb-3">
         <label class="fw-bold">Slug</label>
         <p>{{ data.slug || '— Sin slug —' }}</p>
+        <small class="text-muted">
+          URL final: {{ getArticleUrl() }}
+        </small>
       </div>
 
-      <!-- Meta Description -->
+      <!-- META DESCRIPTION -->
       <div class="mb-3">
-        <label class="fw-bold">Meta Descripción</label>
-        <p class="{{ getSeoStatus(data.meta?.description, 150, 160) }}">
+        <label class="fw-bold">Meta Descripción (Google)</label>
+        <p
+          [ngClass]="getSeoStatus(data.meta?.description, 120, 160)"
+        >
           {{ data.meta?.description || '— Sin descripción —' }}
         </p>
-        <small class="text-muted">Caracteres: {{ getCharCount(data.meta?.description) }} / 160</small>
-        <div *ngIf="getCharCount(data.meta?.description) < 150 || getCharCount(data.meta?.description) > 160" class="text-danger">
-          <small>Recomendado: 150-160 caracteres.</small>
+        <small class="text-muted">
+          Caracteres: {{ getCharCount(data.meta?.description) }} / 160
+        </small>
+        <div
+          *ngIf="getCharCount(data.meta?.description) < 120 || getCharCount(data.meta?.description) > 160"
+          class="text-danger"
+        >
+          <small>Recomendado: 120–160 caracteres.</small>
         </div>
       </div>
 
-      <!-- Summary -->
+      <!-- SUMMARY / FALLBACK -->
       <div class="mb-3">
-        <label class="fw-bold">Resumen (Fallback)</label>
-        <p class="{{ getSeoStatus(data.summary, 150, 160) }}">{{ data.summary || '— Resumen vacío —' }}</p>
-        <small class="text-muted">Caracteres: {{ getCharCount(data.summary) }} / 160</small>
+        <label class="fw-bold">Resumen (fallback meta)</label>
+        <p
+          [ngClass]="getSeoStatus(data.summary, 150, 160)"
+        >
+          {{ data.summary || '— Resumen vacío —' }}
+        </p>
+        <small class="text-muted">
+          Caracteres: {{ getCharCount(data.summary) }} / 160
+        </small>
       </div>
 
-      <!-- Tags -->
+      <!-- TAGS -->
       <div class="mb-3">
         <label class="fw-bold">Tags</label>
-        <p *ngIf="data.tags?.length; else noTags">{{ data.tags.join(', ') }}</p>
-        <ng-template #noTags><p class="text-muted">— Sin tags —</p></ng-template>
+        <p *ngIf="data.tags?.length; else noTags">
+          {{ data.tags.join(', ') }}
+        </p>
+        <ng-template #noTags>
+          <p class="text-muted">— Sin tags —</p>
+        </ng-template>
       </div>
 
-      <!-- Meta Image -->
+      <!-- IMAGEN DESTACADA + PIE DE FOTO GLOBAL -->
       <div class="mb-3">
         <label class="fw-bold">Imagen Destacada</label>
-        <div>
-          <img *ngIf="data.meta?.image" [src]="data.meta.image" [alt]="data.meta?.imageAltGlobal || 'Imagen destacada'"
-               class="img-fluid mb-2" style="max-height: 200px;" (error)="handleImageError()"/>
-          <p>{{ data.meta?.image || '— Sin imagen —' }}</p>
-          <div *ngIf="!data.meta?.image" class="text-danger">
+
+        <div class="preview-hero-image">
+          <img
+            *ngIf="data.meta?.image"
+            [src]="data.meta.image"
+            [alt]="data.meta?.imageAltGlobal || 'Imagen destacada'"
+            class="img-fluid mb-2"
+            style="max-height: 220px; object-fit: cover;"
+            (error)="handleImageError()"
+          />
+
+          <p class="mb-1">
+            {{ data.meta?.image || '— Sin imagen —' }}
+          </p>
+
+          <!-- Caption global (NUEVO) -->
+          <div
+            *ngIf="data.meta?.imageCaptionHtml"
+            class="preview-caption text-muted"
+            [innerHTML]="formatHtml(data.meta.imageCaptionHtml)"
+          ></div>
+
+          <div *ngIf="!data.meta?.image" class="text-danger mt-1">
             <small>Se requiere una imagen destacada para SEO.</small>
           </div>
         </div>
       </div>
 
-      <!-- Location -->
+      <!-- FUENTE / CANONICAL (la estás usando como fuente de imagen) -->
+      <div class="mb-3">
+        <label class="fw-bold">Fuente de la imagen (canonical)</label>
+        <p>
+          {{ data.meta?.canonical || '— Sin fuente —' }}
+        </p>
+        <small class="text-muted" *ngIf="data.meta?.canonical">
+          Dominio: {{ getDomain(data.meta.canonical) }}
+        </small>
+      </div>
+
+      <!-- UBICACIÓN (Local SEO) -->
       <div class="mb-3">
         <label class="fw-bold">Ubicación</label>
-        <p>{{ data.location?.city || '—' }}, {{ data.location?.region || '—' }}, {{ data.location?.country || '—' }}</p>
+        <p>
+          {{ data.location?.city || '—' }},
+          {{ data.location?.region || '—' }},
+          {{ data.location?.country || '—' }}
+        </p>
       </div>
 
-      <!-- Publish Date -->
+      <!-- FECHA PUBLICACIÓN -->
       <div class="mb-3">
         <label class="fw-bold">Fecha de Publicación</label>
-        <p>{{ data.publishAt ? (data.publishAt | date: 'medium') : '— No establecida —' }}</p>
+        <p>
+          {{ data.publishAt ? (data.publishAt | date: 'medium') : '— No establecida —' }}
+        </p>
       </div>
 
-      <!-- H1 Warning -->
+      <!-- AVISO H1 -->
       <div *ngIf="hasMultipleH1()" class="text-danger mb-3">
         <small>No se permite ningún H1 en el contenido para estructura SEO óptima.</small>
+      </div>
+
+      <!-- VISTA RÁPIDA OG / REDES -->
+      <div class="mb-2">
+        <label class="fw-bold">Resumen para Redes (OG)</label>
+        <div class="social-snippet card p-2">
+          <div class="social-domain text-uppercase small text-muted">
+            {{ getDomain(getArticleUrl()) }}
+          </div>
+          <div class="social-title fw-semibold">
+            {{ getOgTitle() || '— Sin título OG —' }}
+          </div>
+          <div class="social-description small text-muted">
+            {{ getOgDescription() || '— Sin descripción OG —' }}
+          </div>
+          <div class="social-image-placeholder mt-2" *ngIf="data.meta?.image">
+            <small class="text-muted">
+              La vista real en Facebook/Twitter dependerá de sus cachés, pero se usará esta imagen.
+            </small>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Contenido -->
+  <!-- =======================
+       BLOQUE: CONTENIDO
+       ======================= -->
   <div class="card">
     <div class="card-body">
       <h3 class="card-title">Contenido</h3>
@@ -93,57 +182,134 @@
             <!-- TEXTO -->
             <ng-container *ngSwitchCase="'text'">
               <ng-container [ngSwitch]="block.tag">
-                <h2 *ngSwitchCase="'h2'" class="mb-3" [ngStyle]="block.style" [innerHTML]="block.html || ''" [attr.aria-label]="block.text || ''"></h2>
-                <h3 *ngSwitchCase="'h3'" class="mb-3" [ngStyle]="block.style" [innerHTML]="block.html || ''" [attr.aria-label]="block.text || ''"></h3>
-                <h4 *ngSwitchCase="'h4'" class="mb-3" [ngStyle]="block.style" [innerHTML]="block.html || ''" [attr.aria-label]="block.text || ''"></h4>
-                <h5 *ngSwitchCase="'h5'" class="mb-3" [ngStyle]="block.style" [innerHTML]="block.html || ''" [attr.aria-label]="block.text || ''"></h5>
-                <h6 *ngSwitchCase="'h6'" class="mb-3" [ngStyle]="block.style" [innerHTML]="block.html || ''" [attr.aria-label]="block.text || ''"></h6>
-                <span *ngSwitchCase="'span'" class="mb-3" [ngStyle]="block.style" [innerHTML]="block.html || ''" [attr.aria-label]="block.text || ''"></span>
-                <p *ngSwitchDefault class="mb-3" [ngStyle]="block.style" [innerHTML]="block.html || ''" [attr.aria-label]="block.text || ''"></p>
+                <h2
+                  *ngSwitchCase="'h2'"
+                  class="mb-3"
+                  [ngStyle]="block.style"
+                  [innerHTML]="block.html || ''"
+                  [attr.aria-label]="block.text || ''"
+                ></h2>
+                <h3
+                  *ngSwitchCase="'h3'"
+                  class="mb-3"
+                  [ngStyle]="block.style"
+                  [innerHTML]="block.html || ''"
+                  [attr.aria-label]="block.text || ''"
+                ></h3>
+                <h4
+                  *ngSwitchCase="'h4'"
+                  class="mb-3"
+                  [ngStyle]="block.style"
+                  [innerHTML]="block.html || ''"
+                  [attr.aria-label]="block.text || ''"
+                ></h4>
+                <h5
+                  *ngSwitchCase="'h5'"
+                  class="mb-3"
+                  [ngStyle]="block.style"
+                  [innerHTML]="block.html || ''"
+                  [attr.aria-label]="block.text || ''"
+                ></h5>
+                <h6
+                  *ngSwitchCase="'h6'"
+                  class="mb-3"
+                  [ngStyle]="block.style"
+                  [innerHTML]="block.html || ''"
+                  [attr.aria-label]="block.text || ''"
+                ></h6>
+                <span
+                  *ngSwitchCase="'span'"
+                  class="mb-3 d-inline-block"
+                  [ngStyle]="block.style"
+                  [innerHTML]="block.html || ''"
+                  [attr.aria-label]="block.text || ''"
+                ></span>
+                <p
+                  *ngSwitchDefault
+                  class="mb-3"
+                  [ngStyle]="block.style"
+                  [innerHTML]="block.html || ''"
+                  [attr.aria-label]="block.text || ''"
+                ></p>
               </ng-container>
             </ng-container>
 
-            <!-- IMAGEN -->
+            <!-- IMAGEN EN CUERPO -->
             <figure *ngSwitchCase="'image'" class="mb-4 text-center">
-              <img [src]="block.url || ''" [alt]="block.alt || 'Imagen sin descripción'" class="img-fluid"
-                   [attr.aria-label]="block.alt || block.caption || ''" (error)="handleImageError()"/>
-              <figcaption *ngIf="block.captionHtml" class="text-muted" [innerHTML]="block.captionHtml"></figcaption>
-              <figcaption *ngIf="!block.alt" class="text-danger">Falta texto alternativo (alt).</figcaption>
+              <img
+                [src]="block.url || ''"
+                [alt]="block.alt || 'Imagen sin descripción'"
+                class="img-fluid"
+                [attr.aria-label]="block.alt || block.caption || ''"
+                (error)="handleImageError()"
+              />
+
+              <!-- Caption por bloque (ya venía) -->
+              <figcaption
+                *ngIf="block.captionHtml"
+                class="text-muted"
+                [innerHTML]="block.captionHtml"
+              ></figcaption>
+
+              <figcaption *ngIf="!block.alt" class="text-danger">
+                Falta texto alternativo (alt).
+              </figcaption>
             </figure>
 
             <!-- CITA -->
-            <blockquote *ngSwitchCase="'quote'" class="blockquote mb-3" [ngStyle]="{ 'text-align': block.style?.textAlign || 'left' }">
+            <blockquote
+              *ngSwitchCase="'quote'"
+              class="blockquote mb-3"
+              [ngStyle]="{ 'text-align': block.style?.textAlign || 'left' }"
+            >
               <div [innerHTML]="block.html || ''"></div>
             </blockquote>
 
             <!-- LISTA -->
             <ng-container *ngSwitchCase="'list'" class="mb-3">
               <ol *ngIf="block.ordered" [ngStyle]="block.style">
-                <li *ngFor="let itemHtml of block.itemsHtml || []; let j = index" [innerHTML]="itemHtml" [attr.aria-label]="block.items && block.items[j] || ''"></li>
+                <li
+                  *ngFor="let itemHtml of block.itemsHtml || []; let j = index"
+                  [innerHTML]="itemHtml"
+                  [attr.aria-label]="block.items && block.items[j] || ''"
+                ></li>
               </ol>
               <ul *ngIf="!block.ordered" [ngStyle]="block.style">
-                <li *ngFor="let itemHtml of block.itemsHtml || []; let j = index" [innerHTML]="itemHtml" [attr.aria-label]="block.items && block.items[j] || ''"></li>
+                <li
+                  *ngFor="let itemHtml of block.itemsHtml || []; let j = index"
+                  [innerHTML]="itemHtml"
+                  [attr.aria-label]="block.items && block.items[j] || ''"
+                ></li>
               </ul>
             </ng-container>
 
-            <!-- ENLACE aislado -->
+            <!-- ENLACE AISLADO -->
             <p *ngSwitchCase="'link'" class="mb-3">
-              <a [href]="block.href || ''" target="_blank" rel="noopener noreferrer" [attr.aria-label]="block.textLink || ''">
+              <a
+                [href]="block.href || ''"
+                target="_blank"
+                rel="noopener noreferrer"
+                [attr.aria-label]="block.textLink || ''"
+              >
                 {{ block.textLink || '— Enlace sin texto —' }}
               </a>
-              <small *ngIf="block.textLink && isGenericAnchor(block.textLink)" class="text-danger">
+              <small
+                *ngIf="block.textLink && isGenericAnchor(block.textLink)"
+                class="text-danger"
+              >
                 Evita textos genéricos como "clic aquí" o "leer más".
               </small>
             </p>
 
-            <!-- Tipo desconocido -->
-            <pre *ngSwitchDefault class="bg-light p-2">{{ block | json }}</pre>
-
+            <!-- TIPO DESCONOCIDO (debug) -->
+            <pre *ngSwitchDefault class="bg-light p-2">
+{{ block | json }}
+            </pre>
           </ng-container>
         </ng-container>
       </ng-container>
 
-      <!-- Fallback: HTML crudo del editor -->
+      <!-- FALLBACK: HTML crudo del editor -->
       <ng-template #rawHtml>
         <div class="ck-content" [innerHTML]="data.bodyHtml"></div>
       </ng-template>

@@ -33,6 +33,7 @@
     "@ckeditor/ckeditor5-build-classic": "^44.3.0",
     "@ckeditor/ckeditor5-essentials": "^47.1.0",
     "@ckeditor/ckeditor5-image": "^47.1.0",
+    "@ckeditor/ckeditor5-media-embed": "^47.2.0",
     "@ckeditor/ckeditor5-upload": "^47.1.0",
     "@ng-select/ng-select": "^20.3.1",
     "express": "^5.1.0",
