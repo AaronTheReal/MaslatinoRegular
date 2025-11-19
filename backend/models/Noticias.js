@@ -164,8 +164,9 @@ BlockSchema.pre('save', function (next) {
 const NoticiaSchema = new Schema({
   title: { type: String, required: true, trim: true },
   slug:  { type: String, required: true, trim: true, unique: true },
-
+  focusKeyphrase: { type: String, trim: true }, 
   summary: { type: String, trim: true },
+  extracto: { type: String, trim: true }, 
   tags:    [{ type: String, trim: true }],
 
   originalUrl: { type: String, trim: true },

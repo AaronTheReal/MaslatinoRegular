@@ -36,6 +36,7 @@
             <label class="form-label">Palabra clave principal <span class="required">*</span></label>
             <input type="text" class="form-control" formControlName="focusKeyphrase"
                    placeholder="Ej: eventos latinos" />
+
             <small class="text-muted d-block">Úsala en título, slug, meta, extracto, alt y cuerpo.</small>
             <div class="text-danger small mt-1"
                  *ngIf="noticiaForm.get('focusKeyphrase')?.touched && noticiaForm.get('focusKeyphrase')?.invalid">
