@@ -113,7 +113,7 @@ function pickCanonical(publicBaseUrl, slug, req) {
     const host = req.get ? req.get('host') : req.headers.host;
     if (host) return `${proto}://${host}/${slug}`;
   } catch (_) {}
-  return `https://yourdomain.com/${slug}`;
+  return `https://maslatino.com/${slug}`;
 }
 // ---- Helpers para normalizar blocks provenientes del front ----
 function toPlainHtml(val) {
@@ -245,6 +245,7 @@ class noticiasController {
       // 4) Optional fields (don’t block)
       const summary  = String(data.summary || '').trim();
       const extracto = String(data.extracto || '').trim();
+      const focusKeyphrase= String(data.focusKeyphrase || '').trim();
       const tags     = normTags(data.tags);
 
       const location = (data.location && typeof data.location === 'object')
@@ -298,6 +299,7 @@ class noticiasController {
         slug: finalSlug,
         summary,
         extracto,
+        focusKeyphrase,
         tags,
         categories,
         location,
@@ -702,6 +704,8 @@ async  createNoticia(req, res, next) {
     const {
       title,
       slug: slugFromClient,
+      extracto,
+      focusKeyphrase,
       summary,
       categories,
       tags,
@@ -836,6 +840,8 @@ async  createNoticia(req, res, next) {
     const doc = new Noticia({
       title,
       slug: finalSlug,
+      extracto,
+      focusKeyphrase,
       summary,
       author: authorId,
       categories: normCategories,

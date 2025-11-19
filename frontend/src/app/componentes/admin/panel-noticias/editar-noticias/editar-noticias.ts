@@ -956,6 +956,7 @@ export class EditarNoticias implements OnInit {
     } = raw.meta || {};
     const metaOut = {
       ...raw.meta,
+      focusKeyphrase: raw.focusKeyphrase,
       ogTitle: raw.meta?.ogTitle || raw.title,
       ogDescription: raw.meta?.ogDescription || (raw.extracto || raw.meta?.description),
       canonical: raw.meta?.canonical || `https://${this.domain}/${raw.slug}`,
@@ -1186,66 +1187,70 @@ export class EditarNoticias implements OnInit {
     this.syncCaptionToForm();
   }
   private loadNoticia() {
-    this.noticiasService.getNoticiaById(this.id).subscribe((noticia) => {
-      if (!noticia) return;
+  this.noticiasService.getNoticiaById(this.id).subscribe((noticia) => {
+    if (!noticia) return;
 
-      // --- mapear categorías a IDs y guardar objetos si vienen pobladas
-      const catsRaw: any[] = Array.isArray(noticia.categories) ? (noticia.categories as any[]) : [];
-      this.loadedNoticiaCats = catsRaw
-        .filter(c => c && (c._id || c.id || c.slug || c.name))
-        .map(c => ({
-          _id: String(c._id || ''),
-          name: String(c.name || ''),
-          slug: String(c.slug || ''),
-          color: c.color || undefined,
-        })) as CategoriaPayload[];
+    const catsRaw: any[] = Array.isArray(noticia.categories) ? (noticia.categories as any[]) : [];
+    this.loadedNoticiaCats = catsRaw
+      .filter(c => c && (c._id || c.id || c.slug || c.name))
+      .map(c => ({
+        _id: String(c._id || ''),
+        name: String(c.name || ''),
+        slug: String(c.slug || ''),
+        color: c.color || undefined,
+      })) as CategoriaPayload[];
 
-      this.loadedNoticiaCatIds = catsRaw
-        .map(c => (typeof c === 'string' ? c : (c._id || c.id)))
-        .filter(Boolean)
-        .map(String);
+    this.loadedNoticiaCatIds = catsRaw
+      .map(c => (typeof c === 'string' ? c : (c._id || c.id)))
+      .filter(Boolean)
+      .map(String);
 
-      const meta = (noticia as any).meta || {};
-      const location = (noticia as any).location || { country:'', region:'', city:'' };
-      const bodyHtml: string = (noticia as any).bodyHtml || this.blocksToHtml(noticia.content || []);
+    const meta = (noticia as any).meta || {};
+    const location = (noticia as any).location || { country:'', region:'', city:'' };
+    const bodyHtml: string = (noticia as any).bodyHtml || this.blocksToHtml(noticia.content || []);
 
-      this.noticiaForm.patchValue({
-        focusKeyphrase: meta.focusKeyphrase || '',
-        title: noticia.title,
-        slug: noticia.slug,
-        extracto: (noticia as any).extracto || '',
-        summary: noticia.summary || '',
-        categories: this.loadedNoticiaCatIds,               // <<--- IDs
-        location,
-        meta: {
-          description: meta.description || '',
-          image: meta.image || '',
-          canonical: meta.canonical || '',
-          ogTitle: meta.ogTitle || noticia.title || '',
-          ogDescription: meta.ogDescription || meta.description || '',
-          imageAltGlobal: meta.imageAltGlobal || '',
-          imageCaptionHtml: meta.imageCaptionHtml || ''
-        },
-        state: (noticia as any).state || 'draft',
-        publishAt: this.formatDateForInput((noticia as any).publishAt || null),
-        body: bodyHtml
-      });
+    // 👇 AQUÍ tomamos de meta y, si no existe, del root
+    const focusFromMeta =
+      (meta as any).focusKeyphrase ??
+      (noticia as any).focusKeyphrase ??
+      '';
 
-      // tags
-      this.tags.clear();
-      if (Array.isArray(noticia.tags)) {
-        noticia.tags.forEach(tag => this.tags.push(this.fb.control(tag, Validators.required)));
-      }
-
-      // Mergea las categorías de la noticia al catálogo si faltan
-      this.ensureSelectedCatsAreInItems();
-      this.cdr.detectChanges();
-      this.noticiaForm.get('categories')?.updateValueAndValidity();  // Force refresh to show selected
-      // Métricas iniciales
-      this.updateMetricsFromHTML();
-      this.previewDataObj = this.buildPreviewData();
+    this.noticiaForm.patchValue({
+      focusKeyphrase: focusFromMeta,      // 👈 AQUÍ estaba el fallo
+      title: noticia.title,
+      slug: noticia.slug,
+      extracto: (noticia as any).extracto || '',
+      summary: noticia.summary || '',
+      categories: this.loadedNoticiaCatIds,
+      location,
+      meta: {
+        description: meta.description || '',
+        image: meta.image || '',
+        canonical: meta.canonical || '',
+        ogTitle: meta.ogTitle || noticia.title || '',
+        ogDescription: meta.ogDescription || meta.description || '',
+        imageAltGlobal: meta.imageAltGlobal || '',
+        imageCaptionHtml: meta.imageCaptionHtml || ''
+      },
+      state: (noticia as any).state || 'draft',
+      publishAt: this.formatDateForInput((noticia as any).publishAt || null),
+      body: bodyHtml
     });
-  }
+
+    // tags
+    this.tags.clear();
+    if (Array.isArray(noticia.tags)) {
+      noticia.tags.forEach(tag => this.tags.push(this.fb.control(tag, Validators.required)));
+    }
+
+    this.ensureSelectedCatsAreInItems();
+    this.cdr.detectChanges();
+    this.noticiaForm.get('categories')?.updateValueAndValidity();
+    this.updateMetricsFromHTML();
+    this.previewDataObj = this.buildPreviewData();
+  });
+}
+
   private ensureSelectedCatsAreInItems() {
     this.cdr.detectChanges();
     if (!this.loadedNoticiaCatIds?.length) return;
