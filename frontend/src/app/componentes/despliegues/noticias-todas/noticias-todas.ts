@@ -21,6 +21,8 @@ export class NoticiasTodas implements OnInit {
 
   // Estado UI
   activeCategory: string = 'All';
+    private activeCategoryId: string | null = null;  // ⭐ id para el backend
+
   searchQuery = '';
 
   // Datos
@@ -55,9 +57,7 @@ export class NoticiasTodas implements OnInit {
   currentPage = 1;
 
   ngOnInit(): void {
-    console.log("si llega?");
-
-    // 1) Cargar categorías (igual que antes)
+    // 1) Cargar categorías
     this.categoriasService.obtenerCategorias().subscribe({
       next: (res: CategoriaPayload[]) => {
         const limpias = (res ?? []).filter(c => !!c && !!c.name && !!c.slug);
@@ -83,12 +83,19 @@ export class NoticiasTodas implements OnInit {
     });
 
     // 2) Cargar NOTICIAS PAGINADAS desde backend
-    this.loadPage(1);   // ⭐ empezamos en página 1
+    this.loadPage(1);
   }
-
-  // ⭐ NUEVO: carga una página desde el backend
+ // ⭐ carga una página desde el backend CON filtros
   private loadPage(page: number): void {
-    this.noticiasService.getNoticiasPaginadas(page, this.pageSize).subscribe({
+    const search = this.searchQuery.trim() || undefined;
+    const categoryId = this.activeCategoryId || undefined;
+
+    this.noticiasService.getNoticiasPaginadas(
+      page,
+      this.pageSize,
+      search,
+      categoryId
+    ).subscribe({
       next: (res) => {
         this.noticias = Array.isArray(res.items) ? res.items : [];
         this.totalNoticias = res.total || 0;
@@ -102,7 +109,6 @@ export class NoticiasTodas implements OnInit {
       }
     });
   }
-
   // =========================
   //     Helpers de catálogo
   // =========================
@@ -189,17 +195,26 @@ export class NoticiasTodas implements OnInit {
 
   setActiveCategory(category: string): void {
     this.activeCategory = category;
+
+    if (category === 'All') {
+      this.activeCategoryId = null;
+    } else {
+      const cat = this.categoriaByNameLower.get(category.toLowerCase());
+      this.activeCategoryId = (cat?._id ?? '').toString() || null;
+    }
+
     this.currentPage = 1;
-    // OJO: si quisieras filtrar también en backend por categoría,
-    // aquí habría que llamar a otro endpoint. De momento filtramos
-    // solo sobre la página actual.
+    this.loadPage(1);   // ⭐ ahora pedimos al backend la página 1 de esa categoría
   }
+
 
   onSearchInput(value: string | undefined) {
     this.searchQuery = value ?? '';
     this.currentPage = 1;
-    // Igual que arriba: ahora mismo búsqueda = filtro sobre la página actual.
+    this.loadPage(1);   // ⭐ ahora búsqueda se hace en el backend
+    // Si no quieres lanzar petición por cada tecla, mete un debounce.
   }
+
 
   /** Siempre texto blanco para las etiquetas de categoría. */
   getCategoryTextColor(_: string): string {
@@ -233,17 +248,8 @@ export class NoticiasTodas implements OnInit {
 
   // Filtro se aplica SOLO sobre la página actual (this.noticias)
   get filteredNoticias(): Noticia[] {
-    const q = this.searchQuery.trim().toLowerCase();
-    const active = (this.activeCategory ?? 'All').toLowerCase();
-
-    return this.noticias.filter(n => {
-      const names = this.extraerNombresCategorias(n).map(x => x.toLowerCase());
-      const inCategory = (active === 'all') ? true : names.includes(active);
-      const inSearch = q ? (n.title?.toLowerCase().includes(q)) : true;
-      return inCategory && inSearch;
-    });
-  }
-
+      return this.noticias;
+    }
   // =========================
   //     PAGINACIÓN SIMPLE
   // =========================
@@ -261,11 +267,10 @@ export class NoticiasTodas implements OnInit {
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
-      this.loadPage(page);  // ⭐ pedimos esa página al backend
+      this.loadPage(page);  // ⭐ mismo método, ya incluye búsqueda/categoría actuales
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
-
   previousPage(): void {
     if (this.currentPage > 1) this.goToPage(this.currentPage - 1);
   }

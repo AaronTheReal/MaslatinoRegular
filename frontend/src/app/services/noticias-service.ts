@@ -11,8 +11,8 @@ export class NoticiasService {
   private platformId = inject(PLATFORM_ID);
 
   // Ajusta para prod con ENV si aplica
-  //private baseUrl = 'http://localhost:3000/aaron/maslatino';
-  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
+  private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  //private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
    //private baseUrl = 'https://maslatino.onrender.com/aaron/maslatino'; // Ajusta si tu backend cambia
 
   /** ======== CRUD ======== */
@@ -34,13 +34,18 @@ export class NoticiasService {
     }
     return observable;
   }
-  // ======== Paginación real desde backend ========
+  // ======== Paginación real desde backend (con filtros) ========
   getNoticiasPaginadas(
     page = 1,
-    limit = 5
+    limit = 5,
+    search?: string,
+    categoryId?: string
   ): Observable<{ items: Noticia[]; total: number; page: number; limit: number }> {
+    const normSearch = (search || '').trim();
+    const normCat    = (categoryId || '').trim();
+
     const key = makeStateKey<{ items: Noticia[]; total: number; page: number; limit: number }>(
-      `noticias-pag-${page}-${limit}`
+      `noticias-pag-${page}-${limit}-${normSearch || 'all'}-${normCat || 'all'}`
     );
 
     // TransferState: si ya viene del SSR, lo usamos
@@ -50,10 +55,16 @@ export class NoticiasService {
       return of(data);
     }
 
+    let url = `${this.baseUrl}/noticias/paginadas?page=${page}&limit=${limit}`;
+    if (normSearch) {
+      url += `&q=${encodeURIComponent(normSearch)}`;
+    }
+    if (normCat) {
+      url += `&categoryId=${encodeURIComponent(normCat)}`;
+    }
+
     const observable = this.http
-      .get<{ items: Noticia[]; total: number; page: number; limit: number }>(
-        `${this.baseUrl}/noticias/paginadas?page=${page}&limit=${limit}`
-      )
+      .get<{ items: Noticia[]; total: number; page: number; limit: number }>(url)
       .pipe(shareReplay(1));
 
     if (isPlatformServer(this.platformId)) {
