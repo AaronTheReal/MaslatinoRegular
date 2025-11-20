@@ -11,8 +11,8 @@ export class NoticiasService {
   private platformId = inject(PLATFORM_ID);
 
   // Ajusta para prod con ENV si aplica
-  private baseUrl = 'http://localhost:3000/aaron/maslatino';
-  //private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
+  //private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
    //private baseUrl = 'https://maslatino.onrender.com/aaron/maslatino'; // Ajusta si tu backend cambia
 
   /** ======== CRUD ======== */
