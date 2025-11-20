@@ -34,36 +34,36 @@
 </div>
 
 
-    <!-- Grid de noticias -->
-    <div class="news-grid">
-      <article
-        *ngFor="let n of paginatedNoticias; trackBy: trackByNoticia"
-        class="news-card"
-        [routerLink]="['/noticia', (n.slug || '')]">
-        <div class="news-image-wrapper">
-          <img [src]="getCardImage(n)" [alt]="n.meta?.imageAltGlobal || n.title" class="news-image" />
-        </div>
-
-        <div class="news-content">
-          <div class="category-badges">
-          <span
-            class="category-badge"
-            *ngFor="let cat of getCategoriesFor(n); let i = index"
-            [style.backgroundColor]="getCategoryColor(cat)"
-            [style.color]="getCategoryTextColor(cat)"
-          >
-            {{ cat }}
-          </span>
-        </div>
-
-          <h2 class="news-title">{{ n.title }}</h2>
-
-          <time class="news-date">
-            {{ n.createdAt ? (n.createdAt | date: 'longDate') : '' }}
-          </time>
-        </div>
-      </article>
+   <!-- Grid de noticias -->
+<div class="news-grid">
+  <a
+    *ngFor="let n of paginatedNoticias; trackBy: trackByNoticia"
+    class="news-card"
+    [routerLink]="['/noticia', (n.slug || '')]">
+    <div class="news-image-wrapper">
+      <img [src]="getCardImage(n)" [alt]="n.meta?.imageAltGlobal || n.title" class="news-image" />
     </div>
+
+    <div class="news-content">
+      <div class="category-badges">
+        <span
+          class="category-badge"
+          *ngFor="let cat of getCategoriesFor(n); let i = index"
+          [style.backgroundColor]="getCategoryColor(cat)"
+          [style.color]="getCategoryTextColor(cat)"
+        >
+          {{ cat }}
+        </span>
+      </div>
+
+      <h2 class="news-title">{{ n.title }}</h2>
+
+      <time class="news-date">
+        {{ n.createdAt ? (n.createdAt | date: 'longDate') : '' }}
+      </time>
+    </div>
+  </a>
+</div>
 
     <!-- PAGINACIÓN -->
     <div class="pagination-container">

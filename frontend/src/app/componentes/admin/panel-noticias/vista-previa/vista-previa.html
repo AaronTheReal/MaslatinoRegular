@@ -301,10 +301,34 @@
               </small>
             </p>
 
+                <!-- AQUÍ VIENE LO IMPORTANTE: EMBED CON IFRAME -->
+            <ng-container *ngSwitchCase="'embed'">
+              <div class="vp-embed-wrapper">
+                <iframe
+                  class="vp-embed-iframe"
+                  [src]="getEmbedSrc(block)"
+                  frameborder="0"
+                  allowfullscreen
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
+                <p class="vp-embed-fallback">
+                  <a [href]="block.url" target="_blank" rel="noopener noreferrer">
+                    Ver contenido en {{ block.provider || 'la plataforma' }}
+                  </a>
+                </p>
+              </div>
+            </ng-container>
+        <!-- IFRAME genérico (HTML ya sanetizado) -->
+        <div *ngIf="block.type === 'iframe'" class="embed-responsive mb-3">
+          <div [innerHTML]="block.html"></div>
+        </div>
+
             <!-- TIPO DESCONOCIDO (debug) -->
             <pre *ngSwitchDefault class="bg-light p-2">
 {{ block | json }}
             </pre>
+
           </ng-container>
         </ng-container>
       </ng-container>

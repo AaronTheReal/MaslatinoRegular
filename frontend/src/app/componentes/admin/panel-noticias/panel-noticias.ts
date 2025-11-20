@@ -680,159 +680,266 @@ export class PanelNoticias implements OnInit {
       url: candidate
     };
   }
+/** Convierte el HTML del body en bloques para Vista Previa */
+private parseHtmlToBlocks(html: string) {
+  if (!this.isBrowser) return [];
+  const doc = new DOMParser().parseFromString(html || '', 'text/html');
+  const out: any[] = [];
 
-  /** Convierte el HTML del body en bloques para Vista Previa */
-  private parseHtmlToBlocks(html: string) {
-    if (!this.isBrowser) return [];
-    const doc = new DOMParser().parseFromString(html || '', 'text/html');
-    const out: any[] = [];
+  const walk = (node: ChildNode) => {
+    if (!(node as HTMLElement).tagName) return;
 
-    const walk = (node: ChildNode) => {
-      if (!(node as HTMLElement).tagName) return;
+    const el = node as HTMLElement;
+    const tag = (el.tagName || '').toLowerCase();
+    const style = { textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right' };
 
-      const el = node as HTMLElement;
-      const tag = (el.tagName || '').toLowerCase();
-      const style = { textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right' };
+    // === DETECCIÓN DE EMBEDS DENTRO DE <figure><oembed> (NUEVO) ===
+    if (tag === 'figure') {
+      const oembed = el.querySelector('oembed[url]') as HTMLElement | null;
+      if (oembed) {
+        const url = oembed.getAttribute('url') || '';
+        if (url) {
+          let provider: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'generic' = 'generic';
+          try {
+            const u = new URL(url);
+            const host = u.hostname.replace(/^www\./, '').toLowerCase();
+            if (host.includes('twitter.com') || host === 'x.com') {
+              provider = 'twitter';
+            } else if (host.includes('facebook.com') || host.includes('fb.watch')) {
+              provider = 'facebook';
+            } else if (host.includes('instagram.com')) {
+              provider = 'instagram';
+            } else if (host.includes('youtube.com') || host === 'youtu.be') {
+              provider = 'youtube';
+            } else if (host.includes('tiktok.com')) {
+              provider = 'tiktok';
+            }
+          } catch {
+            // ignorar error de URL
+          }
 
-      if (tag === 'p' || tag === 'div') {
-        const embed = this.detectEmbedBlock(el);
-        if (embed) {
-          out.push(embed);
-          return;
+          out.push({
+            type: 'embed',
+            provider,
+            url
+          });
+          return; // ¡Importante! No continuar procesando como imagen
         }
       }
+    }
+    // === FIN DE DETECCIÓN DE EMBED ===
 
-      if (
-        tag === 'h2' || tag === 'h3' || tag === 'h4' ||
-        tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span'
-      ) {
-        out.push({
-          type: 'text',
-          tag,
-          html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML),
-          text: el.textContent || '',
-          style
-        });
-      } else if (tag === 'blockquote') {
-        out.push({
-          type: 'quote',
-          html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML),
-          quote: el.textContent || '',
-          style
-        });
-      } else if (tag === 'img') {
-        out.push({
-          type: 'image',
-          url: el.getAttribute('src') || '',
-          alt: el.getAttribute('alt') || '',
-          captionHtml: null
-        });
-      } else if (tag === 'figure') {
-        const img = el.querySelector('img');
-        const figcap = el.querySelector('figcaption');
-        out.push({
-          type: 'image',
-          url: img?.getAttribute('src') || '',
-          alt: img?.getAttribute('alt') || '',
-          captionHtml: figcap ? this.sanitizer.bypassSecurityTrustHtml(figcap.innerHTML) : null
-        });
-      } else if (tag === 'ul' || tag === 'ol') {
-        const items = Array.from(el.querySelectorAll(':scope > li'));
-        out.push({
-          type: 'list',
-          ordered: tag === 'ol',
-          items: items.map(li => (li.textContent || '').trim()),
-          itemsHtml: items.map(li => this.sanitizer.bypassSecurityTrustHtml(li.innerHTML)),
-          style
-        });
-      } else if (tag === 'a') {
-        out.push({
-          type: 'link',
-          href: el.getAttribute('href') || '',
-          textLink: el.textContent || ''
-        });
+    if (tag === 'p' || tag === 'div') {
+      const embed = this.detectEmbedBlock(el);
+      if (embed) {
+        out.push(embed);
+        return;
       }
-    };
+    }
+    if (tag === 'iframe') {
+      out.push({
+        type: 'iframe',
+        html: this.sanitizer.bypassSecurityTrustHtml(el.outerHTML)
+      });
+      return;
+    }
 
-    Array.from(doc.body.children).forEach(walk);
-    return out;
-  }
+    if (
+      tag === 'h2' || tag === 'h3' || tag === 'h4' ||
+      tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span'
+    ) {
+      out.push({
+        type: 'text',
+        tag,
+        html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML),
+        text: el.textContent || '',
+        style
+      });
+    } else if (tag === 'blockquote') {
+      out.push({
+        type: 'quote',
+        html: this.sanitizer.bypassSecurityTrustHtml(el.innerHTML),
+        quote: el.textContent || '',
+        style
+      });
+    } else if (tag === 'img') {
+      out.push({
+        type: 'image',
+        url: el.getAttribute('src') || '',
+        alt: el.getAttribute('alt') || '',
+        captionHtml: null
+      });
+    } else if (tag === 'figure') {
+      // Este bloque ahora solo se ejecuta si no era un oembed
+      const img = el.querySelector('img');
+      const figcap = el.querySelector('figcaption');
+      out.push({
+        type: 'image',
+        url: img?.getAttribute('src') || '',
+        alt: img?.getAttribute('alt') || '',
+        captionHtml: figcap ? this.sanitizer.bypassSecurityTrustHtml(figcap.innerHTML) : null
+      });
+    } else if (tag === 'ul' || tag === 'ol') {
+      const items = Array.from(el.querySelectorAll(':scope > li'));
+      out.push({
+        type: 'list',
+        ordered: tag === 'ol',
+        items: items.map(li => (li.textContent || '').trim()),
+        itemsHtml: items.map(li => this.sanitizer.bypassSecurityTrustHtml(li.innerHTML)),
+        style
+      });
+    } else if (tag === 'a') {
+      out.push({
+        type: 'link',
+        href: el.getAttribute('href') || '',
+        textLink: el.textContent || ''
+      });
+    }
+  };
 
-  private parseHtmlToBlocksForSave(html: string) {
-    if (!this.isBrowser) return [];
-    const doc = new DOMParser().parseFromString(html || '', 'text/html');
-    const out: any[] = [];
+  Array.from(doc.body.children).forEach(walk);
+  return out;
+}
+private parseHtmlToBlocksForSave(html: string) {
+  if (!this.isBrowser) return [];
+  const doc = new DOMParser().parseFromString(html || '', 'text/html');
+  const out: any[] = [];
 
-    const walk = (node: ChildNode) => {
-      if (!(node as HTMLElement).tagName) return;
+  const walk = (node: ChildNode) => {
+    if (!(node as HTMLElement).tagName) return;
 
-      const el = node as HTMLElement;
-      const tag = (el.tagName || '').toLowerCase();
-      const style = { textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right' };
+    const el = node as HTMLElement;
+    const tag = (el.tagName || '').toLowerCase();
+    const style = { textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right' };
 
-      if (tag === 'p' || tag === 'div') {
-        const embed = this.detectEmbedBlock(el);
-        if (embed) {
-          out.push(embed);
-          return;
+    // === DETECCIÓN DE EMBEDS DENTRO DE <figure><oembed> (NUEVO) ===
+    if (tag === 'figure') {
+      const oembed = el.querySelector('oembed[url]') as HTMLElement | null;
+      if (oembed) {
+        const url = oembed.getAttribute('url') || '';
+        if (url) {
+          let provider: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'generic' = 'generic';
+          try {
+            const u = new URL(url);
+            const host = u.hostname.replace(/^www\./, '').toLowerCase();
+            if (host.includes('twitter.com') || host === 'x.com') {
+              provider = 'twitter';
+            } else if (host.includes('facebook.com') || host.includes('fb.watch')) {
+              provider = 'facebook';
+            } else if (host.includes('instagram.com')) {
+              provider = 'instagram';
+            } else if (host.includes('youtube.com') || host === 'youtu.be') {
+              provider = 'youtube';
+            } else if (host.includes('tiktok.com')) {
+              provider = 'tiktok';
+            }
+          } catch {
+            // ignorar error de URL
+          }
+
+          out.push({
+            type: 'embed',
+            provider,
+            url
+          });
+          return; // ¡Importante! No continuar procesando como imagen
         }
       }
+    }
+    // === FIN DE DETECCIÓN DE EMBED ===
+if (tag === 'p' || tag === 'div') {
+  const rawText = (el.textContent || '').trim();
 
-      if (
-        tag === 'h2' || tag === 'h3' || tag === 'h4' ||
-        tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span'
-      ) {
-        out.push({
-          type: 'text',
-          tag,
-          html: el.innerHTML || '',
-          text: el.textContent || '',
-          style
-        });
-      } else if (tag === 'blockquote') {
-        out.push({
-          type: 'quote',
-          html: el.innerHTML || '',
-          quote: el.textContent || '',
-          style
-        });
-      } else if (tag === 'img') {
-        out.push({
-          type: 'image',
-          url: el.getAttribute('src') || '',
-          alt: el.getAttribute('alt') || '',
-          captionHtml: null
-        });
-      } else if (tag === 'figure') {
-        const img = el.querySelector('img');
-        const figcap = el.querySelector('figcaption');
-        out.push({
-          type: 'image',
-          url: img?.getAttribute('src') || '',
-          alt: img?.getAttribute('alt') || '',
-          captionHtml: figcap ? (figcap.innerHTML || '') : null
-        });
-      } else if (tag === 'a') {
-        out.push({
-          type: 'link',
-          href: el.getAttribute('href') || '',
-          textLink: el.textContent || ''
-        });
-      } else if (tag === 'ul' || tag === 'ol') {
-        const items = Array.from(el.querySelectorAll(':scope > li'));
-        out.push({
-          type: 'list',
-          ordered: tag === 'ol',
-          items: items.map(li => (li.textContent || '').trim()),
-          itemsHtml: items.map(li => li.innerHTML || ''),
-          style
-        });
-      }
-    };
+  // IFRAME ESCRITO COMO TEXTO
+  if (/^&lt;iframe[\s\S]+&lt;\/iframe&gt;$/i.test(rawText)) {
+    const textarea = document.createElement('textarea');
+    textarea.innerHTML = rawText;
+    const decoded = textarea.value; // <iframe ...></iframe>
 
-    Array.from(doc.body.children).forEach(walk);
-    return out;
+    out.push({
+      type: 'iframe',
+      html: decoded
+    });
+
+    return;
   }
+
+  
+  const embed = this.detectEmbedBlock(el);
+  if (embed) {
+    out.push(embed);
+    return;
+  }
+}
+if (tag === 'iframe') {
+  // Tomamos el HTML tal cual lo ve el DOM
+  const iframeHtml = el.outerHTML;
+
+  out.push({
+    type: 'iframe',
+    html: iframeHtml
+  });
+
+  return;
+}
+
+
+    if (
+      tag === 'h2' || tag === 'h3' || tag === 'h4' ||
+      tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span'
+    ) {
+      out.push({
+        type: 'text',
+        tag,
+        html: el.innerHTML || '',
+        text: el.textContent || '',
+        style
+      });
+    } else if (tag === 'blockquote') {
+      out.push({
+        type: 'quote',
+        html: el.innerHTML || '',
+        quote: el.textContent || '',
+        style
+      });
+    } else if (tag === 'img') {
+      out.push({
+        type: 'image',
+        url: el.getAttribute('src') || '',
+        alt: el.getAttribute('alt') || '',
+        captionHtml: null
+      });
+    } else if (tag === 'figure') {
+      // Este bloque ahora solo se ejecuta si no era un oembed
+      const img = el.querySelector('img');
+      const figcap = el.querySelector('figcaption');
+      out.push({
+        type: 'image',
+        url: img?.getAttribute('src') || '',
+        alt: img?.getAttribute('alt') || '',
+        captionHtml: figcap ? (figcap.innerHTML || '') : null
+      });
+    } else if (tag === 'a') {
+      out.push({
+        type: 'link',
+        href: el.getAttribute('href') || '',
+        textLink: el.textContent || ''
+      });
+    } else if (tag === 'ul' || tag === 'ol') {
+      const items = Array.from(el.querySelectorAll(':scope > li'));
+      out.push({
+        type: 'list',
+        ordered: tag === 'ol',
+        items: items.map(li => (li.textContent || '').trim()),
+        itemsHtml: items.map(li => li.innerHTML || ''),
+        style
+      });
+    }
+  };
+
+  Array.from(doc.body.children).forEach(walk);
+  return out;
+}
 
   private buildPreviewData() {
     const raw = this.noticiaForm.value as any;

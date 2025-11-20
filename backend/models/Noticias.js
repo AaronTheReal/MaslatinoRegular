@@ -12,7 +12,11 @@ const DOMPurify = createDOMPurify(window);
 
 // ==== Sub-esquema de bloque de contenido ====
 const BlockSchema = new Schema({
-  type: { type: String, required: true, enum: ['text', 'image', 'quote', 'link', 'list'] },
+  type: {
+    type: String,
+    required: true,
+    enum: ['text', 'image', 'quote', 'link', 'list', 'embed'] // 👈 agregamos 'embed'
+  },
 
   // Texto / HTML
   text: { type: String },   // texto plano opcional
@@ -36,7 +40,7 @@ const BlockSchema = new Schema({
   },
 
   // Imagen (actual)
-  url:     { type: String },
+  url:     { type: String },      // ⚠️ también se usará para EMBED (url del tweet/video/post)
   alt:     { type: String },
   caption: { type: String },
   captionHtml: { type: String },
@@ -70,7 +74,13 @@ const BlockSchema = new Schema({
 
   // Cita
   quote: { type: String },
-  authorQuote: { type: String }
+  authorQuote: { type: String },
+
+  // 🔥 Embed social (tweet, post, video, etc.)
+  provider: {
+    type: String,
+    enum: ['twitter', 'facebook', 'instagram', 'youtube', 'tiktok', 'generic'],
+  }
 }, { _id: false });
 
 // Validaciones según tipo (flexibles)
@@ -79,12 +89,17 @@ BlockSchema.pre('validate', function (next) {
     case 'text':
       if (!this.html && !this.text) return next(new Error('Bloque text requiere html o text.'));
       break;
+
     case 'image':
       // permitir vacío en edición
       break;
+
     case 'link':
-      if (!this.href || !this.textLink) return next(new Error('Bloque link requiere href y textLink.'));
+      if (!this.href || !this.textLink) {
+        return next(new Error('Bloque link requiere href y textLink.'));
+      }
       break;
+
     case 'list': {
       const okItems = Array.isArray(this.items) && this.items.length > 0;
       const okItemsHtml = Array.isArray(this.itemsHtml) && this.itemsHtml.length > 0;
@@ -93,10 +108,22 @@ BlockSchema.pre('validate', function (next) {
       }
       break;
     }
+
     case 'quote':
-      if (!this.quote && !this.html) return next(new Error('Bloque quote requiere quote o html.'));
+      if (!this.quote && !this.html) {
+        return next(new Error('Bloque quote requiere quote o html.'));
+      }
+      break;
+
+    // 🔥 Nuevo tipo: EMBED
+    case 'embed':
+      // De momento solo exigimos que tenga URL; provider es opcional pero recomendado
+      if (!this.url) {
+        return next(new Error('Bloque embed requiere url.'));
+      }
       break;
   }
+
   if (this.style) {
     const ta = (this.style.textAlign || '').trim();
     if (!['left', 'center', 'right'].includes(ta)) {
@@ -105,6 +132,7 @@ BlockSchema.pre('validate', function (next) {
   }
   next();
 });
+
 
 // Conversión Markdown → HTML sanitizado (solo si html está vacío) + saneo de itemsHtml
 BlockSchema.pre('save', function (next) {

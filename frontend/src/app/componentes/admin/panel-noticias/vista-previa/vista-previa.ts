@@ -1,6 +1,6 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-vista-previa',
@@ -54,6 +54,8 @@ export class VistaPrevia {
       href?: string;
       textLink?: string;
       creditText?: string;
+      provider?: string;
+
     }>;
   };
 
@@ -75,6 +77,57 @@ export class VistaPrevia {
   getArticleUrl(): string {
     if (!this.data?.slug) return this.baseUrl;
     return `${this.baseUrl}/${this.data.slug}`;
+  }
+
+    /** Construye el src del iframe según el provider */
+  getEmbedSrc(block: any): SafeResourceUrl {
+    const url = (block?.url || '').trim();
+    const provider = (block?.provider || 'generic') as string;
+
+    // Si por cualquier razón viene vacío, devolvemos algo inocuo.
+    if (!url) {
+      return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
+    }
+
+    try {
+      const u = new URL(url);
+      const host = u.hostname.replace(/^www\./, '').toLowerCase();
+
+      // === YouTube: convertir a /embed/ ===
+      if (provider === 'youtube') {
+        let videoId = '';
+
+        if (host === 'youtu.be') {
+          // https://youtu.be/VIDEOID
+          videoId = u.pathname.slice(1);
+        } else if (host.includes('youtube.com')) {
+          // https://www.youtube.com/watch?v=VIDEOID
+          videoId = u.searchParams.get('v') || '';
+        }
+
+        if (videoId) {
+          const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+          return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+        }
+
+        // Si no pudimos extraer id, usamos la URL directa
+        return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      }
+
+      // === Twitter / X: iframe directo al URL (aunque a veces dé problemas) ===
+      if (provider === 'twitter') {
+        // Antes podías usar twitframe.com, pero ahora quieres directo:
+        // aunque falle, es "lo que hay" y vemos qué plataformas dejan.
+        return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      }
+
+      // === Facebook, Instagram, TikTok, generic ===
+      // Vamos a intentar iframe directo al URL original.
+      return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    } catch {
+      // Si la URL es inválida, evitamos romper la vista
+      return this.sanitizer.bypassSecurityTrustResourceUrl('about:blank');
+    }
   }
 
   /** Dominio human-readable a partir de una URL */

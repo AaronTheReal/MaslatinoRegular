@@ -172,174 +172,341 @@ function normalizeContent(arr) {
 class noticiasController {
 
 
-   async getNoticiasPaginadas(req, res) {
-    try {
-      const rawPage  = req.query.page;
-      const rawLimit = req.query.limit;
+async getNoticiasPaginadas(req, res) {
+  try {
+    const rawPage    = req.query.page;
+    const rawLimit   = req.query.limit;
+    const q          = (req.query.q || '').toString().trim();
+    const categoryId = (req.query.categoryId || '').toString().trim();
 
-      let page  = parseInt(rawPage, 10);
-      let limit = parseInt(rawLimit, 10);
+    let page  = parseInt(rawPage, 10);
+    let limit = parseInt(rawLimit, 10);
 
-      if (isNaN(page) || page < 1) page = 1;
-      if (isNaN(limit) || limit < 1) limit = 5;
-      // límite de seguridad para no matar el server
-      if (limit > 50) limit = 50;
+    if (isNaN(page) || page < 1) page = 1;
+    if (isNaN(limit) || limit < 1) limit = 5;
+    if (limit > 50) limit = 50;
 
-      const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-      const filtro = { autorizada: true }; // ajusta si quieres mostrar también no autorizadas
+    const filtro = { autorizada: true };
 
-      const [items, total] = await Promise.all([
-        Noticia.find(filtro)
-          .sort({ createdAt: -1 }) // más recientes primero
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        Noticia.countDocuments(filtro)
-      ]);
+    // ⭐ Búsqueda por texto
+    if (q) {
+      filtro.$or = [
+        { title: { $regex: q, $options: 'i' } },
+        { 'meta.excerpt': { $regex: q, $options: 'i' } },
+        // agrega más campos si quieres buscar también en el cuerpo, etc.
+      ];
+    }
 
-      return res.json({
-        items,
-        total,
-        page,
-        limit,
-      });
-    } catch (err) {
-      console.error('Error en getNoticiasPaginadas:', err);
-      return res.status(500).json({
-        error: 'Error al obtener noticias paginadas'
+    // ⭐ Filtro por categoría (array de ObjectId)
+    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+      filtro.categories = new mongoose.Types.ObjectId(categoryId);
+    }
+
+    const [items, total] = await Promise.all([
+      Noticia.find(filtro)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Noticia.countDocuments(filtro)
+    ]);
+
+    return res.json({
+      items,
+      total,
+      page,
+      limit,
+    });
+  } catch (err) {
+    console.error('Error en getNoticiasPaginadas:', err);
+    return res.status(500).json({
+      error: 'Error al obtener noticias paginadas'
+    });
+  }
+}
+async updateNoticia(req, res) {
+  try {
+    const { id } = req.params;
+    const data = req.body || {};
+
+    // 1) Exists?
+    const existing = await Noticia.findById(id);
+    if (!existing) return res.status(404).json({ error: 'Noticia no encontrada' });
+
+    // 2) Title/slug
+    const title = String(data.title || existing.title || '').trim();
+    let incomingSlug = String(data.slug || '').trim();
+    if (!incomingSlug && title) incomingSlug = generarSlug(title);
+    if (!incomingSlug) {
+      return res.status(400).json({ error: 'slug es requerido (o título para generarlo)' });
+    }
+
+    let finalSlug = incomingSlug;
+    const slugChanged = incomingSlug !== existing.slug;
+    if (slugChanged) {
+      finalSlug = await ensureUniqueSlug(generarSlug(incomingSlug));
+    }
+
+    // 3) META: descripción + imagen hero (con soporte imageKey/CDN)
+    const meta = data.meta || {};
+
+    const metaDescription = String(
+      meta.description || existing.meta?.description || ''
+    ).trim();
+
+    // Caption global -> imageCaptionHtml (igual lógica que createNoticia)
+    let imageCaptionHtml = '';
+    if (typeof meta.imageCaptionHtml === 'string' && meta.imageCaptionHtml.trim()) {
+      imageCaptionHtml = meta.imageCaptionHtml.trim();
+    } else if (
+      typeof existing.meta?.imageCaptionHtml === 'string' &&
+      existing.meta.imageCaptionHtml.trim() &&
+      !meta.imageCaption && !meta.imageCaptionUrl
+    ) {
+      // si no mandan nada nuevo, conserva el existente
+      imageCaptionHtml = existing.meta.imageCaptionHtml.trim();
+    } else if (meta.imageCaption || meta.imageCaptionUrl) {
+      const txt = (meta.imageCaption || '').toString().trim();
+      const url = (meta.imageCaptionUrl || '').toString().trim();
+      if (url) {
+        let host = '';
+        try { host = new URL(url).hostname.replace(/^www\./, ''); } catch {}
+        const anchorText = host || 'Fuente';
+        imageCaptionHtml = txt
+          ? `${txt} — <a href="${url}">${anchorText}</a>`
+          : `<a href="${url}">${anchorText}</a>`;
+      } else {
+        imageCaptionHtml = txt;
+      }
+    }
+
+    // === Normalización de META hero a CDN (image / imageKey)
+    const CDN = process.env.CDN_BASE_URL;
+
+    // preferimos valores nuevos; si no, caemos a los existentes
+    let metaImageUrl = meta.image || '';
+    let metaImageKey = meta.imageKey || undefined;
+
+    if (!metaImageUrl && !metaImageKey) {
+      metaImageUrl = existing.meta?.image || '';
+      metaImageKey = existing.meta?.imageKey || undefined;
+    }
+
+    if (!metaDescription) {
+      return res.status(400).json({ error: 'meta.description es obligatoria' });
+    }
+
+    if (!metaImageUrl && metaImageKey) {
+      metaImageUrl = toCdnUrl(metaImageKey, CDN);
+    } else if (metaImageUrl) {
+      metaImageUrl = toCdnUrl(metaImageUrl, CDN);
+    }
+
+    if (!metaImageUrl) {
+      return res.status(400).json({
+        error: 'Se requiere meta.image (o imageKey) válido para la imagen destacada'
       });
     }
-  }
 
-  async updateNoticia(req, res) {
-    try {
-      const { id } = req.params;
-      const data = req.body || {};
+    // 4) Optional fields (don’t block)
+    const summary        = String(data.summary || existing.summary || '').trim();
+    const extracto       = String(data.extracto || existing.extracto || '').trim();
+    const focusKeyphrase = String(data.focusKeyphrase || existing.focusKeyphrase || '').trim();
+    const tags           = normTags(data.tags ?? existing.tags ?? []);
 
-      // 1) Exists?
-      const existing = await Noticia.findById(id);
-      if (!existing) return res.status(404).json({ error: 'Noticia no encontrada' });
-
-      // 2) Title/slug
-      const title = String(data.title || existing.title || '').trim();
-      let incomingSlug = String(data.slug || '').trim();
-      if (!incomingSlug && title) incomingSlug = generarSlug(title);
-      if (!incomingSlug) return res.status(400).json({ error: 'slug es requerido (o título para generarlo)' });
-
-      let finalSlug = incomingSlug;
-      const slugChanged = incomingSlug !== existing.slug;
-      if (slugChanged) {
-        finalSlug = await ensureUniqueSlug(generarSlug(incomingSlug));
-      }
-
-      // 3) Required meta
-      const meta = data.meta || {};
-      const metaDescription = String(meta.description || '').trim();
-      const metaImage = String(meta.image || '').trim();
-      if (!title) return res.status(400).json({ error: 'title es obligatorio' });
-      if (!finalSlug) return res.status(400).json({ error: 'slug es obligatorio' });
-      if (!metaDescription) return res.status(400).json({ error: 'meta.description es obligatoria' });
-      if (!metaImage) return res.status(400).json({ error: 'meta.image es obligatoria' });
-
-      // 4) Optional fields (don’t block)
-      const summary  = String(data.summary || '').trim();
-      const extracto = String(data.extracto || '').trim();
-      const focusKeyphrase= String(data.focusKeyphrase || '').trim();
-      const tags     = normTags(data.tags);
-
-      const location = (data.location && typeof data.location === 'object')
-        ? {
-            country: data.location.country || '',
-            region:  data.location.region || '',
-            city:    data.location.city || ''
-          }
-        : { country: '', region: '', city: '' };
-
-      const state = ['draft', 'review', 'published'].includes(data.state)
-        ? data.state
-        : (existing.state || 'draft');
-
-      const publishAt = data.publishAt ? new Date(data.publishAt) : (existing.publishAt || null);
-
-      // body/content
-      let bodyHtml = String(data.bodyHtml || data.body || '').trim();
-      // tidy nested <p><p>…</p></p> if your editor creates them
-      bodyHtml = bodyHtml.replace(/<p>\s*<p>/g, '<p>').replace(/<\/p>\s*<\/p>/g, '</p>');
-
-      const content = normalizeContent(Array.isArray(data.content) ? data.content : (existing.content || []));
-
-      // categories
-      const categories = await resolveCategories(data.categories || existing.categories || []);
-
-      // 5) Meta final
-      const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL;
-      const canonical = String(meta.canonical || pickCanonical(PUBLIC_BASE_URL, finalSlug, req));
-      const ogTitle = String(meta.ogTitle || title);
-      const ogDescription = String(meta.ogDescription || extracto || metaDescription);
-      const imageAltGlobal = String(meta.imageAltGlobal || '').trim();
-      const imageCaption = String(meta.imageCaption || '').trim();
-      const imageCaptionUrl = String(meta.imageCaptionUrl || '').trim();
-
-      const metaFinal = {
-        description: metaDescription,
-        image: metaImage,
-        canonical,
-        ogTitle,
-        ogDescription,
-        imageAltGlobal,
-        imageCaption,
-        imageCaptionUrl,
-        twitterCard: 'summary_large_image'
-      };
-
-      // 6) Update doc
-      const updateDoc = {
-        title,
-        slug: finalSlug,
-        summary,
-        extracto,
-        focusKeyphrase,
-        tags,
-        categories,
-        location,
-        state,
-        publishAt: publishAt || null,
-        bodyHtml,
-        content,
-        meta: metaFinal,
-        updatedAt: new Date()
-      };
-
-      // 7) Save
-      const updated = await Noticia.findByIdAndUpdate(id, updateDoc, {
-        new: true,
-        runValidators: true
-      })
-        .populate('categories', 'name slug color')
-        .lean();
-
-      if (!updated) return res.status(404).json({ error: 'Error al actualizar la noticia' });
-
-      // 8) Recache on publish / slug change
-      try {
-        if (state === 'published') {
-          await recacheNoticia(updated.slug);
-          if (slugChanged) {
-            // optionally invalidate old slug
-            await recacheNoticia(existing.slug).catch(() => {});
-          }
+    const location = (data.location && typeof data.location === 'object')
+      ? {
+          country: data.location.country || '',
+          region:  data.location.region || '',
+          city:    data.location.city || ''
         }
-      } catch (e) {
-        console.warn('recacheNoticia warning:', e && e.message ? e.message : e);
+      : {
+          country: existing.location?.country || '',
+          region:  existing.location?.region || '',
+          city:    existing.location?.city || ''
+        };
+
+    const state = ['draft', 'review', 'published'].includes(data.state)
+      ? data.state
+      : (existing.state || 'draft');
+
+    const publishAt = data.publishAt
+      ? new Date(data.publishAt)
+      : (existing.publishAt || null);
+
+    // 5) bodyHtml / content (normalizar listas, imágenes a CDN y EMBEDS)
+    let bodyHtml = String(data.bodyHtml || data.body || existing.bodyHtml || '').trim();
+
+    // tidy nested <p><p>…</p></p> si el editor los genera
+    bodyHtml = bodyHtml
+      .replace(/<p>\s*<p>/g, '<p>')
+      .replace(/<\/p>\s*<\/p>/g, '</p>');
+
+    const rawContent = Array.isArray(data.content)
+      ? data.content
+      : (existing.content || []);
+
+    const normContent = Array.isArray(rawContent) ? rawContent.map((b) => {
+      const out = { ...b };
+      if (!out.type) return out;
+
+      // Asegura style.textAlign válido
+      if (out.style) {
+        const ta = (out.style.textAlign ?? '').toString().trim();
+        if (!['left', 'center', 'right'].includes(ta)) {
+          delete out.style.textAlign;
+        }
       }
 
-      return res.status(200).json(updated);
-    } catch (e) {
-      console.error('Error updating noticia:', e);
-      return res.status(500).json({ error: 'Error al actualizar la noticia' });
+      // Listas: preserva arrays
+      if (out.type === 'list') {
+        if (!Array.isArray(out.items)) out.items = [];
+        if (!Array.isArray(out.itemsHtml)) out.itemsHtml = [];
+      }
+
+      // Imágenes: aceptar cdnKey o url y normalizar a CDN
+      if (out.type === 'image') {
+        const cdnKey  = out.cdnKey || '';
+        const mime    = out.mime || '';
+        const bytes   = out.bytes ?? undefined;
+        const width   = out.width ?? undefined;
+        const height  = out.height ?? undefined;
+
+        if (cdnKey && !out.url) {
+          out.url = toCdnUrl(cdnKey, CDN);
+        } else if (out.url) {
+          out.url = toCdnUrl(out.url, CDN);
+        }
+
+        // mime solo image/*
+        if (mime && !/^image\//i.test(mime)) delete out.mime;
+
+        if (bytes !== undefined) out.bytes = Number(bytes) || undefined;
+        if (width !== undefined) out.width = Number(width) || undefined;
+        if (height !== undefined) out.height = Number(height) || undefined;
+
+        // Variantes (si existen)
+        if (out.variants) {
+          const v = { ...out.variants };
+          if (v.sm) v.sm = toCdnUrl(v.sm, CDN);
+          if (v.md) v.md = toCdnUrl(v.md, CDN);
+          if (v.lg) v.lg = toCdnUrl(v.lg, CDN);
+          out.variants = v;
+        }
+      }
+
+      // 🔥 EMBEDS sociales (tweet, post, video…)
+      if (out.type === 'embed') {
+        if (typeof out.url === 'string') {
+          out.url = out.url.trim();
+        } else {
+          out.url = undefined;
+        }
+
+        const allowedProviders = ['twitter', 'facebook', 'instagram', 'youtube', 'tiktok', 'generic'];
+        if (out.provider) {
+          const p = String(out.provider).toLowerCase();
+          out.provider = allowedProviders.includes(p) ? p : 'generic';
+        } else {
+          out.provider = 'generic';
+        }
+      }
+
+      return out;
+    }) : [];
+
+    // 6) Categorías
+    const categories = await resolveCategories(
+      data.categories || existing.categories || []
+    );
+
+    // 7) Meta final alineado con el Schema (sin imageCaption / imageCaptionUrl)
+    const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL;
+    const canonical = String(
+      meta.canonical ||
+      existing.meta?.canonical ||
+      pickCanonical(PUBLIC_BASE_URL, finalSlug, req)
+    );
+
+    const ogTitle = String(meta.ogTitle || existing.meta?.ogTitle || title);
+    const ogDescription = String(
+      meta.ogDescription ||
+      existing.meta?.ogDescription ||
+      extracto ||
+      metaDescription
+    );
+
+    const imageAltGlobal = String(
+      meta.imageAltGlobal || existing.meta?.imageAltGlobal || ''
+    ).trim();
+
+    const metaFinal = {
+      description:    metaDescription,
+      image:          metaImageUrl,
+      canonical,
+      ogTitle,
+      ogDescription,
+      imageAltGlobal,
+      twitterCard:    meta.twitterCard || existing.meta?.twitterCard || 'summary_large_image',
+      imageCaptionHtml,
+      imageKey:       meta.imageKey || existing.meta?.imageKey || undefined,
+      imageWidth:     meta.imageWidth || existing.meta?.imageWidth || undefined,
+      imageHeight:    meta.imageHeight || existing.meta?.imageHeight || undefined,
+      imageType:      meta.imageType || existing.meta?.imageType || undefined
+    };
+
+    // 8) Update doc
+    const updateDoc = {
+      title,
+      slug: finalSlug,
+      summary,
+      extracto,
+      focusKeyphrase,
+      tags,
+      categories,
+      location,
+      state,
+      publishAt: publishAt || null,
+      bodyHtml,
+      content: normContent,
+      meta: metaFinal,
+      updatedAt: new Date()
+    };
+
+    // 9) Save
+    const updated = await Noticia.findByIdAndUpdate(id, updateDoc, {
+      new: true,
+      runValidators: true
+    })
+      .populate('categories', 'name slug color')
+      .lean();
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Error al actualizar la noticia' });
     }
+
+    // 10) Recache on publish / slug change
+    try {
+      if (state === 'published') {
+        await recacheNoticia(updated.slug);
+        if (slugChanged) {
+          // opcional: invalidar slug antiguo
+          await recacheNoticia(existing.slug).catch(() => {});
+        }
+      }
+    } catch (e) {
+      console.warn('recacheNoticia warning:', e && e.message ? e.message : e);
+    }
+
+    return res.status(200).json(updated);
+  } catch (e) {
+    console.error('Error updating noticia:', e);
+    return res.status(500).json({ error: 'Error al actualizar la noticia' });
   }
+}
+
 async getNoticiasByArchive(req, res) {
   try {
     const { anio, mes } = req.params;
@@ -698,8 +865,10 @@ async getAllNoticias(req, res, next) {
     res.status(500).json({ error: 'Error al obtener noticias' });
   }
 } 
+
+
 // dentro de tu controlador (donde ya tienes helpers generarSlug / ensureUniqueSlug, etc.)
-async  createNoticia(req, res, next) {
+async createNoticia(req, res, next) {
   try {
     const {
       title,
@@ -782,9 +951,11 @@ async  createNoticia(req, res, next) {
       return res.status(400).json({ message: 'meta.description y meta.image (o imageKey) son obligatorios.' });
     }
 
-    // ===== NORMALIZAR CONTENT (mantener itemsHtml, limpiar align, y reescribir images a CDN)
+    // ===== NORMALIZAR CONTENT (listas, imágenes a CDN y EMBEDS sociales) =====
     const normContent = Array.isArray(content) ? content.map((b) => {
       const out = { ...b };
+
+      if (!out.type) return out;
 
       // Asegura style.textAlign válido
       if (out.style) {
@@ -802,7 +973,6 @@ async  createNoticia(req, res, next) {
 
       // Imágenes: aceptar cdnKey o url absoluta o s3 y reescribir a CDN
       if (out.type === 'image') {
-        // campos nuevos (si llegan)
         const cdnKey = out.cdnKey || '';
         const mime   = out.mime || '';
         const bytes  = out.bytes || undefined;
@@ -830,6 +1000,25 @@ async  createNoticia(req, res, next) {
           if (v.md) v.md = toCdnUrl(v.md, CDN);
           if (v.lg) v.lg = toCdnUrl(v.lg, CDN);
           out.variants = v;
+        }
+      }
+
+      // 🔥 EMBEDS sociales: solo normalizamos url y provider
+      if (out.type === 'embed') {
+        // URL limpia
+        if (typeof out.url === 'string') {
+          out.url = out.url.trim();
+        } else {
+          out.url = undefined;
+        }
+
+        // Provider a minúsculas + fallback a 'generic'
+        const allowedProviders = ['twitter', 'facebook', 'instagram', 'youtube', 'tiktok', 'generic'];
+        if (out.provider) {
+          const p = String(out.provider).toLowerCase();
+          out.provider = allowedProviders.includes(p) ? p : 'generic';
+        } else {
+          out.provider = 'generic';
         }
       }
 
@@ -883,8 +1072,8 @@ async  createNoticia(req, res, next) {
     }
     next(error);
   }
-
 }
+
 }
 
 const NoticiasController = new noticiasController();
