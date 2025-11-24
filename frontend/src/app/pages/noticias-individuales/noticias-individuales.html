@@ -1,4 +1,5 @@
 <main class="container mt-8" *ngIf="noticia$ | async as noticia; else loading">
+
   <!-- HERO: full-bleed (covers whole screen horizontally) -->
   <section
     class="hero-section hero-fullbleed mb-5"
@@ -153,6 +154,30 @@
                             [innerHTML]="block?.captionHtml || block?.caption">
                 </figcaption>
               </figure>
+          <!-- EMBED -->
+          <ng-container *ngSwitchCase="'embed'">
+            <div class="embed-block">
+              <div class="embed-wrapper">
+                <!-- Caso específico: Twitter/X -->
+                <blockquote
+                  class="twitter-tweet"
+                  *ngIf="block?.provider === 'twitter'; else genericEmbed">
+                  <a [href]="normalizeTwitterUrl(block?.url || '')"></a>
+                </blockquote>
+
+                <!-- Fallback genérico para otros providers -->
+                <ng-template #genericEmbed>
+                  <a
+                    [href]="block?.url || ''"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    Ver contenido incrustado
+                  </a>
+                </ng-template>
+              </div>
+            </div>
+          </ng-container>
+
 
               <!-- Fallback -->
               <p *ngSwitchDefault>Sin soporte para este tipo de bloque: {{ block?.type }}</p>
@@ -240,3 +265,4 @@
     <p aria-live="polite">Cargando noticia...</p>
   </div>
 </ng-template>
+
