@@ -81,7 +81,7 @@ export class PanelNoticias implements OnInit {
     toolbar: [
       'heading', 'bold', 'italic', 'link',
       'bulletedList', 'numberedList', 'blockQuote',
-      'insertTable', 'imageUpload', 'undo', 'redo'
+      'insertTable', 'imageUpload','mediaEmbed', 'undo', 'redo',
     ],
     image: {
       toolbar: [
@@ -93,6 +93,31 @@ export class PanelNoticias implements OnInit {
       ]
     },
     extraPlugins: [S3UploadAdapterPlugin],
+    htmlSupport: {
+    allow: [
+      {
+        name: 'iframe',
+        attributes: true,
+        classes: true,
+        styles: true
+      },
+      {
+        name: 'oembed',
+        attributes: ['url']
+      },
+      {
+        name: 'figure',
+        classes: ['media'] // <figure class="media"> que usa mediaEmbed
+      }
+    ]
+  },
+
+  // 👇 Hacer que mediaEmbed guarde el <oembed> en el HTML
+  mediaEmbed: {
+    previewsInData: true
+    // si quieres, aquí puedes definir providers custom,
+    // pero con los defaults suele bastar para YouTube, Vimeo, etc.
+  }
   };
 
   // Estado de UI del estudio
@@ -1286,6 +1311,7 @@ if (tag === 'iframe') {
         this.editorConfig.image.toolbar.filter((t: string) => available.has(t));
     }
   }
+
 
   private noTrailingDotValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
