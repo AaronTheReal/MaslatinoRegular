@@ -26,13 +26,6 @@ export class RadioPlayerComponent {
     this.player.toggle();
   }
 
-  onVolumeChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const value = Number(input.value);
-    this.player.setVolume(value);
-    this.lastVolume = value;
-    this.isMuted = value === 0;
-  }
 
   toggleMute() {
     if (this.isMuted) {
@@ -70,4 +63,24 @@ export class RadioPlayerComponent {
       console.error('Error al compartir:', err);
     }
   }
+  onVolumeChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const value = Number(input.value);
+  this.player.setVolume(value);
+  this.lastVolume = value;
+  this.isMuted = value === 0;
+
+  this.updateSliderVisual(input, value);
+}
+
+// NUEVO:
+private updateSliderVisual(input: HTMLInputElement, value: number) {
+  const min = Number(input.min || 0);
+  const max = Number(input.max || 1);
+  const percent = ((value - min) / (max - min)) * 100;
+
+  // guardamos el porcentaje en una CSS variable
+  input.style.setProperty('--volume-percent', `${percent}%`);
+}
+
 }
