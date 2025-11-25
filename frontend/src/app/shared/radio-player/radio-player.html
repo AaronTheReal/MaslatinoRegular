@@ -51,14 +51,19 @@
   </div>
 
   <!-- DERECHA: compartir pegado a la orilla -->
-  <div class="radio-player__section radio-player__section--right">
-    <button
-      type="button"
-      class="radio-player__icon-btn radio-player__icon-btn--share"
-      (click)="share()"
-      aria-label="Compartir radio"
-    >
-      ⤴
-    </button>
-  </div>
+<div class="radio-player__section radio-player__section--right">
+  <button
+    type="button"
+    class="radio-player__icon-btn radio-player__icon-btn--share"
+    (click)="share()"
+    aria-label="Compartir radio"
+  >
+    <img
+      src="assets/radio/flecha.png"
+      alt="Compartir"
+      class="radio-player__share-img"
+    />
+  </button>
+</div>
+
 </div>
