@@ -1,35 +1,64 @@
 <div class="radio-player">
-  <div class="radio-player__left">
+  <!-- IZQUIERDA: icono / logo de la radio -->
+  <div class="radio-player__section radio-player__section--left">
+    <img
+      src="assets/radio/logoradio.png"
+      alt="MásLatino Radio"
+      class="radio-player__logo"
+    />
+  </div>
+
+  <!-- CENTRO: play/pausa + barra volumen + mute -->
+  <div class="radio-player__section radio-player__section--center">
+    <!-- Botón play/pausa (icono blanco, sin círculo) -->
     <button
       type="button"
-      class="radio-player__btn"
+      class="radio-player__play-btn"
       (click)="togglePlay()"
       [attr.aria-label]="(isPlaying$ | async) ? 'Pausar radio' : 'Reproducir radio'"
     >
       <ng-container *ngIf="(isPlaying$ | async); else playIcon">
-        <!-- Icono pausa -->
         ❚❚
       </ng-container>
       <ng-template #playIcon>
-        <!-- Icono play -->
         ▶
       </ng-template>
     </button>
 
-    <div class="radio-player__info">
-      <div class="radio-player__title">Tu Radio</div>
-      <div class="radio-player__subtitle">En vivo 24/7 desde MásLatino</div>
+    <!-- Barra de volumen + mute a la derecha -->
+    <div class="radio-player__volume-wrapper">
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        [value]="(volume$ | async) ?? 1"
+        (input)="onVolumeChange($event)"
+        aria-label="Volumen de la radio"
+      />
+
+      <button
+        type="button"
+        class="radio-player__icon-btn radio-player__icon-btn--mute"
+        (click)="toggleMute()"
+        [class.is-muted]="isMuted"
+        aria-label="Silenciar / activar sonido"
+      >
+        <span *ngIf="!isMuted; else mutedIcon">🔊</span>
+        <ng-template #mutedIcon>🔇</ng-template>
+      </button>
     </div>
   </div>
 
-  <div class="radio-player__right">
-    <span class="radio-player__volume-label">Vol</span>
-    <input
-      type="range"
-      min="0"
-      max="1"
-      step="0.01"
-      (input)="onVolumeChange($event)"
-    />
+  <!-- DERECHA: compartir pegado a la orilla -->
+  <div class="radio-player__section radio-player__section--right">
+    <button
+      type="button"
+      class="radio-player__icon-btn radio-player__icon-btn--share"
+      (click)="share()"
+      aria-label="Compartir radio"
+    >
+      ⤴
+    </button>
   </div>
 </div>

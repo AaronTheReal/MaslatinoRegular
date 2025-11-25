@@ -10,98 +10,183 @@
   justify-content: space-between;
   gap: 1rem;
 
-  padding: 0.5rem 1.5rem;
+  padding: 0.35rem 1.5rem;
 
-  background: rgba(10, 10, 10, 0.95);
+  background: #000;
   color: #fff;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.4);
-
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
 
-  .radio-player__left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-  }
+.radio-player__section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
 
-  .radio-player__btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    border: none;
-    outline: none;
-    cursor: pointer;
+.radio-player__section--left {
+  min-width: 0;
+}
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.radio-player__section--center {
+  flex: 1;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
 
-    background: #e11d48; 
-    color: #fff;
-    font-size: 1.1rem;
-    font-weight: bold;
-    transition: transform 0.1s ease, box-shadow 0.1s ease;
+.radio-player__section--right {
+  min-width: 40px;
+  justify-content: flex-end;
+  display: flex;
+  align-items: center;
+}
 
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 10px rgba(225, 29, 72, 0.5);
-    }
+.radio-player__logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+}
 
-    &:active {
-      transform: translateY(0);
-      box-shadow: none;
-    }
-  }
+/* Play/Pause → icono blanco, sin círculo */
+.radio-player__play-btn {
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
 
-  .radio-player__info {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
 
-  .radio-player__title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  .radio-player__subtitle {
-    font-size: 0.8rem;
-    opacity: 0.8;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-  }
+  padding: 0;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
 
-  .radio-player__right {
-    display: flex;
-    align-items: center;
+.radio-player__play-btn:hover {
+  transform: scale(1.08);
+  opacity: 0.9;
+}
+
+.radio-player__play-btn:active {
+  transform: scale(0.96);
+}
+
+/* Barra de volumen + mute (mute a la derecha) */
+.radio-player__volume-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  max-width: 420px;
+}
+
+/* Slider de volumen */
+.radio-player input[type='range'] {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+}
+
+/* thumb (Chrome) */
+.radio-player input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid #000000;
+  margin-top: -5px;
+}
+
+/* thumb (Firefox) */
+.radio-player input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid #000000;
+}
+
+/* track (Firefox) */
+.radio-player input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Botones de icono (mute y compartir) */
+.radio-player__icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 0.9rem;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease, opacity 0.1s ease;
+}
+
+.radio-player__icon-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
+
+.radio-player__icon-btn:active {
+  transform: translateY(0);
+  opacity: 0.8;
+}
+
+/* Estado mute */
+.radio-player__icon-btn--mute.is-muted {
+  color: #f97373;
+  border-color: #f97373;
+}
+
+/* Botón compartir a la derecha (puedes tunearlo aparte si quieres) */
+.radio-player__icon-btn--share {
+  /* estilos extra opcionales */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .radio-player {
+    padding: 0.25rem 0.75rem;
     gap: 0.5rem;
-
-    input[type='range'] {
-      width: 120px;
-      cursor: pointer;
-    }
   }
 
-  .radio-player__volume-label {
-    font-size: 0.8rem;
-    opacity: 0.8;
+  .radio-player__logo {
+    height: 26px;
   }
 
-  @media (max-width: 600px) {
-    padding: 0.5rem 0.75rem;
+  .radio-player__section--center {
+    gap: 0.5rem;
+  }
 
-    .radio-player__subtitle {
-      display: none;
-    }
+  .radio-player__volume-wrapper {
+    max-width: none;
+  }
+}
 
-    .radio-player__right input[type='range'] {
-      width: 80px;
-    }
+@media (max-width: 480px) {
+  .radio-player {
+    padding: 0.25rem 0.5rem;
   }
 }
