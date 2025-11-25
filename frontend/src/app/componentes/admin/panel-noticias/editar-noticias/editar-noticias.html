@@ -273,6 +273,7 @@
                 <span *ngIf="tags?.errors?.['minlength']">Mínimo 1 tag.</span>
                 <span *ngIf="tags?.errors?.['maxlength']">Máximo 5 tags.</span>
               </div>
+
               <div *ngIf="keywordDensityWarnings.length > 0" class="text-warning mt-2 small">
                 <div *ngFor="let w of keywordDensityWarnings">{{ w }}</div>
               </div>
@@ -347,6 +348,13 @@
             <!-- BODY -->
             <div class="form-group mb-3">
               <label>Contenido</label>
+              <small class="text-muted d-block mb-1">
+                Para incrustar contenido de Twitter / X, Facebook, Instagram, YouTube, TikTok, etc.:
+                usa el botón de <strong>media</strong> del editor o pega el iframe o la URL en un
+                párrafo aparte. El sistema lo convierte en bloques de <code>embed</code> / <code>iframe</code>
+                y la Vista Previa ya los sabe renderizar.
+              </small>
+
               <ng-container *ngIf="isBrowser && Editor; else fallbackWhileLoading">
                 <ckeditor
                   [editor]="Editor"
@@ -361,6 +369,7 @@
                           (input)="onBodyChange()"
                           placeholder="Escribe aquí tu noticia si no ves el editor aún..."></textarea>
               </ng-template>
+
               <div class="text-danger mt-2 small"
                    *ngIf="noticiaForm.get('body')?.touched && noticiaForm.get('body')?.invalid">
                 <span *ngIf="noticiaForm.get('body')?.errors?.['minWords']">≥300 palabras. </span>

@@ -1,8 +1,21 @@
 // editar-noticias.ts
-import { Component, OnInit, inject, PLATFORM_ID, HostListener } from '@angular/core';
 import {
-  FormBuilder, FormGroup, FormArray, Validators, ValidatorFn,
-  AbstractControl, ValidationErrors, AsyncValidatorFn
+  Component,
+  OnInit,
+  inject,
+  PLATFORM_ID,
+  HostListener,
+  ChangeDetectorRef
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  FormArray,
+  Validators,
+  ValidatorFn,
+  AbstractControl,
+  ValidationErrors,
+  AsyncValidatorFn
 } from '@angular/forms';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
@@ -18,7 +31,7 @@ import { debounceTime, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Noticia } from '../../../../../models/noticia.model';
 import { S3UploadAdapterPlugin } from './../../../../../utils/ckeditor-s3-adapter';
-import { ChangeDetectorRef } from '@angular/core';
+
 @Component({
   selector: 'app-editar-noticias',
   standalone: true,
@@ -30,17 +43,19 @@ export class EditarNoticias implements OnInit {
   noticiaForm: FormGroup;
   categoriasDisponibles: CategoriaPayload[] = [];
   previewDataObj: any;
+
   // Métricas
   wordCount = 0;
   readingTime = 0;
   imageCount = 0;
   headerCount = 0;
   fleschScore = 0;
-  density = 0; // % densidad keyword
+  density = 0;  // % densidad keyword
   linkCount = 0;
   internalLinks = 0;
   externalLinks = 0;
   captionPlainCount = 0;
+
   // Avisos
   titleWarning = '';
   metaDescWarning = '';
@@ -56,50 +71,26 @@ export class EditarNoticias implements OnInit {
   titleRepetitionWarning = '';
   sourcesSuggestion = '';
   linkSuggestion = '';
+
   // Checklist / UI
   showChecklist = false;
   checklist: any = {};
   publishTooltip = '';
   isSubmitting = false;
   canonicalUrl = '';
+
   // SSR
   isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   public Editor: any = null;
+
   // Dominio para enlaces internos
   private domain = 'maslatino.com';
-  private escapeRegex(s: string): string {
-    return (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  }
-  // CKEditor config
-  public editorConfig: any = {
-    licenseKey: 'GPL',
-    toolbar: [
-      'heading', 'bold', 'italic', 'link',
-      'bulletedList', 'numberedList', 'blockQuote',
-      'insertTable', 'imageUpload', 'undo', 'redo'
-    ],
-    image: {
-      toolbar: [
-        'imageTextAlternative',
-        'toggleImageCaption',
-        'imageStyle:inline',
-        'imageStyle:block',
-        'imageStyle:side'
-      ]
-    },
-    extraPlugins: [S3UploadAdapterPlugin],
-  };
-  // Estado de UI del estudio
-  dockMode: 'hidden' | 'right' | 'bottom' = 'right';
-  seoEssentialsOpen = true;
-  inspectorOpen = false;
-  splitRatio = 0.52;
-  private resizing = false;
+
+  // Routing / estado
+  private id = '';
   private cdr = inject(ChangeDetectorRef);
   private loadedNoticiaCats: CategoriaPayload[] = [];
   private loadedNoticiaCatIds: string[] = [];
-  // routing/state
-  private id = '';
 
   constructor(
     private fb: FormBuilder,
@@ -111,7 +102,8 @@ export class EditarNoticias implements OnInit {
   ) {
     this.noticiaForm = this.fb.group({
       focusKeyphrase: ['', [Validators.required, Validators.maxLength(50)]],
-      title: ['',
+      title: [
+        '',
         [
           Validators.required,
           Validators.minLength(50),
@@ -122,20 +114,24 @@ export class EditarNoticias implements OnInit {
           this.noSpecialCharsValidator()
         ]
       ],
-      slug: ['', {
-        validators: [
-          Validators.required,
-          Validators.pattern(/^[a-z0-9-]+$/),
-          this.slugLengthValidator(),
-          this.slugContainsKeyphraseValidator(),
-          this.noStopWordsValidator(),
-          this.noDatesValidator(),
-          this.noAccentsSymbolsValidator()
-        ],
-        asyncValidators: [this.slugUniqueValidator()],
-        updateOn: 'blur'
-      }],
-      extracto: ['',
+      slug: [
+        '',
+        {
+          validators: [
+            Validators.required,
+            Validators.pattern(/^[a-z0-9-]+$/),
+            this.slugLengthValidator(),
+            this.slugContainsKeyphraseValidator(),
+            this.noStopWordsValidator(),
+            this.noDatesValidator(),
+            this.noAccentsSymbolsValidator()
+          ],
+          asyncValidators: [this.slugUniqueValidator()],
+          updateOn: 'blur'
+        }
+      ],
+      extracto: [
+        '',
         [
           Validators.required,
           Validators.minLength(150),
@@ -148,31 +144,43 @@ export class EditarNoticias implements OnInit {
       ],
       summary: ['', [Validators.minLength(150), Validators.maxLength(160)]],
       tags: this.fb.array([], [Validators.minLength(1), Validators.maxLength(5)]),
+
       categories: [[], Validators.required],
+
       location: this.fb.group({
         country: [''],
         region: [''],
         city: ['']
       }),
+
       meta: this.fb.group({
-        description: ['', [
-          Validators.required,
-          Validators.minLength(120),
-          Validators.maxLength(160),
-          this.keyphraseOnceValidator(),
-          this.noDoubleQuotesValidator(),
-          this.naturalLanguageValidator()
-        ]],
-        image: ['', [
-          Validators.required,
-          Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i),
-          this.imageFilenameValidator()
-        ]],
-        imageAltGlobal: ['', [
-          Validators.required,
-          Validators.minLength(8),
-          this.altKeyphraseHyphenValidator()
-        ]],
+        description: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(120),
+            Validators.maxLength(160),
+            this.keyphraseOnceValidator(),
+            this.noDoubleQuotesValidator(),
+            this.naturalLanguageValidator()
+          ]
+        ],
+        image: [
+          '',
+          [
+            Validators.required,
+            Validators.pattern(/^https:\/\/.*\.(jpg|png|webp)$/i),
+            this.imageFilenameValidator()
+          ]
+        ],
+        imageAltGlobal: [
+          '',
+          [
+            Validators.required,
+            Validators.minLength(8),
+            this.altKeyphraseHyphenValidator()
+          ]
+        ],
         canonical: ['', Validators.pattern(/^https?:\/\/.+/)],
         ogTitle: [''],
         ogDescription: ['', [Validators.maxLength(300)]],
@@ -181,10 +189,13 @@ export class EditarNoticias implements OnInit {
           [this.captionHtmlValidator(140)]
         ],
       }),
+
       state: ['draft'],
       publishAt: [null],
+
       body: ['', [this.bodySeoValidator()]]
     });
+
     // Listeners
     this.noticiaForm.get('title')?.valueChanges.subscribe(title => {
       if (title) {
@@ -194,9 +205,11 @@ export class EditarNoticias implements OnInit {
       this.updateTitleWarning();
       this.updateTitleRepetition();
     });
+
     this.noticiaForm.get('slug')?.valueChanges.subscribe(slug => {
       this.canonicalUrl = `https://${this.domain}/${slug}`;
     });
+
     this.noticiaForm.get('meta.description')?.valueChanges
       .subscribe(() => this.updateMetaDescWarning());
     this.noticiaForm.get('meta.image')?.valueChanges
@@ -205,11 +218,14 @@ export class EditarNoticias implements OnInit {
       .subscribe(() => this.validatePublishAt());
     this.noticiaForm.get('location.city')?.valueChanges
       .subscribe(() => this.updateLocalSeoSuggestion());
+
     this.noticiaForm.get('state')?.valueChanges.subscribe(state => {
-      this.showChecklist = state === 'review' || state === 'published';
+      // Igual que crear: checklist sólo en revisión (puedes cambiar a === 'review' || state === 'published' si quieres)
+      this.showChecklist = state === 'review';
       this.updatePublishTooltip();
       this.noticiaForm.get('body')?.updateValueAndValidity();
     });
+
     this.noticiaForm.get('focusKeyphrase')?.valueChanges.subscribe(() => {
       this.noticiaForm.get('title')?.updateValueAndValidity();
       this.noticiaForm.get('slug')?.updateValueAndValidity();
@@ -221,6 +237,54 @@ export class EditarNoticias implements OnInit {
     });
   }
 
+  // CKEditor config (igual que crear noticias)
+  public editorConfig: any = {
+    licenseKey: 'GPL',
+    toolbar: [
+      'heading', 'bold', 'italic', 'link',
+      'bulletedList', 'numberedList', 'blockQuote',
+      'insertTable', 'imageUpload', 'mediaEmbed', 'undo', 'redo',
+    ],
+    image: {
+      toolbar: [
+        'imageTextAlternative',
+        'toggleImageCaption',
+        'imageStyle:inline',
+        'imageStyle:block',
+        'imageStyle:side'
+      ]
+    },
+    extraPlugins: [S3UploadAdapterPlugin],
+    htmlSupport: {
+      allow: [
+        {
+          name: 'iframe',
+          attributes: true,
+          classes: true,
+          styles: true
+        },
+        {
+          name: 'oembed',
+          attributes: ['url']
+        },
+        {
+          name: 'figure',
+          classes: ['media'] // <figure class="media">
+        }
+      ]
+    },
+    mediaEmbed: {
+      previewsInData: true
+    }
+  };
+
+  // Estado de UI del estudio
+  dockMode: 'hidden' | 'right' | 'bottom' = 'right';
+  seoEssentialsOpen = true;
+  inspectorOpen = false;
+  splitRatio = 0.52;
+  private resizing = false;
+
   ngOnInit(): void {
     if (this.isBrowser) {
       import('@ckeditor/ckeditor5-build-classic').then(m => {
@@ -229,6 +293,7 @@ export class EditarNoticias implements OnInit {
         console.log('CKEditor plugins:', names);
       });
     }
+
     this.previewDataObj = this.buildPreviewData();
     this.noticiaForm.valueChanges.pipe(debounceTime(200)).subscribe(() => {
       this.previewDataObj = this.buildPreviewData();
@@ -237,24 +302,47 @@ export class EditarNoticias implements OnInit {
       this.updateChecklist();
       this.updatePublishTooltip();
     });
+
     this.loadCategories();
+
     this.route.params.subscribe(params => {
       this.id = params['id'];
       if (this.id) this.loadNoticia();
     });
   }
-  // Getters
+
+  // ======== GETTERS ========
   get tags(): FormArray {
     return this.noticiaForm.get('tags') as FormArray;
   }
+
   // Tags
   addTag() {
     if (this.tags.length < 5) this.tags.push(this.fb.control('', Validators.required));
   }
+
   removeTag(i: number) {
     if (this.tags.length > 0) this.tags.removeAt(i);
   }
+
+  // ======== HELPERS / UTILS ========
+  private escapeRegex(s: string): string {
+    return (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  private generateSlug(title: string): string {
+    return title
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
+  }
+
   // =============== VALIDADORES ===============
+
   private titleContainsKeyphraseValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const title = (control.value || '').toLowerCase();
@@ -266,6 +354,7 @@ export class EditarNoticias implements OnInit {
       return null;
     };
   }
+
   private titleCaseValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const title = (control.value || '') as string;
@@ -275,39 +364,49 @@ export class EditarNoticias implements OnInit {
       return isTitleCase ? null : { titleCase: true };
     };
   }
+
   private noSpecialCharsValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const t = (control.value || '') as string;
       return /[!¡/?]/.test(t) ? { noSpecialChars: true } : null;
     };
   }
+
   private captionHtmlValidator(maxPlain: number): ValidatorFn {
     const allowed = ['a', 'strong', 'em', 'b', 'i'];
     const disallowedRx = /<\s*(script|style|iframe|img|video|audio|svg|object|embed)\b/i;
     const anchorRx = /<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>/ig;
+
     const stripHtml = (html: string) =>
       (html || '')
         .replace(/<[^>]+>/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+
     return (control: AbstractControl): ValidationErrors | null => {
       const html = String(control.value || '');
+
       if (!html) return null;
       if (disallowedRx.test(html)) return { disallowedTags: true };
+
       const tagNames = Array.from(html.matchAll(/<\s*\/?\s*([a-z0-9-]+)/ig))
         .map(m => (m[1] || '').toLowerCase());
       const bad = tagNames.filter(t => !allowed.includes(t) && !t.startsWith('/'));
       if (bad.length) return { disallowedTags: true };
+
       let m: RegExpExecArray | null;
       while ((m = anchorRx.exec(html)) !== null) {
         const href = m[1];
         if (!/^https?:\/\//i.test(href)) return { invalidHref: true };
       }
+
       const plain = stripHtml(html);
       if (plain.length > maxPlain) return { maxlengthText: true };
+
       return null;
     };
   }
+
   // Slug
   private slugLengthValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -316,6 +415,7 @@ export class EditarNoticias implements OnInit {
       return parts.length >= 3 && parts.length <= 6 ? null : { slugLength: true };
     };
   }
+
   private slugContainsKeyphraseValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const slug = (control.value || '').toLowerCase();
@@ -327,6 +427,7 @@ export class EditarNoticias implements OnInit {
       return null;
     };
   }
+
   private noStopWordsValidator(): ValidatorFn {
     const stop = ['el', 'la', 'de', 'por', 'con', 'a', 'en', 'y', 'o', 'un', 'una', 'los', 'las'];
     return (control: AbstractControl): ValidationErrors | null => {
@@ -334,18 +435,21 @@ export class EditarNoticias implements OnInit {
       return slug.split('-').some(p => stop.includes(p)) ? { noStopWords: true } : null;
     };
   }
+
   private noDatesValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const slug = (control.value || '') as string;
       return /\d{4}|\b\d{2}\b/.test(slug) ? { noDates: true } : null;
     };
   }
+
   private noAccentsSymbolsValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const slug = (control.value || '') as string;
       return /[^a-z0-9-]/.test(slug) ? { noAccentsSymbols: true } : null;
     };
   }
+
   // Meta / Extracto
   private keyphraseOnceValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -362,11 +466,13 @@ export class EditarNoticias implements OnInit {
       return null;
     };
   }
+
   private noDoubleQuotesValidator(): ValidatorFn {
     return (_: AbstractControl): ValidationErrors | null => {
       return /"/.test(_.value || '') ? { noDoubleQuotes: true } : null;
     };
   }
+
   private naturalLanguageValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const text = (control.value || '') as string;
@@ -379,18 +485,22 @@ export class EditarNoticias implements OnInit {
       return null;
     };
   }
+
   // Imagen
   private imageFilenameValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const url = control.value || '';
       try {
         const filename = new URL(url).pathname.split('/').pop() || '';
-        return /^[a-z0-9-]+(\.jpg|\.png|\.webp)$/i.test(filename) ? null : { imageFilename: true };
+        return /^[a-z0-9-]+(\.jpg|\.png|\.webp)$/i.test(filename)
+          ? null
+          : { imageFilename: true };
       } catch {
         return null;
       }
     };
   }
+
   private altKeyphraseHyphenValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const alt = String(control.value || '').toLowerCase();
@@ -403,37 +513,49 @@ export class EditarNoticias implements OnInit {
       return alt.includes(hyphenKey) ? null : { altKeyphraseHyphen: true };
     };
   }
+
   // Body SEO
   private bodySeoValidator(): ValidatorFn {
     return (_: AbstractControl): ValidationErrors | null => {
       if (this.noticiaForm?.get('state')?.value !== 'review') return null;
+
       const html = (this.noticiaForm.get('body')?.value || '').toString();
       if (!this.isBrowser) return null;
+
       const doc = new DOMParser().parseFromString(html, 'text/html');
+
       const text = doc.body.textContent?.trim() || '';
       const words = text.split(/\s+/).filter(Boolean);
       const wordCount = words.length;
+
       const focus = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase();
       const fullLower = text.toLowerCase();
       const keyCount = focus ? (fullLower.split(focus).length - 1) : 0;
       const density = wordCount ? (keyCount / wordCount) * 100 : 0;
+
       const h2s = Array.from(doc.querySelectorAll('h2')).map(h => (h.textContent || '').toLowerCase());
       const paragraphs = Array.from(doc.querySelectorAll('p')).map(p => (p.textContent || '').toLowerCase());
+
       const links = Array.from(doc.querySelectorAll('a[href]')) as HTMLAnchorElement[];
       const totalLinks = links.length;
       const internal = links.filter(a => a.href.includes(this.domain)).length;
       const external = totalLinks - internal;
+
       const images = Array.from(doc.querySelectorAll('img')) as HTMLImageElement[];
       const srcs = images.map(i => i.src).filter(Boolean);
       const uniqueImages = (new Set(srcs)).size === srcs.length;
+
       const hyphenKey = focus.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, '-');
       const altOk = !focus || images.every(img => (img.alt || '').toLowerCase().includes(hyphenKey));
+
       const lists = doc.querySelectorAll('ul, ol');
       const maxListItems = Array.from(lists)
         .reduce((max, list) => Math.max(max, list.querySelectorAll(':scope > li').length), 0);
+
       const errors: any = {};
       if (wordCount < 300) errors.minWords = true;
       if (wordCount > 400 && h2s.length < 1) errors.minHeaders = true;
+
       if (focus) {
         const firstTwo = (paragraphs[0] || '').split(/[.!?]/).slice(0, 2).join('.');
         if (!firstTwo.includes(focus)) errors.keyphraseFirstPara = true;
@@ -443,43 +565,67 @@ export class EditarNoticias implements OnInit {
         if (density < 0.5 || density > 2) errors.keyphraseDensity = true;
         if (!altOk) errors.altKeyphraseHyphen = true;
       }
+
       if (external < 1 || external > 3 || internal < 2 || internal > 3 || totalLinks > 7) errors.links = true;
       if (!uniqueImages) errors.uniqueImages = true;
       if (maxListItems > 7) errors.maxListItems = true;
+
       return Object.keys(errors).length ? errors : null;
     };
   }
-  // Async validator slug único
+
+  // Async validator slug único (respetando el id actual)
   private slugUniqueValidator(): AsyncValidatorFn {
     return (control: AbstractControl) => {
       const value = (control.value || '').trim();
       if (!value) return of(null);
+
       return this.noticiasService.getNoticiaBySlug(value).pipe(
-        map(noticia => (noticia ? { slugUnique: true } : null)),
+        map((noticia: any) => {
+          if (!noticia) return null;
+
+          const foundId =
+            noticia._id?.toString?.() ??
+            noticia.id ??
+            '';
+
+          if (foundId && this.id && foundId === this.id) {
+            return null;
+          }
+
+          return { slugUnique: true };
+        }),
         catchError(() => of(null))
       );
     };
   }
+
   // =============== MÉTRICAS / HELPERS ===============
   onBodyChange() {
     this.updateMetricsFromHTML();
     this.previewDataObj = this.buildPreviewData();
   }
+
   private updateMetricsFromHTML() {
     const html = (this.noticiaForm.get('body')?.value || '').toString();
     if (!this.isBrowser) return;
+
     const doc = new DOMParser().parseFromString(html, 'text/html');
+
     const text = doc.body.textContent?.trim() || '';
     const words = text.split(/\s+/).filter(Boolean);
     this.wordCount = words.length;
     this.readingTime = Math.ceil(this.wordCount / 200);
+
     this.headerCount = doc.querySelectorAll('h2, h3').length;
     this.imageCount = doc.querySelectorAll('img[alt]').length;
+
     const vowels = (text.match(/[aeiouáéíóúü]/gi) || []).length;
     const sentences = (text.match(/[.!?]/g) || []).length || 1;
     this.fleschScore = this.wordCount
       ? Math.round(206.835 - 1.015 * (this.wordCount / sentences) - 84.6 * (vowels / this.wordCount))
       : 0;
+
     const focus = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase().trim();
     this.density = 0;
     if (focus && this.wordCount > 0) {
@@ -488,10 +634,12 @@ export class EditarNoticias implements OnInit {
       const keyCount = (text.toLowerCase().match(rx) || []).length;
       this.density = (keyCount / this.wordCount) * 100;
     }
+
     const links = Array.from(doc.querySelectorAll('a[href]')) as HTMLAnchorElement[];
     this.linkCount = links.length;
     this.internalLinks = links.filter(a => a.href.includes(this.domain)).length;
     this.externalLinks = this.linkCount - this.internalLinks;
+
     this.paragraphWarnings = [];
     const paras = Array.from(doc.querySelectorAll('p')).map(p => p.textContent || '');
     let shortStreak = 0;
@@ -506,10 +654,13 @@ export class EditarNoticias implements OnInit {
     const avg = paras.length ? Math.round(this.wordCount / paras.length) : 0;
     if (avg && (avg < 40 || avg > 80))
       this.paragraphWarnings.push(`Media por párrafo: ${avg} (objetivo 40–80).`);
+
     if (this.wordCount > 400 && this.headerCount < 1)
       this.headerSuggestion = 'Artículo >400 palabras requiere ≥1 H2.';
     else this.headerSuggestion = '';
+
     this.updateTitleRepetition();
+
     const bodyLower = text.toLowerCase();
     if (bodyLower.includes('fuentes:') || bodyLower.includes('sources:')) {
       const hasLinks = Array.from(doc.querySelectorAll('a[href^="https://"]')).length > 0;
@@ -517,12 +668,14 @@ export class EditarNoticias implements OnInit {
         ? ''
         : 'Si hay “Fuentes:”, exige lista de enlaces https con textos claros.';
     } else this.sourcesSuggestion = '';
+
     this.linkSuggestion =
       (this.externalLinks < 1 || this.externalLinks > 3 ||
         this.internalLinks < 2 || this.internalLinks > 3 ||
         this.linkCount > 7)
         ? 'Enlaces: recomienda 1–3 externos, 2–3 internos, total ≤7.'
         : '';
+
     const lists = doc.querySelectorAll('ul, ol');
     this.listSuggestion = [];
     Array.from(lists).forEach((list, i) => {
@@ -532,15 +685,20 @@ export class EditarNoticias implements OnInit {
       }
     });
   }
+
   private updateSoftValidators() {
     this.keywordDensityWarnings = [];
     this.keyphraseWarnings = [];
+
     const html = (this.noticiaForm.get('body')?.value || '').toString();
     if (!this.isBrowser) return;
+
     const doc = new DOMParser().parseFromString(html, 'text/html');
     const text = (doc.body.textContent || '').toLowerCase();
     const wc = text.split(/\s+/).filter(Boolean).length;
+
     const keyphrase = (this.noticiaForm.get('focusKeyphrase')?.value || '').toLowerCase();
+
     if (keyphrase && wc > 0) {
       if (this.density > 2) {
         this.keywordDensityWarnings
@@ -551,6 +709,7 @@ export class EditarNoticias implements OnInit {
           .push(`La palabra clave aparece al ${this.density.toFixed(1)}% - sugiere aumentar su uso (mín. 0.5%).`);
       }
     }
+
     const firstPara = (doc.querySelector('p')?.textContent || '').toLowerCase();
     const metaDesc = (this.noticiaForm.get('meta.description')?.value || '').toLowerCase();
     if (keyphrase) {
@@ -560,33 +719,32 @@ export class EditarNoticias implements OnInit {
         this.keyphraseWarnings.push(`Sugiere incluir "${keyphrase}" en el primer párrafo.`);
     }
   }
-  private generateSlug(title: string): string {
-    return title
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]+/g, '')
-      .replace(/\-\-+/g, '-')
-      .replace(/^-+/, '')
-      .replace(/-+$/, '');
-  }
-  // EMBEDS a partir de un párrafo con solo un enlace
+
+  // ===== Embeds / parseo de HTML =====
+
+  // Detecta embeds a partir de un párrafo con solo un enlace
   private detectEmbedBlock(el: HTMLElement) {
     const text = (el.textContent || '').trim();
+
     if (!/^\s*https?:\/\/\S+\s*$/.test(text)) {
       const anchorOnly = el.querySelector('a[href]') as HTMLAnchorElement | null;
       if (!anchorOnly) return null;
+
       const anchorText = (anchorOnly.textContent || '').trim();
       const rest = text.replace(anchorText, '').trim();
       if (!/^\s*https?:\/\/\S+\s*$/.test(anchorText) || rest.length > 0) return null;
     }
+
     const anchor = el.querySelector('a[href]') as HTMLAnchorElement | null;
     const candidate = anchor?.getAttribute('href') || text;
     if (!candidate || !/^https?:\/\//i.test(candidate)) return null;
+
     let provider: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'generic' = 'generic';
+
     try {
       const u = new URL(candidate);
       const host = u.hostname.replace(/^www\./, '').toLowerCase();
+
       if (host.includes('twitter.com') || host === 'x.com') {
         provider = 'twitter';
       } else if (host.includes('facebook.com') || host === 'fb.watch') {
@@ -601,22 +759,65 @@ export class EditarNoticias implements OnInit {
     } catch {
       // ignore
     }
+
     return {
       type: 'embed',
       provider,
       url: candidate
     };
   }
-  /** Convierte el HTML del body en bloques para Vista Previa */
+
+  /** Convierte el HTML del body en bloques para la Vista Previa */
   private parseHtmlToBlocks(html: string) {
     if (!this.isBrowser) return [];
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const out: any[] = [];
+
     const walk = (node: ChildNode) => {
       if (!(node as HTMLElement).tagName) return;
+
       const el = node as HTMLElement;
       const tag = (el.tagName || '').toLowerCase();
-      const style = { textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right' };
+      const style = {
+        textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right'
+      };
+
+      // === DETECCIÓN DE EMBEDS DENTRO DE <figure><oembed> ===
+      if (tag === 'figure') {
+        const oembed = el.querySelector('oembed[url]') as HTMLElement | null;
+        if (oembed) {
+          const url = oembed.getAttribute('url') || '';
+          if (url) {
+            let provider: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'generic' = 'generic';
+            try {
+              const u = new URL(url);
+              const host = u.hostname.replace(/^www\./, '').toLowerCase();
+              if (host.includes('twitter.com') || host === 'x.com') {
+                provider = 'twitter';
+              } else if (host.includes('facebook.com') || host.includes('fb.watch')) {
+                provider = 'facebook';
+              } else if (host.includes('instagram.com')) {
+                provider = 'instagram';
+              } else if (host.includes('youtube.com') || host === 'youtu.be') {
+                provider = 'youtube';
+              } else if (host.includes('tiktok.com')) {
+                provider = 'tiktok';
+              }
+            } catch {
+              // ignorar
+            }
+
+            out.push({
+              type: 'embed',
+              provider,
+              url
+            });
+            return; // no seguir procesando como imagen
+          }
+        }
+      }
+      // === FIN DETECCIÓN EMBED figure/oembed ===
+
       if (tag === 'p' || tag === 'div') {
         const embed = this.detectEmbedBlock(el);
         if (embed) {
@@ -624,6 +825,15 @@ export class EditarNoticias implements OnInit {
           return;
         }
       }
+
+      if (tag === 'iframe') {
+        out.push({
+          type: 'iframe',
+          html: this.sanitizer.bypassSecurityTrustHtml(el.outerHTML)
+        });
+        return;
+      }
+
       if (
         tag === 'h2' || tag === 'h3' || tag === 'h4' ||
         tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span'
@@ -650,6 +860,7 @@ export class EditarNoticias implements OnInit {
           captionHtml: null
         });
       } else if (tag === 'figure') {
+        // solo si no fue <figure><oembed>
         const img = el.querySelector('img');
         const figcap = el.querySelector('figcaption');
         out.push({
@@ -675,25 +886,95 @@ export class EditarNoticias implements OnInit {
         });
       }
     };
+
     Array.from(doc.body.children).forEach(walk);
     return out;
   }
+
+  /** Convierte HTML a bloques para guardar en Mongo */
   private parseHtmlToBlocksForSave(html: string) {
     if (!this.isBrowser) return [];
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const out: any[] = [];
+
     const walk = (node: ChildNode) => {
       if (!(node as HTMLElement).tagName) return;
+
       const el = node as HTMLElement;
       const tag = (el.tagName || '').toLowerCase();
-      const style = { textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right' };
+      const style = {
+        textAlign: (el.style?.textAlign || '') as 'left' | 'center' | 'right'
+      };
+
+      // === DETECCIÓN DE EMBEDS DENTRO DE <figure><oembed> ===
+      if (tag === 'figure') {
+        const oembed = el.querySelector('oembed[url]') as HTMLElement | null;
+        if (oembed) {
+          const url = oembed.getAttribute('url') || '';
+          if (url) {
+            let provider: 'twitter' | 'facebook' | 'instagram' | 'youtube' | 'tiktok' | 'generic' = 'generic';
+            try {
+              const u = new URL(url);
+              const host = u.hostname.replace(/^www\./, '').toLowerCase();
+              if (host.includes('twitter.com') || host === 'x.com') {
+                provider = 'twitter';
+              } else if (host.includes('facebook.com') || host.includes('fb.watch')) {
+                provider = 'facebook';
+              } else if (host.includes('instagram.com')) {
+                provider = 'instagram';
+              } else if (host.includes('youtube.com') || host === 'youtu.be') {
+                provider = 'youtube';
+              } else if (host.includes('tiktok.com')) {
+                provider = 'tiktok';
+              }
+            } catch {
+              // ignorar
+            }
+
+            out.push({
+              type: 'embed',
+              provider,
+              url
+            });
+            return; // importante
+          }
+        }
+      }
+      // === FIN DETECCIÓN EMBED figure/oembed ===
+
       if (tag === 'p' || tag === 'div') {
+        const rawText = (el.textContent || '').trim();
+
+        // IFRAME ESCRITO COMO TEXTO (&lt;iframe...&lt;/iframe&gt;)
+        if (/^&lt;iframe[\s\S]+&lt;\/iframe&gt;$/i.test(rawText)) {
+          const textarea = document.createElement('textarea');
+          textarea.innerHTML = rawText;
+          const decoded = textarea.value; // <iframe ...></iframe>
+
+          out.push({
+            type: 'iframe',
+            html: decoded
+          });
+
+          return;
+        }
+
         const embed = this.detectEmbedBlock(el);
         if (embed) {
           out.push(embed);
           return;
         }
       }
+
+      if (tag === 'iframe') {
+        const iframeHtml = el.outerHTML;
+        out.push({
+          type: 'iframe',
+          html: iframeHtml
+        });
+        return;
+      }
+
       if (
         tag === 'h2' || tag === 'h3' || tag === 'h4' ||
         tag === 'h5' || tag === 'h6' || tag === 'p' || tag === 'span'
@@ -720,6 +1001,7 @@ export class EditarNoticias implements OnInit {
           captionHtml: null
         });
       } else if (tag === 'figure') {
+        // si no era oembed
         const img = el.querySelector('img');
         const figcap = el.querySelector('figcaption');
         out.push({
@@ -745,15 +1027,18 @@ export class EditarNoticias implements OnInit {
         });
       }
     };
+
     Array.from(doc.body.children).forEach(walk);
     return out;
   }
+
   private buildPreviewData() {
     const raw = this.noticiaForm.value as any;
     const meta = raw.meta || {};
     const html = String(raw.body || '');
     const bodyHtml: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(html);
     const contentBlocks = this.parseHtmlToBlocks(html);
+
     return {
       ...raw,
       bodyHtml,
@@ -766,13 +1051,16 @@ export class EditarNoticias implements OnInit {
       }
     };
   }
+
   get previewData() { return this.previewDataObj; }
+
   private updateTitleWarning() {
     const len = this.noticiaForm.get('title')?.value?.length || 0;
     if ((len < 50 && len > 45) || (len > 60 && len < 65))
       this.titleWarning = `Tu título tiene ${len} caracteres. Ideal: 50–60.`;
     else this.titleWarning = '';
   }
+
   private updateMetaDescWarning() {
     const len = this.noticiaForm.get('meta.description')?.value?.length || 0;
     if (len < 120 && len > 110)
@@ -781,6 +1069,7 @@ export class EditarNoticias implements OnInit {
       this.metaDescWarning = 'Supera 160 chars. Acórtala.';
     else this.metaDescWarning = '';
   }
+
   private validatePublishAt() {
     if (this.noticiaForm.get('state')?.value !== 'review') return;
     const raw = this.noticiaForm.get('publishAt')?.value;
@@ -793,6 +1082,7 @@ export class EditarNoticias implements OnInit {
     const futureLimit = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     this.publishAtError = publishAt > futureLimit ? 'Fecha no puede ser más de 24h en el futuro.' : '';
   }
+
   private updateLocalSeoSuggestion() {
     const city = this.noticiaForm.get('location.city')?.value;
     const html = (this.noticiaForm.get('body')?.value || '').toString();
@@ -803,6 +1093,7 @@ export class EditarNoticias implements OnInit {
         ? `Sugiere añadir mención a "${city}" en el primer 30% del texto. (Opcional)`
         : '';
   }
+
   private updateTitleRepetition() {
     const title = (this.noticiaForm.get('title')?.value || '').toLowerCase();
     const html = (this.noticiaForm.get('body')?.value || '').toString();
@@ -815,6 +1106,7 @@ export class EditarNoticias implements OnInit {
         ? 'La primera frase repite el título: varíala para mejorar CTR.'
         : '';
   }
+
   private updateChecklist() {
     this.checklist = {
       title: this.noticiaForm.get('title')?.valid,
@@ -825,6 +1117,7 @@ export class EditarNoticias implements OnInit {
         !this.noticiaForm.get('body')?.errors?.['links'],
       image: this.noticiaForm.get('meta.image')?.valid,
       publishAt: !this.publishAtError,
+      noUtm: true,
       sources: !this.sourcesSuggestion,
       focusKeyphrase: this.noticiaForm.get('focusKeyphrase')?.valid &&
         this.noticiaForm.get('title')?.valid,
@@ -835,6 +1128,7 @@ export class EditarNoticias implements OnInit {
       tags: this.tags?.valid
     };
   }
+
   private updatePublishTooltip() {
     if (this.noticiaForm.get('state')?.value !== 'review') {
       this.publishTooltip = '';
@@ -857,12 +1151,155 @@ export class EditarNoticias implements OnInit {
     if (!this.checklist.tags) fails.push('1–5 etiquetas');
     this.publishTooltip = fails.length ? 'Pendientes: ' + fails.join(', ') : '';
   }
-  // ===== Servicios / Submit =====
+
+  // ===== Servicios / carga =====
   loadCategories() {
     this.categoriasService.obtenerCategorias().subscribe(categories => {
       this.categoriasDisponibles = categories;
+      this.ensureSelectedCatsAreInItems();
     });
   }
+private loadNoticia() {
+  this.noticiasService.getNoticiaById(this.id).subscribe((noticia: Noticia | any) => {
+    if (!noticia) return;
+
+    const catsRaw: any[] = Array.isArray(noticia.categories) ? (noticia.categories as any[]) : [];
+    this.loadedNoticiaCats = catsRaw
+      .filter(c => c && (c._id || c.id || c.slug || c.name))
+      .map(c => ({
+        _id: String(c._id || ''),
+        name: String(c.name || ''),
+        slug: String(c.slug || ''),
+        color: c.color || undefined,
+      })) as CategoriaPayload[];
+
+    this.loadedNoticiaCatIds = catsRaw
+      .map(c => (typeof c === 'string' ? c : (c._id || c.id)))
+      .filter(Boolean)
+      .map(String);
+
+    const meta = (noticia as any).meta || {};
+    const location = (noticia as any).location || { country: '', region: '', city: '' };
+
+    // 👇 NUEVO: priorizar content sobre bodyHtml
+    const blocks = (noticia as any).content || [];
+    let bodyHtml: string;
+    if (Array.isArray(blocks) && blocks.length > 0) {
+      bodyHtml = this.blocksToHtml(blocks);
+    } else {
+      bodyHtml = (noticia as any).bodyHtml || '';
+    }
+
+    const focusFromMeta =
+      (meta as any).focusKeyphrase ??
+      (noticia as any).focusKeyphrase ??
+      '';
+
+    this.noticiaForm.patchValue({
+      focusKeyphrase: focusFromMeta,
+      title: noticia.title,
+      slug: noticia.slug,
+      extracto: (noticia as any).extracto || '',
+      summary: noticia.summary || '',
+      categories: this.loadedNoticiaCatIds,
+      location,
+      meta: {
+        description: meta.description || '',
+        image: meta.image || '',
+        canonical: meta.canonical || '',
+        ogTitle: meta.ogTitle || noticia.title || '',
+        ogDescription: meta.ogDescription || meta.description || '',
+        imageAltGlobal: meta.imageAltGlobal || '',
+        imageCaptionHtml: meta.imageCaptionHtml || ''
+      },
+      state: (noticia as any).state || 'draft',
+      publishAt: this.formatDateForInput((noticia as any).publishAt || null),
+      body: bodyHtml
+    });
+
+    // tags
+    this.tags.clear();
+    if (Array.isArray(noticia.tags)) {
+      noticia.tags.forEach((tag: any) => this.tags.push(this.fb.control(tag, Validators.required)));
+    }
+
+    this.ensureSelectedCatsAreInItems();
+    this.cdr.detectChanges();
+    this.noticiaForm.get('categories')?.updateValueAndValidity();
+    this.updateMetricsFromHTML();
+    this.previewDataObj = this.buildPreviewData();
+  });
+}
+
+  private ensureSelectedCatsAreInItems() {
+    this.cdr.detectChanges();
+    if (!this.loadedNoticiaCatIds?.length) return;
+
+    const existentes = new Set((this.categoriasDisponibles || []).map(c => String(c._id)));
+    const faltantesIds = this.loadedNoticiaCatIds.filter(id => !existentes.has(String(id)));
+
+    if (faltantesIds.length === 0) return;
+
+    const desdePopulate = this.loadedNoticiaCats.filter(c => c?._id && faltantesIds.includes(String(c._id)));
+    const idsQueSiguenFaltando = faltantesIds.filter(id => !desdePopulate.some(c => c._id === id));
+
+    if (desdePopulate.length) {
+      this.categoriasDisponibles = [...this.categoriasDisponibles, ...desdePopulate];
+    }
+
+    if (idsQueSiguenFaltando.length) {
+      if ((this.categoriasService as any).getCategoriasByIds) {
+        this.categoriasService.getCategoriasByIds(idsQueSiguenFaltando).subscribe((rows: any[]) => {
+          if (Array.isArray(rows) && rows.length) {
+            const nuevos = rows.filter(r => r && r._id && !existentes.has(String(r._id)));
+            if (nuevos.length) {
+              this.categoriasDisponibles = [...this.categoriasDisponibles, ...nuevos];
+            }
+          }
+        });
+      }
+    }
+  }
+
+  // convierte bloques a html básico (por si no hay bodyHtml en BD)
+  private blocksToHtml(blocks: any[]): string {
+    if (!Array.isArray(blocks)) return '';
+    const to = blocks.map(b => {
+      switch (b.type) {
+        case 'text': {
+          const tag = b.tag || 'p';
+          return `<${tag}>${(b.html || b.text || '')}</${tag}>`;
+        }
+        case 'image':
+          return `<figure><img src="${b.url || ''}" alt="${b.alt || ''}"/>${b.captionHtml ? `<figcaption>${b.captionHtml}</figcaption>` : ''}</figure>`;
+        case 'quote':
+          return `<blockquote>${b.html || b.quote || ''}</blockquote>`;
+        case 'list': {
+          const tag = b.ordered ? 'ol' : 'ul';
+          const items = (b.itemsHtml || b.items || []).map((it: any) => `<li>${it || ''}</li>`).join('');
+          return `<${tag}>${items}</${tag}>`;
+        }
+        case 'link':
+          return `<p><a href="${b.href}" rel="noopener">${b.textLink || b.href}</a></p>`;
+        case 'iframe':
+          return typeof b.html === 'string' ? b.html : '';
+        case 'embed':
+          return `<figure class="media"><oembed url="${b.url}"></oembed></figure>`;
+        default:
+          return '';
+      }
+    }).join('\n');
+    return to;
+  }
+
+  private formatDateForInput(date: string | Date | null): string | null {
+    if (!date) return null;
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().slice(0, 16);
+  }
+
+  // ===== Imagen meta =====
   onMetaImageLoad(event: Event) {
     const img = event.target as HTMLImageElement;
     const width = img.naturalWidth;
@@ -872,10 +1309,12 @@ export class EditarNoticias implements OnInit {
       this.metaImageWarning = `Imagen recomendada: ≥1200x630, ratio ~1.91:1. Actual: ${width}x${height}`;
     }
   }
+
   async onPickHero(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input?.files?.[0];
     if (!file) return;
+
     const sign = await fetch('https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -887,25 +1326,31 @@ export class EditarNoticias implements OnInit {
     });
     if (!sign.ok) { alert('No se pudo firmar la subida.'); return; }
     const { uploadUrl, publicUrl } = await sign.json();
+
     const put = await fetch(uploadUrl, {
       method: 'PUT',
       headers: { 'Content-Type': file.type || 'application/octet-stream' },
       body: file
     });
     if (!put.ok) { alert('Fallo al subir a S3'); return; }
+
     this.noticiaForm.patchValue({
       meta: {
         ...this.noticiaForm.get('meta')?.value,
         image: publicUrl,
       }
     });
+
     this.noticiaForm.get('meta.image')?.updateValueAndValidity();
     setTimeout(() => this.metaImageWarning = '', 0);
   }
+
+  // ===== Submit (update) =====
   onSubmit() {
     this.isSubmitting = true;
     this.noticiaForm.markAllAsTouched();
     this.noticiaForm.get('body')?.updateValueAndValidity();
+
     if (this.noticiaForm.invalid ||
       (this.noticiaForm.get('state')?.value === 'review' &&
         Object.values(this.checklist).some((v: any) => !v))) {
@@ -925,7 +1370,9 @@ export class EditarNoticias implements OnInit {
       }
       alert('Se guardará aunque haya pendientes:\n- ' + errors.join('\n- '));
     }
+
     const data = this.prepareSubmitData();
+
     this.noticiasService.updateNoticia(this.id, data).subscribe({
       next: _ => {
         alert('Noticia actualizada (aunque hubiera avisos).');
@@ -937,23 +1384,28 @@ export class EditarNoticias implements OnInit {
       }
     });
   }
+
   private prepareSubmitData() {
     const raw = this.noticiaForm.value as any;
     const categories: string[] = raw.categories;
-    const authorId = 'a94f23c8bd7e4ad1f6c30ae5'; // TODO: reemplazar por el user real
+    const authorId = 'a94f23c8bd7e4ad1f6c30ae5'; // TODO: autor real
+
     const html = String(raw.body || '');
     const contentForSave = this.parseHtmlToBlocksForSave(html);
+
     const hardenCaptionLinks = (captionHtml: string) => {
       if (!captionHtml) return captionHtml;
       return captionHtml
         .replace(/<a\b(?![^>]*\btarget=)[^>]*>/ig, m => m.replace('<a', '<a target="_blank"'))
         .replace(/<a\b(?![^>]*\brel=)[^>]*>/ig, m => m.replace('<a', '<a rel="nofollow noopener"'));
     };
+
     const {
       imageCaption,
       imageCaptionUrl,
       imageCaptionHtml = ''
     } = raw.meta || {};
+
     const metaOut = {
       ...raw.meta,
       focusKeyphrase: raw.focusKeyphrase,
@@ -963,8 +1415,10 @@ export class EditarNoticias implements OnInit {
       twitterCard: 'summary_large_image',
       imageCaptionHtml: hardenCaptionLinks(imageCaptionHtml)
     };
+
     delete (metaOut as any).imageCaption;
     delete (metaOut as any).imageCaptionUrl;
+
     return {
       ...raw,
       categories,
@@ -974,6 +1428,7 @@ export class EditarNoticias implements OnInit {
       meta: metaOut
     };
   }
+
   // ======== Atajos y split ========
   @HostListener('window:keydown', ['$event'])
   onKeyDown(e: KeyboardEvent) {
@@ -983,6 +1438,7 @@ export class EditarNoticias implements OnInit {
     if (e.key.toLowerCase() === 'b') { e.preventDefault(); this.inspectorOpen = !this.inspectorOpen; }
     if (e.key === ';') { e.preventDefault(); this.seoEssentialsOpen = !this.seoEssentialsOpen; }
   }
+
   cycleDock() {
     this.dockMode = this.dockMode === 'hidden'
       ? 'right'
@@ -990,16 +1446,19 @@ export class EditarNoticias implements OnInit {
         ? 'bottom'
         : 'hidden';
   }
+
   onGutterDown(_: MouseEvent) {
     if (this.dockMode !== 'right') return;
     this.resizing = true;
     document.body.classList.add('resizing');
   }
+
   @HostListener('window:mouseup')
   onMouseUp() {
     this.resizing = false;
     document.body.classList.remove('resizing');
   }
+
   @HostListener('window:mousemove', ['$event'])
   onMouseMove(e: MouseEvent) {
     if (!this.resizing || this.dockMode !== 'right') return;
@@ -1009,11 +1468,13 @@ export class EditarNoticias implements OnInit {
     const x = e.clientX - rect.left;
     this.splitRatio = Math.min(0.8, Math.max(0.3, x / rect.width));
   }
+
   // Helpers categorías
   getCategoryNameById(id: string): string {
     const match = this.categoriasDisponibles.find(c => c._id === id);
     return match ? match.name : '—';
   }
+
   removeCategory(id: string): void {
     const current = this.noticiaForm.get('categories')?.value || [];
     const next = current.filter((catId: string) => catId !== id);
@@ -1022,6 +1483,7 @@ export class EditarNoticias implements OnInit {
     this.updateChecklist();
     this.updatePublishTooltip();
   }
+
   onEditorReady(editor: any) {
     const available = new Set<string>(Array.from(editor.ui.componentFactory.names()));
     if (Array.isArray(this.editorConfig.toolbar)) {
@@ -1032,12 +1494,14 @@ export class EditarNoticias implements OnInit {
         this.editorConfig.image.toolbar.filter((t: string) => available.has(t));
     }
   }
+
   private noTrailingDotValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const v = (control.value || '').toString().trim();
       return /\.\s*$/.test(v) ? { noTrailingDot: true } : null;
     };
   }
+
   // ==== Caption helpers ====
   wrapSelection(textarea: HTMLTextAreaElement, before: string, after: string) {
     const ctrl = this.noticiaForm.get('meta.imageCaptionHtml');
@@ -1045,6 +1509,7 @@ export class EditarNoticias implements OnInit {
     const start = textarea.selectionStart ?? value.length;
     const end = textarea.selectionEnd ?? value.length;
     const sel = value.slice(start, end) || 'texto';
+
     const next = value.slice(0, start) + before + sel + after + value.slice(end);
     ctrl?.setValue(next);
     ctrl?.markAsDirty();
@@ -1055,6 +1520,7 @@ export class EditarNoticias implements OnInit {
       ctrl?.updateValueAndValidity();
     });
   }
+
   wrapSelectionAsLink(textarea: HTMLTextAreaElement) {
     const url = (window.prompt('Pega la URL (debe iniciar con http:// o https://)') || '').trim();
     if (!/^https?:\/\/.+/i.test(url)) {
@@ -1063,6 +1529,7 @@ export class EditarNoticias implements OnInit {
     }
     this.wrapSelection(textarea, `<a href="${url}">`, `</a>`);
   }
+
   private sanitizeCaptionHtml(html: string): string {
     const doc = new DOMParser().parseFromString(html || '', 'text/html');
     const allowed = new Set(['A', 'STRONG', 'EM', 'B', 'I']);
@@ -1089,28 +1556,34 @@ export class EditarNoticias implements OnInit {
       for (const child of Array.from(node.childNodes)) walker(child);
     };
     walker(doc.body);
+
     return (doc.body.innerHTML || '')
       .replace(/<(div|p)>(.*?)<\/\1>/gi, '$2')
       .trim();
   }
+
   private getPlainTextLenFromHtml(html: string): number {
     const tmp = document.createElement('div');
     tmp.innerHTML = html || '';
     return (tmp.textContent || '').replace(/\s+/g, ' ').trim().length;
   }
+
   onCaptionInput(ev: Event) {
     const el = ev.target as HTMLElement;
     const clean = this.sanitizeCaptionHtml(el.innerHTML);
     if (clean !== el.innerHTML) el.innerHTML = clean;
+
     this.captionPlainCount = this.getPlainTextLenFromHtml(clean);
     this.noticiaForm.get('meta.imageCaptionHtml')?.setValue(clean, { emitEvent: true });
     this.noticiaForm.get('meta.imageCaptionHtml')?.updateValueAndValidity();
   }
+
   onCaptionPaste(ev: ClipboardEvent) {
     ev.preventDefault();
     const text = (ev.clipboardData?.getData('text/plain') || '').replace(/\s+/g, ' ');
     document.execCommand('insertText', false, text);
   }
+
   syncCaptionToForm() {
     const ctrl = this.noticiaForm.get('meta.imageCaptionHtml');
     const editor = document.querySelector('.caption-editor') as HTMLElement | null;
@@ -1122,16 +1595,19 @@ export class EditarNoticias implements OnInit {
       if (clean !== editor.innerHTML) editor.innerHTML = clean;
     }
   }
+
   capBold(editor: HTMLElement) {
     editor.focus();
     document.execCommand('bold');
     this.syncCaptionToForm();
   }
+
   capItalic(editor: HTMLElement) {
     editor.focus();
     document.execCommand('italic');
     this.syncCaptionToForm();
   }
+
   private isSelectionInside(editor: HTMLElement): boolean {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return false;
@@ -1141,36 +1617,46 @@ export class EditarNoticias implements OnInit {
       ? (container as Node)
       : container.parentNode);
   }
+
   onFormEnter(event: Event) {
     const target = event.target as HTMLElement | null;
     if (!target) return;
+
     const tag = target.tagName.toLowerCase();
     const isTextArea = tag === 'textarea';
+
     const isContentEditable =
       (target as HTMLElement).isContentEditable ||
       !!target.closest('[contenteditable="true"]');
+
     if (!isTextArea && !isContentEditable) {
       event.preventDefault();
       event.stopPropagation();
     }
   }
+
   capLink(editor: HTMLElement) {
     editor.focus();
+
     const url = (prompt('Pega la URL (debe iniciar con http:// o https://)') || '').trim();
     if (!/^https?:\/\//i.test(url)) {
       if (url) alert('URL inválida. Debe iniciar con http:// o https://');
       return;
     }
+
     const sel = window.getSelection();
     const hasSel = !!sel && sel.rangeCount > 0 && !sel.isCollapsed && this.isSelectionInside(editor);
+
     if (hasSel) {
       document.execCommand('createLink', false, url);
     } else {
       const display = (prompt('Texto a mostrar para el enlace:') || '').trim();
       if (!display) return;
+
       const a = document.createElement('a');
       a.href = url;
       a.textContent = display;
+
       if (sel && sel.rangeCount > 0 && this.isSelectionInside(editor)) {
         const range = sel.getRangeAt(0);
         range.deleteContents();
@@ -1184,139 +1670,11 @@ export class EditarNoticias implements OnInit {
         editor.appendChild(document.createTextNode(' '));
       }
     }
+
     this.syncCaptionToForm();
   }
-  private loadNoticia() {
-  this.noticiasService.getNoticiaById(this.id).subscribe((noticia) => {
-    if (!noticia) return;
 
-    const catsRaw: any[] = Array.isArray(noticia.categories) ? (noticia.categories as any[]) : [];
-    this.loadedNoticiaCats = catsRaw
-      .filter(c => c && (c._id || c.id || c.slug || c.name))
-      .map(c => ({
-        _id: String(c._id || ''),
-        name: String(c.name || ''),
-        slug: String(c.slug || ''),
-        color: c.color || undefined,
-      })) as CategoriaPayload[];
-
-    this.loadedNoticiaCatIds = catsRaw
-      .map(c => (typeof c === 'string' ? c : (c._id || c.id)))
-      .filter(Boolean)
-      .map(String);
-
-    const meta = (noticia as any).meta || {};
-    const location = (noticia as any).location || { country:'', region:'', city:'' };
-    const bodyHtml: string = (noticia as any).bodyHtml || this.blocksToHtml(noticia.content || []);
-
-    // 👇 AQUÍ tomamos de meta y, si no existe, del root
-    const focusFromMeta =
-      (meta as any).focusKeyphrase ??
-      (noticia as any).focusKeyphrase ??
-      '';
-
-    this.noticiaForm.patchValue({
-      focusKeyphrase: focusFromMeta,      // 👈 AQUÍ estaba el fallo
-      title: noticia.title,
-      slug: noticia.slug,
-      extracto: (noticia as any).extracto || '',
-      summary: noticia.summary || '',
-      categories: this.loadedNoticiaCatIds,
-      location,
-      meta: {
-        description: meta.description || '',
-        image: meta.image || '',
-        canonical: meta.canonical || '',
-        ogTitle: meta.ogTitle || noticia.title || '',
-        ogDescription: meta.ogDescription || meta.description || '',
-        imageAltGlobal: meta.imageAltGlobal || '',
-        imageCaptionHtml: meta.imageCaptionHtml || ''
-      },
-      state: (noticia as any).state || 'draft',
-      publishAt: this.formatDateForInput((noticia as any).publishAt || null),
-      body: bodyHtml
-    });
-
-    // tags
-    this.tags.clear();
-    if (Array.isArray(noticia.tags)) {
-      noticia.tags.forEach(tag => this.tags.push(this.fb.control(tag, Validators.required)));
-    }
-
-    this.ensureSelectedCatsAreInItems();
-    this.cdr.detectChanges();
-    this.noticiaForm.get('categories')?.updateValueAndValidity();
-    this.updateMetricsFromHTML();
-    this.previewDataObj = this.buildPreviewData();
-  });
-}
-
-  private ensureSelectedCatsAreInItems() {
-    this.cdr.detectChanges();
-    if (!this.loadedNoticiaCatIds?.length) return;
-
-    const existentes = new Set((this.categoriasDisponibles || []).map(c => String(c._id)));
-    const faltantesIds = this.loadedNoticiaCatIds.filter(id => !existentes.has(String(id)));
-
-    if (faltantesIds.length === 0) return;
-
-    // 1) Intenta completar desde los objetos que ya venían en la noticia (si había populate)
-    const desdePopulate = this.loadedNoticiaCats.filter(c => c?._id && faltantesIds.includes(String(c._id)));
-
-    // 2) Si aún faltan, intenta buscarlas por API
-    const idsQueSiguenFaltando = faltantesIds.filter(id => !desdePopulate.some(c => c._id === id));
-
-    if (desdePopulate.length) {
-      this.categoriasDisponibles = [...this.categoriasDisponibles, ...desdePopulate];
-    }
-
-    if (idsQueSiguenFaltando.length) {
-      // opcional: si tienes endpoint por IDs
-      this.categoriasService.getCategoriasByIds(idsQueSiguenFaltando).subscribe((rows) => {
-        if (Array.isArray(rows) && rows.length) {
-          const nuevos = rows.filter(r => r && r._id && !existentes.has(String(r._id)));
-          if (nuevos.length) {
-            this.categoriasDisponibles = [...this.categoriasDisponibles, ...nuevos];
-          }
-        }
-      });
-    }
-  }
-
-
-  // convierte bloques a html básico (por si no hay bodyHtml en BD)
-  private blocksToHtml(blocks: any[]): string {
-    if (!Array.isArray(blocks)) return '';
-    const to = blocks.map(b => {
-      switch (b.type) {
-        case 'text': {
-          const tag = b.tag || 'p';
-          return `<${tag}>${(b.html || b.text || '')}</${tag}>`;
-        }
-        case 'image':
-          return `<figure><img src="${b.url || ''}" alt="${b.alt || ''}"/>${b.captionHtml ? `<figcaption>${b.captionHtml}</figcaption>`:''}</figure>`;
-        case 'quote':
-          return `<blockquote>${b.html || b.quote || ''}</blockquote>`;
-        case 'list': {
-          const tag = b.ordered ? 'ol' : 'ul';
-          const items = (b.itemsHtml || b.items || []).map((it: any) => `<li>${it || ''}</li>`).join('');
-          return `<${tag}>${items}</${tag}>`;
-        }
-        case 'link':
-          return `<p><a href="${b.href}" rel="noopener">${b.textLink || b.href}</a></p>`;
-        default:
-          return '';
-      }
-    }).join('\n');
-    return to;
-  }
-
-  private formatDateForInput(date: string | Date | null): string | null {
-    if (!date) return null;
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return null;
-    return d.toISOString().slice(0, 16);
-  }
+  // ===== Eliminar noticia =====
   onDelete() {
     if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return;
     this.isSubmitting = true;
