@@ -14,6 +14,9 @@ export class RadioPlayerComponent {
   isPlaying$: Observable<boolean>;
   volume$: Observable<number>;
 
+  isMuted = false;
+  private lastVolume = 1;
+
   constructor(private player: RadioPlayerService) {
     this.isPlaying$ = this.player.isPlaying$;
     this.volume$ = this.player.volume$;
@@ -27,5 +30,44 @@ export class RadioPlayerComponent {
     const input = event.target as HTMLInputElement;
     const value = Number(input.value);
     this.player.setVolume(value);
+    this.lastVolume = value;
+    this.isMuted = value === 0;
+  }
+
+  toggleMute() {
+    if (this.isMuted) {
+      const targetVolume = this.lastVolume > 0 ? this.lastVolume : 0.7;
+      this.player.setVolume(targetVolume);
+      this.isMuted = false;
+    } else {
+      this.player.setVolume(0);
+      this.isMuted = true;
+    }
+  }
+
+  async share() {
+    const url =
+      typeof window !== 'undefined'
+        ? window.location.origin
+        : '';
+
+    const shareData = {
+      title: 'MásLatino Radio',
+      text: 'Escucha la radio en vivo de MásLatino.',
+      url
+    };
+
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share(shareData);
+      } else if (typeof navigator !== 'undefined' && (navigator as any).clipboard) {
+        await (navigator as any).clipboard.writeText(url);
+        console.log('URL copiada al portapapeles');
+      } else {
+        console.log('Compartir no soportado en este navegador');
+      }
+    } catch (err) {
+      console.error('Error al compartir:', err);
+    }
   }
 }
