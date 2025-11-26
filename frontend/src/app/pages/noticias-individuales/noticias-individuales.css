@@ -239,9 +239,20 @@
 .content li { margin-bottom: 8px; }
 
 /* ===== LAYOUT SPACING between article and sidebar ===== */
+/*
 .content-column {
   padding-right: clamp(15px, 2.2vw, 32px);
   padding-left: clamp(15px, 2.2vw, 32px);
+}
+
+.content-column {
+  padding-right: clamp(15px, 20.2vw, 130px);
+  padding-left: clamp(15px, 20.2vw, 120px);
+}
+  */
+.content-column {
+ padding-right: clamp(15px, 12.2vw, 100px);
+  padding-left: clamp(15px, 12.2vw, 90px);
 }
 .sidebar-column {
   padding-left: 0;
