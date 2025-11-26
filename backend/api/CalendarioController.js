@@ -83,6 +83,29 @@ async function ensureUniqueSlug(baseSlug, idToExclude = null) {
   counter = Math.max(...numbers) + 1;
   return `${slug}-${counter}`;
 }
+async function autoArchiveExpired() {
+  const now = new Date();
+
+  const filtroCaducados = {
+    status: 'published',
+    $or: [
+      // Eventos con fecha de fin pasada
+      { endAt: { $lt: now } },
+      // Eventos sin endAt pero cuya fecha de inicio ya es pasada
+      { endAt: null, startAt: { $lt: now } }
+    ]
+  };
+
+  await CalendarItem.updateMany(
+    filtroCaducados,
+    {
+      $set: {
+        status: 'archived',
+        updatedAt: now
+      }
+    }
+  );
+}
 
 class CalendarioController {
   /**
@@ -221,43 +244,57 @@ class CalendarioController {
   /**
    * GET /calendar/upcoming
    */
-  static async listarProximos(req, res, next) {
-    try {
-      const { page, limit, skip } = parsePagination(req);
-      const now = new Date();
+/**
+ * GET /calendar/upcoming
+ */
+/**
+ * GET /calendar/upcoming
+ */
+static async listarProximos(req, res, next) {
+  try {
+    // 1) Primero archivar caducados
+    await autoArchiveExpired();
 
-      const filter = {
-        status: 'published',
-        //startAt: { $gte: now }
-      };
+    // 2) Luego traer solo los publicados vigentes/futuros
+    const { page, limit, skip } = parsePagination(req);
+    const now = new Date();
 
-      const sort = parseSort(req.query.sort || 'startAt:asc');
+    const filter = {
+      status: 'published',
+      $or: [
+        { endAt: { $gte: now } },                // aún no terminan
+        { endAt: null, startAt: { $gte: now } }  // sin fin, pero futuros
+      ]
+    };
 
-      const [items, total] = await Promise.all([
-        CalendarItem.find(filter)
-          .populate('categories', 'name slug color')
-          .sort(sort)
-          .skip(skip)
-          .limit(limit)
-          .lean(),
-        CalendarItem.countDocuments(filter)
-      ]);
-      console.log("calendairo si llega",items);
+    const sort = parseSort(req.query.sort || 'startAt:asc');
 
-      return res.json({
-        ok: true,
-        data: items,
-        meta: {
-          total,
-          page,
-          limit,
-          pages: Math.ceil(total / limit)
-        }
-      });
-    } catch (err) {
-      next(err);
-    }
+    const [items, total] = await Promise.all([
+      CalendarItem.find(filter)
+        .populate('categories', 'name slug color')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      CalendarItem.countDocuments(filter)
+    ]);
+
+    return res.json({
+      ok: true,
+      data: items,
+      meta: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (err) {
+    next(err);
   }
+}
+
+
 
   /**
    * GET /calendar/past
