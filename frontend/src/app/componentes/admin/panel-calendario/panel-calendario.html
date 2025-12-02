@@ -4,10 +4,8 @@
       <a routerLink="/calendario-panel" routerLinkActive="text-blue-600 font-bold" class="hover:underline">
         Móvil
       </a>
-      |
-      <a routerLink="/calendario-panel-pc" routerLinkActive="text-blue-600 font-bold" class="hover:underline">
-        PC
-      </a>
+      
+
     </div>
       <!-- Tabs -->
   <div class="tabs">
@@ -73,8 +71,29 @@
 
         <!-- Imagen -->
         <div class="full-width form-group">
-          <label for="image">Imagen (URL):</label>
-          <input type="text" id="image" formControlName="image" placeholder="https://..." />
+          <label for="image">Imagen del evento/anuncio:</label>
+
+          <!-- URL manual -->
+          <input
+            type="text"
+            id="image"
+            formControlName="image"
+            placeholder="https://..."
+          />
+
+          <!-- Botón para subir a S3 -->
+          <div class="mt-2">
+            <label class="btn-upload">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onPickCalendarImage($event)"
+              />
+              <span>Seleccionar imagen</span>
+            </label>
+          </div>
+
+          <!-- Preview -->
           <div class="image-preview" *ngIf="form.value.image">
             <img [src]="form.value.image" alt="preview" />
           </div>
@@ -285,3 +304,26 @@
     </div>
   </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <!--
+      <a routerLink="/calendario-panel-pc" routerLinkActive="text-blue-600 font-bold" class="hover:underline">
+        PC
+      </a>
+      -->

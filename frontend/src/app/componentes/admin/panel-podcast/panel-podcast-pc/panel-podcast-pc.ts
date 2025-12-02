@@ -349,4 +349,110 @@ export class PanelPodcastPc implements OnInit {
     this.editingEpisode = false;
     this.selectedEpisode = null;
   }
+
+    // ========= Subidas a S3 para imágenes (PC) =========
+
+  private async uploadToS3(file: File): Promise<string> {
+    const contentType = file.type || 'application/octet-stream';
+
+    const sign = await fetch(
+      'https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType,
+          approxSize: file.size
+        })
+      }
+    );
+
+    if (!sign.ok) {
+      throw new Error('No se pudo firmar la subida.');
+    }
+
+    const { uploadUrl, publicUrl } = await sign.json();
+
+    const put = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file
+    });
+
+    if (!put.ok) {
+      throw new Error('Fallo al subir a S3.');
+    }
+
+    return publicUrl;
+  }
+
+  async onPickPodcastCoverPc(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.podcastForm.patchValue({ coverImage: url });
+      this.podcastForm.get('coverImage')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen de portada (PC).');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  async onPickPodcastBannerPc(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.podcastForm.patchValue({ bannerImage: url });
+      this.podcastForm.get('bannerImage')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen de banner (PC).');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  async onPickPodcastMetaImagePc(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.podcastForm.patchValue({ metaImage: url });
+      this.podcastForm.get('metaImage')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen SEO (PC).');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  async onPickEpisodeImagePc(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.episodeForm.patchValue({ image: url });
+      this.episodeForm.get('image')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen del episodio (PC).');
+    } finally {
+      input.value = '';
+    }
+  }
+
 }

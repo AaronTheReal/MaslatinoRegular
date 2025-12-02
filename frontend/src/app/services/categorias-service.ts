@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -10,16 +9,21 @@ export interface CategoriaPayload {
   description?: string;
   image?: string;
   color?: string;
-  order?: number; // ← agrega esta línea
+  order?: number;
+
+  // 🔹 Campos SEO
+  metaTitle?: string;
+  metaDescription?: string;
+  seoIndexable?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }
 
-
 @Injectable({ providedIn: 'root' })
 export class CategoriaService {
   //private baseUrl = 'http://localhost:3000/aaron/maslatino';
-   baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
+  baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 

@@ -20,17 +20,34 @@ const CategorySchema = new Schema({
     type: String,
     trim: true
   },
+
+  // 🔹 Campos SEO
+  metaTitle: {
+    type: String,
+    trim: true,
+    maxlength: 70 // recomendado para <title>
+  },
+  metaDescription: {
+    type: String,
+    trim: true,
+    maxlength: 160 // recomendado para meta description
+  },
+  seoIndexable: {
+    type: Boolean,
+    default: true // si pones false luego puedes renderizar <meta name="robots" content="noindex">
+  },
+
   image: {
     type: String, // URL de imagen representativa
     required: false
   },
-    color: {
+  color: {
     type: String, // HEX o nombre de color
-    default: '#007bff' // Azul por defecto si no se especifica
+    default: '#007bff'
   },
   order: {
     type: Number,
-    default: 0 // Puedes ordenar visualmente las categorías
+    default: 0
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

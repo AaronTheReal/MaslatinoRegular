@@ -210,3 +210,29 @@ td button:hover {
   margin-left: 1rem;
   padding: 0;
 }
+.btn-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.btn-upload input[type="file"] {
+  display: none;
+}
+
+.image-preview {
+  margin-top: 0.5rem;
+  max-width: 220px;
+}
+
+.image-preview img {
+  max-width: 100%;
+  border-radius: 4px;
+  display: block;
+}

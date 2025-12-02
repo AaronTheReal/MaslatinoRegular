@@ -385,4 +385,60 @@ export class PanelCalendario implements OnInit {
   get linkGroup(): FormGroup {
     return this.form.get('link') as FormGroup;
   }
+
+    // ========= Subida de imágenes a S3 para calendario =========
+
+  private async uploadToS3(file: File): Promise<string> {
+    const contentType = file.type || 'application/octet-stream';
+
+    const sign = await fetch(
+      'https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType,
+          approxSize: file.size
+        })
+      }
+    );
+
+    if (!sign.ok) {
+      throw new Error('No se pudo firmar la subida.');
+    }
+
+    const { uploadUrl, publicUrl } = await sign.json();
+
+    const put = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file
+    });
+
+    if (!put.ok) {
+      throw new Error('Fallo al subir a S3.');
+    }
+
+    return publicUrl;
+  }
+
+  async onPickCalendarImage(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.form.patchValue({ image: url });
+      this.form.get('image')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('❌ No se pudo subir la imagen del evento/anuncio.');
+    } finally {
+      // Limpia el input para poder volver a elegir el mismo archivo si hace falta
+      input.value = '';
+    }
+  }
+
 }
