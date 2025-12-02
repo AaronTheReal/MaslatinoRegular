@@ -44,14 +44,62 @@
         </div>
 
         <div>
-          <label for="coverImage">Imagen de Portada (URL):</label>
-          <input id="coverImage" formControlName="coverImage" type="text" />
+          <label for="coverImage">Imagen de Portada:</label>
+
+          <!-- URL manual -->
+          <input
+            id="coverImage"
+            formControlName="coverImage"
+            type="text"
+            placeholder="https://...portada.jpg"
+          />
+
+          <!-- botón subir a S3 -->
+          <div class="mt-2">
+            <label class="btn-upload">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onPickPodcastCoverPc($event)"
+              />
+              <span>Seleccionar imagen</span>
+            </label>
+          </div>
+
+          <!-- preview -->
+          <div *ngIf="podcastForm.value.coverImage" class="image-preview">
+            <img [src]="podcastForm.value.coverImage" alt="Portada del podcast" />
+          </div>
         </div>
 
-        <div>
-          <label for="bannerImage">Imagen Banner (URL):</label>
-          <input id="bannerImage" formControlName="bannerImage" type="text" />
-        </div>
+      <div>
+      <label for="bannerImage">Imagen Banner:</label>
+
+      <!-- URL manual -->
+      <input
+        id="bannerImage"
+        formControlName="bannerImage"
+        type="text"
+        placeholder="https://...banner.jpg"
+      />
+
+      <!-- botón subir a S3 -->
+      <div class="mt-2">
+        <label class="btn-upload">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onPickPodcastBannerPc($event)"
+          />
+          <span>Seleccionar imagen</span>
+        </label>
+      </div>
+
+      <!-- preview -->
+      <div *ngIf="podcastForm.value.bannerImage" class="image-preview">
+        <img [src]="podcastForm.value.bannerImage" alt="Banner del podcast" />
+      </div>
+    </div>
 
         <div>
           <label for="order">Orden (home):</label>
@@ -112,10 +160,33 @@
           <label for="metaDescription">Descripción SEO:</label>
           <input id="metaDescription" formControlName="metaDescription" type="text" placeholder="Texto breve para buscadores" />
         </div>
-
         <div>
-          <label for="metaImage">Imagen SEO (URL):</label>
-          <input id="metaImage" formControlName="metaImage" type="text" placeholder="https://tusitio.com/seo.jpg" />
+          <label for="metaImage">Imagen SEO:</label>
+
+          <!-- URL manual -->
+          <input
+            id="metaImage"
+            formControlName="metaImage"
+            type="text"
+            placeholder="https://tusitio.com/seo.jpg"
+          />
+
+          <!-- botón subir a S3 -->
+          <div class="mt-2">
+            <label class="btn-upload">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onPickPodcastMetaImagePc($event)"
+              />
+              <span>Seleccionar imagen</span>
+            </label>
+          </div>
+
+          <!-- preview -->
+          <div *ngIf="podcastForm.value.metaImage" class="image-preview">
+            <img [src]="podcastForm.value.metaImage" alt="Imagen SEO del podcast" />
+          </div>
         </div>
 
         <div style="grid-column: span 2;">
@@ -241,8 +312,32 @@
           </div>
 
           <div>
-            <label for="episodeImage">Imagen (URL):</label>
-            <input id="episodeImage" formControlName="image" type="text" />
+            <label for="episodeImage">Imagen del episodio:</label>
+
+            <!-- URL manual -->
+            <input
+              id="episodeImage"
+              formControlName="image"
+              type="text"
+              placeholder="https://...episodio.jpg"
+            />
+
+            <!-- botón subir a S3 -->
+            <div class="mt-2">
+              <label class="btn-upload">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onPickEpisodeImagePc($event)"
+                />
+                <span>Seleccionar imagen</span>
+              </label>
+            </div>
+
+            <!-- preview -->
+            <div *ngIf="episodeForm.value.image" class="image-preview">
+              <img [src]="episodeForm.value.image" alt="Imagen del episodio" />
+            </div>
           </div>
 
           <div>

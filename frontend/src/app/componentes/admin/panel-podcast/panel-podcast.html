@@ -37,10 +37,31 @@
         </select>
       </div>
 
-      <div>
-        <label for="coverImage">Imagen de Portada (URL):</label>
-        <input id="coverImage" formControlName="coverImage" type="text" />
-      </div>
+        <div>
+          <label for="coverImage">Imagen de Portada:</label>
+
+          <!-- input de URL (permite pegar manual si quieres) -->
+          <input id="coverImage" formControlName="coverImage" type="text"
+                placeholder="https://...portada.jpg" />
+
+          <!-- botón para subir a S3 -->
+          <div class="mt-2">
+            <label class="btn-upload">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onPickPodcastCover($event)"
+              />
+              <span>Seleccionar imagen</span>
+            </label>
+          </div>
+
+          <!-- preview -->
+          <div *ngIf="podcastForm.value.coverImage" class="image-preview">
+            <img [src]="podcastForm.value.coverImage" alt="Portada del podcast" />
+          </div>
+        </div>
+
 
 
       <div>
@@ -94,6 +115,32 @@
         <label for="metaDescription">Descripción SEO:</label>
         <input id="metaDescription" formControlName="metaDescription" type="text" placeholder="Texto breve para buscadores" />
       </div>
+
+      <div>
+        <label for="metaImage">Imagen SEO:</label>
+
+        <!-- input de URL manual -->
+        <input id="metaImage" formControlName="metaImage" type="text"
+              placeholder="https://tusitio.com/seo.jpg" />
+
+        <!-- botón subir a S3 -->
+        <div class="mt-2">
+          <label class="btn-upload">
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onPickPodcastMetaImage($event)"
+            />
+            <span>Seleccionar imagen</span>
+          </label>
+        </div>
+
+        <!-- preview -->
+        <div *ngIf="podcastForm.value.metaImage" class="image-preview">
+          <img [src]="podcastForm.value.metaImage" alt="Imagen SEO del podcast" />
+        </div>
+      </div>
+
 
       <div>
         <label for="metaImage">Imagen SEO (URL):</label>
@@ -225,11 +272,31 @@
                 <option value="signed">Firmado (JWT)</option>
               </select>
             </div>
+          <div>
+            <label for="episodeImage">Imagen del episodio:</label>
 
-            <div>
-              <label for="episodeImage">Imagen (URL):</label>
-              <input id="episodeImage" formControlName="image" type="text" />
+            <!-- URL manual -->
+            <input id="episodeImage" formControlName="image" type="text"
+                  placeholder="https://...episodio.jpg" />
+
+            <!-- botón subir a S3 -->
+            <div class="mt-2">
+              <label class="btn-upload">
+                <input
+                  type="file"
+                  accept="image/*"
+                  (change)="onPickEpisodeImage($event)"
+                />
+                <span>Seleccionar imagen</span>
+              </label>
             </div>
+
+            <!-- preview -->
+            <div *ngIf="episodeForm.value.image" class="image-preview">
+              <img [src]="episodeForm.value.image" alt="Imagen del episodio" />
+            </div>
+          </div>
+
 
             <div>
               <label for="releaseDate">Fecha de Lanzamiento:</label>

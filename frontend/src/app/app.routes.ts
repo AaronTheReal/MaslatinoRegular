@@ -36,7 +36,6 @@ export const routes: Routes = [
   //{ path: ':slug', component: NoticiasIndividuales },
  { path: 'noticia/:slug', component: NoticiasIndividuales },
 
-  { path: 'sobre-nosotros', component: SobreNosotros },
 
 
   //admin-panel
@@ -63,7 +62,6 @@ export const routes: Routes = [
     { path: 'recomendadas-show', component: NoticiasRecomendadas },
   { path: 'podcast-show', component: Podcast },
   {path: 'descarga-la-app', component:DescargaLaApp},
-  {path: 'nosotros-pagina', component:Nosotros},
   {path: 'nosotros-pagina', component:Nosotros},
   {path: 'noticias-todas', component:NoticiasTodas},
 

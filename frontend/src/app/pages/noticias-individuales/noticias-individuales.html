@@ -225,7 +225,7 @@
           <ul class="entries-list">
             <li *ngFor="let n of (recientes || []); trackBy: trackBySlug" class="entry-item">
               <a *ngIf="n?.slug"
-                 [routerLink]="[ n?.slug]"
+                 [routerLink]="['/noticia', n.slug]"
                  class="enlace-reciente"
                  [attr.aria-label]="'Leer noticia: ' + (n?.title || 'Sin título')">
                 {{ n?.title || 'Sin título' }}

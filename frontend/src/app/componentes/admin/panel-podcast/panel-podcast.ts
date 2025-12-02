@@ -261,6 +261,93 @@ onSubmitPodcast() {
       }))
     );
   }
+  // === Subidas a S3 para imágenes ===
+
+  private async uploadToS3(file: File): Promise<string> {
+    const contentType = file.type || 'application/octet-stream';
+
+    const sign = await fetch(
+      'https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType,
+          approxSize: file.size,
+        }),
+      }
+    );
+
+    if (!sign.ok) {
+      throw new Error('No se pudo firmar la subida.');
+    }
+
+    const { uploadUrl, publicUrl } = await sign.json();
+
+    const put = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+
+    if (!put.ok) {
+      throw new Error('Fallo al subir a S3.');
+    }
+
+    return publicUrl;
+  }
+
+  async onPickPodcastCover(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.podcastForm.patchValue({ coverImage: url });
+      this.podcastForm.get('coverImage')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen de portada.');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  async onPickPodcastMetaImage(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.podcastForm.patchValue({ metaImage: url });
+      this.podcastForm.get('metaImage')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen SEO del podcast.');
+    } finally {
+      input.value = '';
+    }
+  }
+
+  async onPickEpisodeImage(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.episodeForm.patchValue({ image: url });
+      this.episodeForm.get('image')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen del episodio.');
+    } finally {
+      input.value = '';
+    }
+  }
 
   private resetForms() {
     this.podcastForm.reset({ language: 'es' });
