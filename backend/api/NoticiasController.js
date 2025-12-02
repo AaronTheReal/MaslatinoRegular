@@ -506,35 +506,77 @@ async updateNoticia(req, res) {
     return res.status(500).json({ error: 'Error al actualizar la noticia' });
   }
 }
+// Ejemplo de ruta: router.get('/noticias/archivo/:anio/:mes', NoticiasController.getNoticiasByArchive);
 
 async getNoticiasByArchive(req, res) {
   try {
     const { anio, mes } = req.params;
-    const year = parseInt(anio);
-    const month = parseInt(mes);
+
+    const year = parseInt(anio, 10);
+    const month = parseInt(mes, 10);
+
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
       return res.status(400).json({ error: 'Año o mes inválido' });
     }
-    console.log('Fetching archive:', { year, month });
-    const noticias = await Noticia.find({
-      createdAt: {
-        $gte: new Date(year, month - 1, 1),
-        $lt: new Date(year, month, 1)
-      },
-      autorizada: true
-    })
-      .populate('categories', 'name slug color')
-      .lean();
-    console.log('Noticias found:', noticias.length);
-    res.status(200).json(noticias);
+
+    // Leer page y limit desde query string
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10; // 👈 10 noticias por página
+
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 10;
+
+    const start = new Date(year, month - 1, 1);
+    const end   = new Date(year, month, 1);
+
+    const filter = {
+      createdAt: { $gte: start, $lt: end },
+      autorizada: true,
+    };
+
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      Noticia.find(filter)
+        .populate('categories', 'name slug color')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Noticia.countDocuments(filter),
+    ]);
+
+    const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+
+    console.log('Archive noticias found:', { total, page, totalPages });
+
+    return res.status(200).json({
+      items,
+      total,
+      page,
+      totalPages,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    });
   } catch (e) {
     console.error('Error fetching noticias by archive:', e);
-    res.status(500).json({ error: 'Error al obtener noticias por archivo' });
+    return res.status(500).json({ error: 'Error al obtener noticias por archivo' });
   }
 }
+
+
 async getArchivos(req, res) {
   try {
-    const archivos = await Noticia.aggregate([
+    // Leer page y limit desde query, con valores por defecto
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 12; // por ejemplo, 12 meses por página
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 12;
+
+    const skip = (page - 1) * limit;
+
+    const result = await Noticia.aggregate([
       { $match: { autorizada: true } },
       {
         $group: {
@@ -545,8 +587,12 @@ async getArchivos(req, res) {
           nombre: {
             $first: {
               $concat: [
-                { $arrayElemAt: [
-                    ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                {
+                  $arrayElemAt: [
+                    [
+                      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+                    ],
                     { $subtract: [{ $month: '$createdAt' }, 1] }
                   ]
                 },
@@ -565,36 +611,91 @@ async getArchivos(req, res) {
           _id: 0
         }
       },
-      { $sort: { anio: -1, mes: -1 } }
+      { $sort: { anio: -1, mes: -1 } },
+      {
+        $facet: {
+          items: [
+            { $skip: skip },
+            { $limit: limit }
+          ],
+          totalCount: [
+            { $count: 'count' }
+          ]
+        }
+      }
     ]);
-    res.status(200).json(archivos);
+
+    const facet = result[0] || { items: [], totalCount: [] };
+    const items = facet.items || [];
+    const total = facet.totalCount[0]?.count || 0;
+    const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+
+    return res.status(200).json({
+      items,
+      total,
+      page,
+      totalPages,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    });
   } catch (e) {
     console.error('Error fetching archivos:', e);
-    res.status(500).json({ error: 'Error al obtener archivos' });
+    return res.status(500).json({ error: 'Error al obtener archivos' });
   }
-}async getNoticiasByCategory(req, res) {
+}
+
+async getNoticiasByCategory(req, res) {
   try {
     const { slug } = req.params;
     console.log('Fetching noticias for category slug:', slug);
+
+    // Leer page y limit desde query, con defaults
+    let page = parseInt(req.query.page, 10) || 1;
+    let limit = parseInt(req.query.limit, 10) || 10;
+    if (page < 1) page = 1;
+    if (limit < 1) limit = 10;
+
     const category = await Category.findOne({ slug }).lean();
     if (!category) {
       console.log('Category not found for slug:', slug);
       return res.status(404).json({ error: 'Categoría no encontrada' });
     }
-    console.log(category);
-    const noticias = await Noticia.find({
+
+    const filter = {
       categories: category._id,
       autorizada: true
-    })
-      .populate('categories', 'name slug color')
-      .lean();
-    console.log('Noticias found:', noticias);
-    res.status(200).json(noticias);
+    };
+
+    const [total, noticias] = await Promise.all([
+      Noticia.countDocuments(filter),
+      Noticia.find(filter)
+        .populate('categories', 'name slug color')
+        .sort({ createdAt: -1 })       // opcional: más recientes primero
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean()
+    ]);
+
+    const totalPages = Math.max(Math.ceil(total / limit), 1);
+
+    console.log(`Noticias found (page ${page}):`, noticias.length);
+
+    return res.status(200).json({
+      items: noticias,
+      total,
+      page,
+      totalPages,
+      limit,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1
+    });
   } catch (e) {
     console.error('Error fetching noticias by category:', e);
-    res.status(500).json({ error: 'Error al obtener noticias por categoría' });
+    return res.status(500).json({ error: 'Error al obtener noticias por categoría' });
   }
 }
+
 async getCategorias(req, res) {
   try {
     const categorias = await Category.find().select('name slug color').lean();
