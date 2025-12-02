@@ -1,8 +1,42 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
 import { Observable, of, tap, map, shareReplay, catchError } from 'rxjs';
 import { Noticia } from '../../models/noticia.model';
 import { isPlatformServer } from '@angular/common';
+export interface NoticiaCategoriaPage {
+  items: Noticia[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+export interface ArchivoItem {
+  anio: number;
+  mes: number;
+  nombre: string;
+}
+// Define esta interfaz en tu service o en un models.ts
+export interface PaginatedNoticias {
+  items: Noticia[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+export interface ArchivosPage {
+  items: ArchivoItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+}
+
 
 @Injectable({ providedIn: 'root' })
 export class NoticiasService {
@@ -11,8 +45,8 @@ export class NoticiasService {
   private platformId = inject(PLATFORM_ID);
 
   // Ajusta para prod con ENV si aplica
-  //private baseUrl = 'http://localhost:3000/aaron/maslatino';
-  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
+  private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  //private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
    //private baseUrl = 'https://maslatino.onrender.com/aaron/maslatino'; // Ajusta si tu backend cambia
 
   /** ======== CRUD ======== */
@@ -169,21 +203,40 @@ export class NoticiasService {
     return observable;
   }
 
-  getArchivos(): Observable<{ anio: number; mes: number; nombre: string; }[]> {
-    const key = makeStateKey<{ anio: number; mes: number; nombre: string }[]>('archivos');
-    if (this.ts.hasKey(key)) {
-      const data = this.ts.get<{ anio: number; mes: number; nombre: string }[]>(key, []);
-      this.ts.remove(key);
-      return of(data);
-    }
-    const observable = this.http
-      .get<{ anio: number; mes: number; nombre: string }[]>(`${this.baseUrl}/archivos`)
-      .pipe(shareReplay(1));
-    if (isPlatformServer(this.platformId)) {
-      return observable.pipe(tap(data => this.ts.set(key, data)));
-    }
-    return observable;
+
+getArchivos(page: number = 1, limit: number = 12): Observable<ArchivosPage> {
+  const key = makeStateKey<ArchivosPage>(`archivos-p${page}-l${limit}`);
+
+  if (this.ts.hasKey(key)) {
+    const data = this.ts.get<ArchivosPage>(key, {
+      items: [],
+      total: 0,
+      page,
+      totalPages: 1,
+      limit,
+      hasNextPage: false,
+      hasPrevPage: false
+    });
+    this.ts.remove(key);
+    return of(data);
   }
+
+  const observable = this.http
+    .get<ArchivosPage>(`${this.baseUrl}/archivos`, {
+      params: {
+        page: page.toString(),
+        limit: limit.toString()
+      }
+    })
+    .pipe(shareReplay(1));
+
+  if (isPlatformServer(this.platformId)) {
+    return observable.pipe(tap(data => this.ts.set(key, data)));
+  }
+
+  return observable;
+}
+
 
   getCategorias(): Observable<{ _id: string; name: string; slug: string; color?: string }[]> {
     const key = makeStateKey<{ _id: string; name: string; slug: string; color?: string }[]>('categorias');
@@ -201,38 +254,83 @@ export class NoticiasService {
     return observable;
   }
 
-  getNoticiasByArchive(anio: number, mes: number): Observable<Noticia[]> {
-    const key = makeStateKey<Noticia[]>(`noticias-archivo-${anio}-${mes}`);
-    if (this.ts.hasKey(key)) {
-      const data = this.ts.get<Noticia[]>(key, []);
-      this.ts.remove(key);
-      return of(data);
-    }
-    const observable = this.http
-      .get<Noticia[]>(`${this.baseUrl}/noticias/archivo/${anio}/${mes}`)
-      .pipe(shareReplay(1));
-    if (isPlatformServer(this.platformId)) {
-      return observable.pipe(tap(data => this.ts.set(key, data)));
-    }
-    return observable;
+getNoticiasByArchive(
+  anio: number,
+  mes: number,
+  page: number = 1,
+  limit: number = 10
+): Observable<PaginatedNoticias> {
+  const key = makeStateKey<PaginatedNoticias>(`noticias-archivo-${anio}-${mes}-p${page}-l${limit}`);
+
+  if (this.ts.hasKey(key)) {
+    const data = this.ts.get<PaginatedNoticias>(key, {
+      items: [],
+      total: 0,
+      page,
+      totalPages: 1,
+      limit,
+      hasNextPage: false,
+      hasPrevPage: false,
+    });
+    this.ts.remove(key);
+    return of(data);
   }
 
-  getNoticiasByCategory(slug: string): Observable<Noticia[]> {
-    const key = makeStateKey<Noticia[]>(`noticias-categoria-${slug}`);
-    if (this.ts.hasKey(key)) {
-      const data = this.ts.get<Noticia[]>(key, []);
-      this.ts.remove(key);
-      return of(data);
-    }
-    const observable = this.http
-      .get<Noticia[]>(`${this.baseUrl}/noticias/categoria/${encodeURIComponent(slug)}`)
-      .pipe(shareReplay(1));
-    if (isPlatformServer(this.platformId)) {
-      return observable.pipe(tap(data => this.ts.set(key, data)));
-    }
-    return observable;
+  const params = new HttpParams()
+    .set('page', page.toString())
+    .set('limit', limit.toString());
+
+  const observable = this.http
+    .get<PaginatedNoticias>(`${this.baseUrl}/noticias/archivo/${anio}/${mes}`, { params })
+    .pipe(shareReplay(1));
+
+  if (isPlatformServer(this.platformId)) {
+    return observable.pipe(tap(data => this.ts.set(key, data)));
   }
 
+  return observable;
+}
+  getNoticiasByCategory(
+  slug: string,
+  page: number = 1,
+  limit: number = 10
+): Observable<NoticiaCategoriaPage> {
+  const key = makeStateKey<NoticiaCategoriaPage>(
+    `noticias-categoria-${slug}-p${page}-l${limit}`
+  );
+
+  if (this.ts.hasKey(key)) {
+    const data = this.ts.get<NoticiaCategoriaPage>(key, {
+      items: [],
+      total: 0,
+      page,
+      totalPages: 1,
+      limit,
+      hasNextPage: false,
+      hasPrevPage: false
+    });
+    this.ts.remove(key);
+    return of(data);
+  }
+
+  const observable = this.http
+    .get<NoticiaCategoriaPage>(
+      `${this.baseUrl}/noticias/categoria/${encodeURIComponent(slug)}`,
+      {
+        params: {
+          page: page.toString(),
+          limit: limit.toString()
+        }
+      }
+    )
+    .pipe(shareReplay(1));
+
+  if (isPlatformServer(this.platformId)) {
+    return observable.pipe(tap(data => this.ts.set(key, data)));
+  }
+
+  return observable;
+}
   checkImageUnique(url: string): Observable<boolean> {
     return this.http.get<{ unique: boolean }>(`${this.baseUrl}/image-unique?url=${encodeURIComponent(url)}`).pipe(
       map(res => res.unique),
