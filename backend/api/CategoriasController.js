@@ -1,67 +1,89 @@
 import dotenv from 'dotenv';
-import slugify from 'slugify';
-import Category from '../models/Categorias.js';
+import Category from '../models/Category.js';
 import User from '../models/Usuarios.js';
 
 dotenv.config();
 
 class CategoriasController {
+  // ─────────────────────────────
   // 1. Crear categoría
+  // ─────────────────────────────
   async crearCategoria(req, res) {
     try {
       const {
         name,
-        slug,
         description,
         image,
         color,
         metaTitle,
         metaDescription,
-        seoIndexable
+        seoIndexable,
+        canonicalUrl,
+        ogTitle,
+        ogDescription,
+        ogImage,
+        status,
+        schemaType,
+        order
       } = req.body;
 
-      if (!name || !image || !color) {
-        return res.status(400).json({ error: 'Faltan campos requeridos (name, image o color).' });
+      if (!name) {
+        return res.status(400).json({ error: 'El nombre es obligatorio.' });
       }
 
-      const slugFinal =
-        slug?.trim() || slugify(name, { lower: true, strict: true });
-
-      const existe = await Category.findOne({ slug: slugFinal });
-      if (existe) {
-        return res.status(409).json({ error: 'Ya existe una categoría con ese slug.' });
-      }
-
-      // Fallbacks SEO sencillos
-      const metaTitleFinal = (metaTitle && metaTitle.trim()) || name;
+      // Fallbacks SEO inteligentes
+      const metaTitleFinal = metaTitle?.trim() || name;
       const metaDescriptionFinal =
-        (metaDescription && metaDescription.trim()) || (description || '').slice(0, 160);
+        metaDescription?.trim() ||
+        description?.slice(0, 160) ||
+        `Contenido relacionado con ${name}`;
 
       const nuevaCategoria = new Category({
         name,
-        slug: slugFinal,
         description,
         image,
         color,
+        order,
+
+        // SEO
         metaTitle: metaTitleFinal,
         metaDescription: metaDescriptionFinal,
-        seoIndexable: typeof seoIndexable === 'boolean' ? seoIndexable : true
+        seoIndexable: typeof seoIndexable === 'boolean' ? seoIndexable : true,
+        canonicalUrl,
+
+        // Open Graph
+        ogTitle: ogTitle?.trim() || metaTitleFinal,
+        ogDescription: ogDescription?.trim() || metaDescriptionFinal,
+        ogImage: ogImage || image,
+
+        // Editorial / Schema
+        status: status || 'published',
+        schemaType: schemaType || 'CollectionPage'
       });
 
       await nuevaCategoria.save();
-      return res
-        .status(201)
-        .json({ message: 'Categoría creada exitosamente', categoria: nuevaCategoria });
+
+      return res.status(201).json({
+        message: 'Categoría creada exitosamente',
+        categoria: nuevaCategoria
+      });
     } catch (error) {
       console.error('Error al crear categoría:', error);
+
+      if (error.code === 11000) {
+        return res.status(409).json({ error: 'La categoría ya existe.' });
+      }
+
       return res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
 
-  // 2. Obtener todas las categorías
+  // ─────────────────────────────
+  // 2. Obtener todas las categorías (admin)
+  // ─────────────────────────────
   async obtenerCategorias(req, res) {
     try {
-      const categorias = await Category.find().sort({ createdAt: -1 });
+      const categorias = await Category.find().sort({ order: 1, createdAt: -1 });
       return res.status(200).json(categorias);
     } catch (error) {
       console.error('Error al obtener categorías:', error);
@@ -69,142 +91,120 @@ class CategoriasController {
     }
   }
 
-  // 3. Obtener una categoría por ID
+  // ─────────────────────────────
+  // 3. Obtener categorías públicas (SEO)
+  // ─────────────────────────────
+  async obtenerCategoriasPublicas(req, res) {
+    try {
+      const categorias = await Category.find({
+        status: 'published',
+        seoIndexable: true
+      }).sort({ order: 1 });
+
+      return res.status(200).json(categorias);
+    } catch (error) {
+      console.error('Error al obtener categorías públicas:', error);
+      return res.status(500).json({ error: 'Error interno' });
+    }
+  }
+
+  // ─────────────────────────────
+  // 4. Obtener categoría por ID
+  // ─────────────────────────────
   async obtenerCategoriaPorId(req, res) {
     try {
       const { id } = req.params;
       const categoria = await Category.findById(id);
+
       if (!categoria) {
         return res.status(404).json({ error: 'Categoría no encontrada' });
       }
+
       return res.status(200).json(categoria);
     } catch (error) {
       console.error('Error al obtener categoría:', error);
-      return res.status(500).json({ error: 'Error interno al buscar categoría' });
+      return res.status(500).json({ error: 'Error interno' });
     }
   }
 
-  async obtenerCategoriasPorIds(req, res) {
+  // ─────────────────────────────
+  // 5. Obtener categoría por SLUG (SEO 🔥)
+  // ─────────────────────────────
+  async obtenerCategoriaPorSlug(req, res) {
     try {
-      const { ids } = req.body; // Expecting an array of IDs in the request body
-      if (!Array.isArray(ids) || ids.length === 0) {
-        return res.status(400).json({ error: 'Se requiere un array de IDs válido' });
+      const { slug } = req.params;
+
+      const categoria = await Category.findOne({
+        slug,
+        status: 'published'
+      });
+
+      if (!categoria) {
+        return res.status(404).json({ error: 'Categoría no encontrada' });
       }
-      const categorias = await Category.find({ _id: { $in: ids } });
-      if (!categorias || categorias.length === 0) {
-        return res
-          .status(404)
-          .json({ error: 'Ninguna categoría encontrada para los IDs proporcionados' });
-      }
-      return res.status(200).json(categorias);
+
+      return res.status(200).json(categoria);
     } catch (error) {
-      console.error('Error al obtener categorías por IDs:', error);
-      return res.status(500).json({ error: 'Error interno al buscar categorías' });
+      console.error('Error al obtener categoría por slug:', error);
+      return res.status(500).json({ error: 'Error interno' });
     }
   }
 
-  // 4. Actualizar una categoría
+  // ─────────────────────────────
+  // 6. Actualizar categoría
+  // ─────────────────────────────
   async actualizarCategoria(req, res) {
     try {
       const { id } = req.params;
-      const {
-        name,
-        slug,
-        description,
-        image,
-        color,
-        metaTitle,
-        metaDescription,
-        seoIndexable
-      } = req.body;
+      const updateData = { ...req.body };
 
-      const slugFinal =
-        slug?.trim() || (name ? slugify(name, { lower: true, strict: true }) : undefined);
-
-      // Armamos el payload de actualización solo con lo que venga definido
-      const updateData = {
-        updatedAt: Date.now()
-      };
-
-      if (name !== undefined) updateData.name = name;
-      if (description !== undefined) updateData.description = description;
-      if (image !== undefined) updateData.image = image;
-      if (color !== undefined) updateData.color = color;
-      if (slugFinal) updateData.slug = slugFinal;
-      if (metaTitle !== undefined)
-        updateData.metaTitle =
-          (metaTitle && metaTitle.trim()) || name || updateData.name;
-      if (metaDescription !== undefined)
-        updateData.metaDescription =
-          (metaDescription && metaDescription.trim()) ||
-          description ||
-          updateData.description;
-      if (typeof seoIndexable === 'boolean') {
-        updateData.seoIndexable = seoIndexable;
-      }
+      // Limpieza de campos undefined
+      Object.keys(updateData).forEach(
+        key => updateData[key] === undefined && delete updateData[key]
+      );
 
       const categoria = await Category.findByIdAndUpdate(
         id,
         updateData,
-        { new: true }
+        { new: true, runValidators: true }
       );
 
       if (!categoria) {
         return res.status(404).json({ error: 'Categoría no encontrada' });
       }
 
-      return res.status(200).json({ message: 'Categoría actualizada', categoria });
+      return res.status(200).json({
+        message: 'Categoría actualizada correctamente',
+        categoria
+      });
     } catch (error) {
       console.error('Error al actualizar categoría:', error);
       return res.status(500).json({ error: 'Error interno al actualizar' });
     }
   }
 
-  // 5. Eliminar una categoría
+  // ─────────────────────────────
+  // 7. Eliminar categoría
+  // ─────────────────────────────
   async eliminarCategoria(req, res) {
     try {
       const { id } = req.params;
       const categoria = await Category.findByIdAndDelete(id);
+
       if (!categoria) {
         return res.status(404).json({ error: 'Categoría no encontrada' });
       }
+
       return res.status(200).json({ message: 'Categoría eliminada correctamente' });
     } catch (error) {
       console.error('Error al eliminar categoría:', error);
-      return res.status(500).json({ error: 'Error interno al eliminar categoría' });
+      return res.status(500).json({ error: 'Error interno' });
     }
   }
 
-  async categoriasUsuarioDelete(req, res) {
-    try {
-      const { userId, id } = req.params;
-
-      // Check if the category exists
-      const category = await Category.findById(id);
-      if (!category) {
-        return res.status(404).json({ error: 'Categoría no encontrada' });
-      }
-
-      // Update the user by pulling the category ID from the categories array
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { $pull: { categories: id } },
-        { new: true }
-      );
-
-      if (!user) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      return res
-        .status(200)
-        .json({ message: 'Categoría eliminada del usuario correctamente', user });
-    } catch (error) {
-      console.error('Error al eliminar categoría del usuario:', error);
-      return res.status(500).json({ error: 'Error interno al eliminar categoría' });
-    }
-  }
-
+  // ─────────────────────────────
+  // 8. Categorías por usuario
+  // ─────────────────────────────
   async obtenerCategoriasUsuario(req, res) {
     try {
       const userId = req.params.id;
@@ -220,13 +220,10 @@ class CategoriasController {
       return res.status(200).json(usuario.categories);
     } catch (error) {
       console.error('Error al obtener categorías del usuario:', error);
-      return res
-        .status(500)
-        .json({ error: 'Error interno al obtener categorías del usuario' });
+      return res.status(500).json({ error: 'Error interno' });
     }
   }
 }
 
 const categoriasController = new CategoriasController();
 export default categoriasController;
-  

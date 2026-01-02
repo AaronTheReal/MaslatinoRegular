@@ -3,6 +3,9 @@ import { Injectable, inject, PLATFORM_ID, TransferState, makeStateKey } from '@a
 import { Observable, of, tap, map, shareReplay, catchError } from 'rxjs';
 import { Noticia } from '../../models/noticia.model';
 import { isPlatformServer } from '@angular/common';
+import { CategoriaPayload } from '../services/categorias-service'; 
+
+
 export interface NoticiaCategoriaPage {
   items: Noticia[];
   total: number;
@@ -238,7 +241,7 @@ getArchivos(page: number = 1, limit: number = 12): Observable<ArchivosPage> {
 }
 
 
-  getCategorias(): Observable<{ _id: string; name: string; slug: string; color?: string }[]> {
+ getCategorias(): Observable<CategoriaPayload[]> {
     const key = makeStateKey<{ _id: string; name: string; slug: string; color?: string }[]>('categorias');
     if (this.ts.hasKey(key)) {
       const data = this.ts.get<{ _id: string; name: string; slug: string; color?: string }[]>(key, []);

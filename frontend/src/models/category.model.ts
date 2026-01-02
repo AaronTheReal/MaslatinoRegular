@@ -1,12 +1,21 @@
-
 export interface Category {
-  _id?: string; // Matches $oid from MongoDB
-  name: string; // Required, e.g., "Arte", "Finanzas"
-  slug: string; // Required, e.g., "arte", "finanzas"
-  description?: string; // Optional description for meta tags
-  image?: string; // Optional image URL for og:image
-  color?: string; // Optional, e.g., "#007bff"
-  order?: number; // Optional, default 0
-  createdAt?: string; // ISO date string
-  updatedAt?: string; // ISO date string
+  _id?: string;                 // MongoDB ObjectId
+  name: string;                 // "Arte", "Finanzas"
+  slug: string;                 // "arte", "finanzas"
+
+  // Contenido / visual
+  description?: string;         // Descripción general
+  image?: string;               // Para og:image
+  color?: string;               // UI
+  order?: number;
+
+  // 🔥 SEO
+  metaTitle?: string;           // <title> específico
+  metaDescription?: string;     // <meta name="description">
+  seoIndexable?: boolean;       // true = index, false = noindex
+
+  // Auditoría
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
 }

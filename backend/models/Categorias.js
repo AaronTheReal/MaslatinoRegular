@@ -1,60 +1,128 @@
 // models/Category.js
 import mongoose from 'mongoose';
+import slugify from 'slugify';
+
 const { Schema, model } = mongoose;
 
-const CategorySchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    unique: true, // Ej: "Arte", "Finanzas"
-    trim: true
-  },
-  slug: {
-    type: String,
-    required: true,
-    unique: true, // Ej: "arte", "finanzas" (para URL)
-    lowercase: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    trim: true
-  },
+const CategorySchema = new Schema(
+  {
+    // ─────────────────────────────
+    // Identidad básica
+    // ─────────────────────────────
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
 
-  // 🔹 Campos SEO
-  metaTitle: {
-    type: String,
-    trim: true,
-    maxlength: 70 // recomendado para <title>
-  },
-  metaDescription: {
-    type: String,
-    trim: true,
-    maxlength: 160 // recomendado para meta description
-  },
-  seoIndexable: {
-    type: Boolean,
-    default: true // si pones false luego puedes renderizar <meta name="robots" content="noindex">
-  },
+    slug: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true // 🔥 clave para SEO + performance
+    },
 
-  image: {
-    type: String, // URL de imagen representativa
-    required: false
-  },
-  color: {
-    type: String, // HEX o nombre de color
-    default: '#007bff'
-  },
-  order: {
-    type: Number,
-    default: 0
-  },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+    description: {
+      type: String,
+      trim: true
+    },
 
-CategorySchema.pre('save', function (next) {
-  this.updatedAt = Date.now();
+    // ─────────────────────────────
+    // SEO ON-PAGE
+    // ─────────────────────────────
+    metaTitle: {
+      type: String,
+      trim: true,
+      maxlength: 70
+    },
+
+    metaDescription: {
+      type: String,
+      trim: true,
+      maxlength: 160
+    },
+
+    seoIndexable: {
+      type: Boolean,
+      default: true
+    },
+
+    canonicalUrl: {
+      type: String,
+      trim: true
+    },
+
+    // ─────────────────────────────
+    // Open Graph / Social SEO
+    // ─────────────────────────────
+    ogTitle: {
+      type: String,
+      trim: true,
+      maxlength: 70
+    },
+
+    ogDescription: {
+      type: String,
+      trim: true,
+      maxlength: 160
+    },
+
+    ogImage: {
+      type: String // URL absoluta recomendada
+    },
+
+    // ─────────────────────────────
+    // Schema.org
+    // ─────────────────────────────
+    schemaType: {
+      type: String,
+      default: 'CollectionPage'
+    },
+
+    // ─────────────────────────────
+    // Estado editorial (MUY SEO)
+    // ─────────────────────────────
+    status: {
+      type: String,
+      enum: ['draft', 'published'],
+      default: 'published',
+      index: true
+    },
+
+    // ─────────────────────────────
+    // UX / Visual
+    // ─────────────────────────────
+    image: {
+      type: String
+    },
+
+    color: {
+      type: String,
+      default: '#007bff'
+    },
+
+    order: {
+      type: Number,
+      default: 0
+    }
+  },
+  {
+    timestamps: true // createdAt + updatedAt automáticos
+  }
+);
+
+// ─────────────────────────────
+// Generación automática de slug
+// ─────────────────────────────
+CategorySchema.pre('validate', function (next) {
+  if (this.name && !this.slug) {
+    this.slug = slugify(this.name, {
+      lower: true,
+      strict: true
+    });
+  }
   next();
 });
 

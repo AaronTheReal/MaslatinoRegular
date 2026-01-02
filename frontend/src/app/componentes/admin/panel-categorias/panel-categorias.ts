@@ -1,19 +1,27 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule
+} from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
+import {
+  CategoriaService,
+  CategoriaPayload
+} from '../../../services/categorias-service';
 
 @Component({
   selector: 'app-panel-categorias',
   templateUrl: './panel-categorias.html',
   styleUrls: ['./panel-categorias.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule]
 })
 export class PanelCategorias {
   selectedTab: string = 'agregar';
   categoryForm: FormGroup;
-  editing: boolean = false;
+  editing = false;
   categoriaIdEditando: string | null = null;
   categorias: CategoriaPayload[] = [];
 
@@ -22,64 +30,68 @@ export class PanelCategorias {
     private categoriasService: CategoriaService
   ) {
     this.categoryForm = this.fb.group({
+      // ─────────────────────────────
+      // Básico
+      // ─────────────────────────────
       name: ['', Validators.required],
-      slug: ['', Validators.required],
       description: [''],
       image: ['', Validators.required],
       color: ['#007bff', Validators.required],
+      order: [0],
 
-      // 🔹 Campos SEO
-      metaTitle: ['', [Validators.maxLength(70)]],
-      metaDescription: ['', [Validators.maxLength(160)]],
-      seoIndexable: [true]
-    });
+      // ─────────────────────────────
+      // SEO
+      // ─────────────────────────────
+      metaTitle: ['', Validators.maxLength(70)],
+      metaDescription: ['', Validators.maxLength(160)],
+      seoIndexable: [true],
+      canonicalUrl: [''],
 
-    // Autogenerar slug desde name cuando NO estás editando
-    this.categoryForm.get('name')?.valueChanges.subscribe((nombre: string) => {
-      if (!this.editing) {
-        const slug = this.generarSlug(nombre || '');
-        this.categoryForm.get('slug')?.setValue(slug, { emitEvent: false });
-      }
+      // ─────────────────────────────
+      // Open Graph
+      // ─────────────────────────────
+      ogTitle: ['', Validators.maxLength(70)],
+      ogDescription: ['', Validators.maxLength(160)],
+      ogImage: [''],
+
+      // ─────────────────────────────
+      // Editorial
+      // ─────────────────────────────
+      status: ['published'],
+      schemaType: ['CollectionPage']
     });
 
     this.obtenerCategorias();
   }
 
-  generarSlug(nombre: string): string {
-    return nombre
-      .toLowerCase()
-      .trim()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  }
-
+  // ─────────────────────────────
+  // Tabs
+  // ─────────────────────────────
   selectTab(tab: string) {
     this.selectedTab = tab;
-    this.editing = false;
-    this.categoriaIdEditando = null;
-    this.categoryForm.reset({
-      color: '#007bff',
-      seoIndexable: true
-    });
+    this.resetFormulario();
   }
 
+  // ─────────────────────────────
+  // Submit
+  // ─────────────────────────────
   onSubmit() {
     if (this.categoryForm.invalid) return;
 
     const formData = this.categoryForm.value;
 
     if (this.editing && this.categoriaIdEditando) {
-      this.categoriasService.actualizarCategoria(this.categoriaIdEditando, formData).subscribe({
-        next: () => {
-          alert('✅ Categoría actualizada');
-          this.resetFormulario();
-          this.obtenerCategorias();
-        },
-        error: (err) => alert(err.error?.error || 'Error al actualizar')
-      });
+      this.categoriasService
+        .actualizarCategoria(this.categoriaIdEditando, formData)
+        .subscribe({
+          next: () => {
+            alert('✅ Categoría actualizada');
+            this.resetFormulario();
+            this.obtenerCategorias();
+          },
+          error: err =>
+            alert(err.error?.error || 'Error al actualizar categoría')
+        });
     } else {
       this.categoriasService.crearCategoria(formData).subscribe({
         next: () => {
@@ -87,14 +99,18 @@ export class PanelCategorias {
           this.resetFormulario();
           this.obtenerCategorias();
         },
-        error: (err) => alert(err.error?.error || 'Error al crear')
+        error: err =>
+          alert(err.error?.error || 'Error al crear categoría')
       });
     }
   }
 
+  // ─────────────────────────────
+  // CRUD helpers
+  // ─────────────────────────────
   obtenerCategorias() {
     this.categoriasService.obtenerCategorias().subscribe({
-      next: (res) => (this.categorias = res),
+      next: res => (this.categorias = res),
       error: () => alert('Error al cargar categorías')
     });
   }
@@ -104,87 +120,110 @@ export class PanelCategorias {
     this.editing = true;
     this.categoriaIdEditando = categoria._id || null;
 
-    // Rellenar formulario con todo, incluyendo SEO
     this.categoryForm.patchValue({
       name: categoria.name,
-      slug: categoria.slug,
       description: categoria.description,
       image: categoria.image,
       color: categoria.color || '#007bff',
-      metaTitle: (categoria as any).metaTitle || '',
-      metaDescription: (categoria as any).metaDescription || '',
-      seoIndexable: (categoria as any).seoIndexable ?? true
+      order: categoria.order ?? 0,
+
+      // SEO
+      metaTitle: categoria.metaTitle || '',
+      metaDescription: categoria.metaDescription || '',
+      seoIndexable: categoria.seoIndexable ?? true,
+      canonicalUrl: categoria.canonicalUrl || '',
+
+      // Open Graph
+      ogTitle: categoria.ogTitle || '',
+      ogDescription: categoria.ogDescription || '',
+      ogImage: categoria.ogImage || categoria.image,
+
+      // Editorial
+      status: categoria.status || 'published',
+      schemaType: categoria.schemaType || 'CollectionPage'
     });
   }
 
   eliminarCategoria(id: string) {
-    if (confirm('¿Seguro que quieres eliminar esta categoría?')) {
-      this.categoriasService.eliminarCategoria(id).subscribe({
-        next: () => {
-          alert('✅ Categoría eliminada');
-          this.obtenerCategorias();
-        },
-        error: () => alert('Error al eliminar categoría')
-      });
-    }
+    if (!confirm('¿Seguro que quieres eliminar esta categoría?')) return;
+
+    this.categoriasService.eliminarCategoria(id).subscribe({
+      next: () => {
+        alert('✅ Categoría eliminada');
+        this.obtenerCategorias();
+      },
+      error: () => alert('Error al eliminar categoría')
+    });
   }
 
+  // ─────────────────────────────
+  // Reset
+  // ─────────────────────────────
   resetFormulario() {
     this.categoryForm.reset({
       color: '#007bff',
-      seoIndexable: true
+      seoIndexable: true,
+      status: 'published',
+      schemaType: 'CollectionPage',
+      order: 0
     });
+
     this.editing = false;
     this.categoriaIdEditando = null;
   }
-    async onPickCategoryImage(event: Event) {
+
+  // ─────────────────────────────
+  // Upload imagen categoría (S3)
+  // ─────────────────────────────
+  async onPickCategoryImage(event: Event) {
     const input = event.target as HTMLInputElement;
     const file = input?.files?.[0];
     if (!file) return;
 
     const contentType = file.type || 'application/octet-stream';
 
-    // 1) Pedir URL firmada al backend (mismo endpoint que usas en noticias)
-    const sign = await fetch(
-      'https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: file.name,
-          contentType,
-          approxSize: file.size,
-        }),
+    try {
+      const sign = await fetch(
+        'https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType,
+            approxSize: file.size
+          })
+        }
+      );
+
+      if (!sign.ok) {
+        alert('No se pudo firmar la subida de la imagen.');
+        return;
       }
-    );
 
-    if (!sign.ok) {
-      alert('No se pudo firmar la subida de la imagen de categoría.');
-      return;
+      const { uploadUrl, publicUrl } = await sign.json();
+
+      const put = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': contentType },
+        body: file
+      });
+
+      if (!put.ok) {
+        alert('Fallo al subir la imagen a S3.');
+        return;
+      }
+
+      this.categoryForm.patchValue({
+        image: publicUrl,
+        ogImage: publicUrl
+      });
+
+      this.categoryForm.get('image')?.updateValueAndValidity();
+      input.value = '';
+    } catch (err) {
+      console.error(err);
+      alert('Error al subir la imagen.');
     }
-
-    const { uploadUrl, publicUrl } = await sign.json();
-
-    // 2) Subir archivo directo a S3
-    const put = await fetch(uploadUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': contentType },
-      body: file,
-    });
-
-    if (!put.ok) {
-      alert('Fallo al subir la imagen a S3.');
-      return;
-    }
-
-    // 3) Guardar la URL pública en el formulario (campo "image")
-    this.categoryForm.patchValue({
-      image: publicUrl,
-    });
-    this.categoryForm.get('image')?.updateValueAndValidity();
-
-    // opcional: limpiar el input file
-    input.value = '';
   }
-
 }
