@@ -4,29 +4,53 @@ import { Observable } from 'rxjs';
 
 export interface CategoriaPayload {
   _id?: string;
+
+  // Identidad
   name: string;
-  slug: string;
+  slug?: string; // ⚠️ ahora opcional (lo genera el backend)
   description?: string;
+
+  // UX / Visual
   image?: string;
   color?: string;
   order?: number;
 
-  // 🔹 Campos SEO
+  // ─────────────────────────────
+  // SEO ON-PAGE
+  // ─────────────────────────────
   metaTitle?: string;
   metaDescription?: string;
   seoIndexable?: boolean;
+  canonicalUrl?: string;
 
+  // ─────────────────────────────
+  // Open Graph / Social
+  // ─────────────────────────────
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+
+  // ─────────────────────────────
+  // Editorial / Schema
+  // ─────────────────────────────
+  status?: 'draft' | 'published';
+  schemaType?: string;
+
+  // Fechas (solo lectura)
   createdAt?: string;
   updatedAt?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class CategoriaService {
-  //private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  // private baseUrl = 'http://localhost:3000/aaron/maslatino';
   baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 
+  // ─────────────────────────────
+  // ADMIN
+  // ─────────────────────────────
   crearCategoria(data: CategoriaPayload): Observable<any> {
     return this.http.post(`${this.baseUrl}/categoriaPost`, data);
   }
@@ -39,7 +63,7 @@ export class CategoriaService {
     return this.http.get<CategoriaPayload>(`${this.baseUrl}/categorias/${id}`);
   }
 
-  actualizarCategoria(id: string, data: CategoriaPayload): Observable<any> {
+  actualizarCategoria(id: string, data: Partial<CategoriaPayload>): Observable<any> {
     return this.http.put(`${this.baseUrl}/categorias/${id}`, data);
   }
 
@@ -48,6 +72,24 @@ export class CategoriaService {
   }
 
   getCategoriasByIds(ids: string[]): Observable<CategoriaPayload[]> {
-    return this.http.post<CategoriaPayload[]>(`${this.baseUrl}/categorias/by-ids`, { ids });
+    return this.http.post<CategoriaPayload[]>(
+      `${this.baseUrl}/categorias/by-ids`,
+      { ids }
+    );
+  }
+
+  // ─────────────────────────────
+  // SEO / FRONTEND
+  // ─────────────────────────────
+  obtenerCategoriasPublicas(): Observable<CategoriaPayload[]> {
+    return this.http.get<CategoriaPayload[]>(
+      `${this.baseUrl}/categorias-publicas`
+    );
+  }
+
+  obtenerCategoriaPorSlug(slug: string): Observable<CategoriaPayload> {
+    return this.http.get<CategoriaPayload>(
+      `${this.baseUrl}/categoria/${slug}`
+    );
   }
 }

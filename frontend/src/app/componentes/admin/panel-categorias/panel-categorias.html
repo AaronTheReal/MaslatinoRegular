@@ -1,153 +1,128 @@
 <div class="container">
   <div class="tabs">
     <button (click)="selectTab('agregar')" [class.active]="selectedTab === 'agregar'">
-      Agregar Categoria
+      Agregar categoría
     </button>
     <button (click)="selectTab('administrar')" [class.active]="selectedTab === 'administrar'">
-      Administrar Categoria
+      Administrar categorías
     </button>
   </div>
 
   <div class="content">
     <!-- TAB AGREGAR / EDITAR -->
     <div *ngIf="selectedTab === 'agregar'">
-      <h2>{{ editing ? 'Editar categoría' : 'Agregar Categoria' }}</h2>
+      <h2>{{ editing ? 'Editar categoría' : 'Agregar categoría' }}</h2>
 
       <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="form-grid">
-        <!-- Primera fila: Nombre y Slug -->
+        <!-- Nombre -->
         <div>
-          <label for="name">Nombre:</label>
-          <input id="name" formControlName="name" type="text" placeholder="Ej: Arte" />
+          <label>Nombre:</label>
+          <input formControlName="name" type="text" placeholder="Ej: Arte" />
         </div>
 
+        <!-- Orden -->
         <div>
-          <label for="slug">Slug (URL):</label>
-          <input id="slug" formControlName="slug" type="text" placeholder="Ej: arte" />
+          <label>Orden:</label>
+          <input type="number" formControlName="order" />
         </div>
 
-        <!-- Segunda fila: Color y Imagen -->
+        <!-- Color -->
         <div>
-          <label for="color">Color de la categoría:</label>
-          <input id="color" formControlName="color" type="color" />
+          <label>Color:</label>
+          <input type="color" formControlName="color" />
         </div>
 
-<div>
-  <label for="image">Imagen destacada:</label>
-  <input
-    id="image"
-    formControlName="image"
-    type="text"
-    placeholder="https://...imagen.jpg"
-  />
+        <!-- Imagen -->
+        <div>
+          <label>Imagen destacada:</label>
+          <input type="text" formControlName="image" placeholder="https://..." />
 
-  <!-- Botón para subir directo a S3 -->
-  <div class="mt-2">
-    <label class="btn-upload">
-      <input
-        type="file"
-        accept="image/*"
-        (change)="onPickCategoryImage($event)"
-      />
-      <span>Seleccionar imagen</span>
-    </label>
-  </div>
-
-  <!-- Preview -->
-  <div *ngIf="categoryForm.value.image" class="image-preview">
-    <img [src]="categoryForm.value.image" alt="Preview de imagen" />
-  </div>
-</div>
-
-        <!-- Descripción (fila completa) -->
-        <div class="full-width">
-          <label for="description">Descripción:</label>
-          <textarea
-            id="description"
-            formControlName="description"
-            rows="3"
-            placeholder="Describe brevemente la categoría..."
-          ></textarea>
-        </div>
-
-        <!-- SEO (fila completa) -->
-        <div class="full-width seo-block">
-          <h3>SEO de la categoría</h3>
-
-          <div class="seo-grid">
-            <div>
-              <label for="metaTitle">Meta title (opcional):</label>
-              <input
-                id="metaTitle"
-                formControlName="metaTitle"
-                type="text"
-                placeholder="Título para Google (máx. 70 caracteres)"
-              />
-              <small>
-                {{ categoryForm.get('metaTitle')?.value?.length || 0 }}/70
-              </small>
-            </div>
-
-            <div>
-              <label for="metaDescription">Meta description (opcional):</label>
-              <textarea
-                id="metaDescription"
-                formControlName="metaDescription"
-                rows="2"
-                placeholder="Descripción corta para resultados de búsqueda (máx. 160 caracteres)"
-              ></textarea>
-              <small>
-                {{ categoryForm.get('metaDescription')?.value?.length || 0 }}/160
-              </small>
-            </div>
-          </div>
-
-          <div class="seo-indexable">
-            <label>
-              <input type="checkbox" formControlName="seoIndexable" />
-              Permitir que esta categoría sea indexada (index,follow)
+          <div class="mt-2">
+            <label class="btn-upload">
+              <input type="file" accept="image/*" (change)="onPickCategoryImage($event)" />
+              <span>Seleccionar imagen</span>
             </label>
           </div>
 
-          <!-- Mini preview tipo snippet 
-          <div class="seo-preview">
-            <div class="seo-title">
-              {{ categoryForm.value.metaTitle || categoryForm.value.name || 'Título de categoría' }}
-            </div>
-            <div class="seo-url">
-              maslatino.com/categoria/{{ categoryForm.value.slug || 'slug-de-categoria' }}
-            </div>
-            <div class="seo-desc">
-              {{
-                categoryForm.value.metaDescription ||
-                  categoryForm.value.description ||
-                  'Descripción de ejemplo para la categoría en los resultados de búsqueda.'
-              }}
-            </div>
-
+          <div *ngIf="categoryForm.value.image" class="image-preview">
+            <img [src]="categoryForm.value.image" />
           </div>
--->
         </div>
 
-        <!-- Botón (fila completa, centrado) -->
-        <div class="full-width" style="text-align: center;">
+        <!-- Descripción -->
+        <div class="full-width">
+          <label>Descripción:</label>
+          <textarea rows="3" formControlName="description"></textarea>
+        </div>
+
+        <!-- SEO -->
+        <div class="full-width seo-block">
+          <h3>SEO</h3>
+
+          <div class="seo-grid">
+            <div>
+              <label>Meta title</label>
+              <input formControlName="metaTitle" />
+              <small>{{ categoryForm.value.metaTitle?.length || 0 }}/70</small>
+            </div>
+
+            <div>
+              <label>Meta description</label>
+              <textarea rows="2" formControlName="metaDescription"></textarea>
+              <small>{{ categoryForm.value.metaDescription?.length || 0 }}/160</small>
+            </div>
+
+            <div>
+              <label>Canonical URL</label>
+              <input formControlName="canonicalUrl" placeholder="https://maslatino.com/categoria/arte" />
+            </div>
+          </div>
+
+          <label>
+            <input type="checkbox" formControlName="seoIndexable" />
+            Indexable (Google)
+          </label>
+        </div>
+
+        <!-- Open Graph -->
+        <div class="full-width seo-block">
+          <h3>Social (Open Graph)</h3>
+
+          <div class="seo-grid">
+            <input placeholder="OG Title" formControlName="ogTitle" />
+            <textarea placeholder="OG Description" formControlName="ogDescription"></textarea>
+            <input placeholder="OG Image URL" formControlName="ogImage" />
+          </div>
+        </div>
+
+        <!-- Estado -->
+        <div class="full-width">
+          <label>Estado</label>
+          <select formControlName="status">
+            <option value="published">Publicado</option>
+            <option value="draft">Borrador</option>
+          </select>
+        </div>
+
+        <div class="full-width text-center">
           <button type="submit" [disabled]="categoryForm.invalid">
-            {{ editing ? 'Actualizar categoría' : 'Guardar categoría' }}
+            {{ editing ? 'Actualizar' : 'Guardar' }}
           </button>
         </div>
       </form>
     </div>
 
-    <!-- TAB ADMINISTRAR -->
+    <!-- TAB ADMIN -->
     <div *ngIf="selectedTab === 'administrar'">
-      <h2>Administrar Categoria</h2>
+      <h2>Administrar categorías</h2>
 
       <table>
         <thead>
           <tr>
             <th>Nombre</th>
             <th>Slug</th>
+            <th>Estado</th>
             <th>Indexable</th>
-            <th>Descripción</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -155,12 +130,8 @@
           <tr *ngFor="let cat of categorias">
             <td>{{ cat.name }}</td>
             <td>{{ cat.slug }}</td>
-            <td>
-              <span [ngClass]="cat.seoIndexable ? 'badge-ok' : 'badge-no'">
-                {{ cat.seoIndexable ? 'Sí' : 'No' }}
-              </span>
-            </td>
-            <td>{{ cat.description }}</td>
+            <td>{{ cat.status }}</td>
+            <td>{{ cat.seoIndexable ? 'Sí' : 'No' }}</td>
             <td>
               <button (click)="editarCategoria(cat)">Editar</button>
               <button (click)="eliminarCategoria(cat._id!)">Eliminar</button>
@@ -168,11 +139,9 @@
           </tr>
         </tbody>
       </table>
-
     </div>
   </div>
 </div>
-
 
 <!--
 

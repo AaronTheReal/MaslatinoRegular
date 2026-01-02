@@ -41,6 +41,7 @@ export class PanelAdmin implements OnInit {
     );
   }
 
+
   // Podcasts: Admin, Tecnico
   canSeePodcasts(): boolean {
     return this.userRole === 'Administrador' || this.userRole === 'Tecnico';

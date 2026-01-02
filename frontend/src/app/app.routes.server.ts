@@ -46,6 +46,8 @@ export const serverRoutes: ServerRoute[] = [
   {path: 'noticias-todas', renderMode: RenderMode.Client},
     {path: 'prueba-component', renderMode: RenderMode.Client},
         {path: 'contactanos', renderMode: RenderMode.Client},
+    {path: 'privacy-policy', renderMode: RenderMode.Client},
+    {path: 'terminos-condiciones', renderMode: RenderMode.Client},
 
   
               

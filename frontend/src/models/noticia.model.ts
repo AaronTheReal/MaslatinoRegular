@@ -1,12 +1,22 @@
+
 // src/app/models/noticia.model.ts
 
 export interface Category {
   _id: string;
   name: string;
   slug: string;
+
+  // Contenido
   description?: string;
   image?: string;
   color?: string;
+
+  // 🔥 SEO (CLAVE PARA EL ERROR QUE TENÍAS)
+  metaTitle?: string;
+  metaDescription?: string;
+  seoIndexable?: boolean;
+
+  // Auditoría
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;

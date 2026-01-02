@@ -29,6 +29,9 @@ import { adminAuthGuard } from './guards/admin-auth.guard';
 import {Eventos} from './componentes/despliegues/eventos/eventos'
 import {PruebaComponent} from './componentes/prueba-component/prueba-component'
 import{Contactanos} from './pages/contactanos/contactanos'
+import{PrivacyPolicy} from './pages/privacy-policy/privacy-policy'
+import {Terminos} from './pages/terminos/terminos'
+
 export const routes: Routes = [
   { path: '', component: Dashboard },
   { path: 'noticias-recientes', component: NoticiasRecientes },
@@ -69,7 +72,9 @@ export const routes: Routes = [
   {path: 'contactanos', component:Contactanos},
 
   
-  
+    {path: 'privacy-policy', component:PrivacyPolicy},
+    {path: 'terminos-condiciones', component:Terminos},
+
 
 
 
