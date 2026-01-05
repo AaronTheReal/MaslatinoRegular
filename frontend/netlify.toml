@@ -2,17 +2,9 @@
   command = "ng build"
   publish = "dist/nombre-proyecto/browser"
 
-# 🔥 Sitemap dinámico desde el backend (Render)
+
 [[redirects]]
   from = "/sitemap.xml"
-  to = "https://maslatinoregular.onrender.com/aaron/maslatino/sitemap.xml"
-  status = 200
-  force = true
-
-# (opcional pero recomendado)
-# Google News sitemap
-[[redirects]]
-  from = "/news-sitemap.xml"
-  to = "https://maslatinoregular.onrender.com/aaron/maslatino/news-sitemap.xml"
+  to = "/.netlify/functions/sitemap"
   status = 200
   force = true

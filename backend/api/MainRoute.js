@@ -486,48 +486,20 @@ router.post('/google-login', async (req, res) => {
     router.get('/share/podcast/:podcastId/episode/:episodeId', SmartLinkController.redirectPodcastLink);
 
 
-    router.get('/sitemap.xml', async (req, res) => {
-      try {
-        const SITE_URL = 'https://www.maslatino.com';
+    // GET /aaron/maslatino/sitemap-data
+router.get('/sitemap-data', async (req, res) => {
+  const noticias = await Noticia.find({ state: 'published' })
+    .select('slug updatedAt');
 
-        // Importa el modelo directamente
-        const noticias = await Noticia.find({
-          autorizada: true,
+  const urls = noticias.map(n => ({
+    loc: `https://www.maslatino.com/noticia/${n.slug}`,
+    lastmod: n.updatedAt.toISOString().split('T')[0],
+    changefreq: 'weekly',
+    priority: '0.9'
+  }));
 
-        })
-        .select('slug updatedAt publishAt')
-        .lean();
-
-        console.log("noticias"+ noticias);
-
-        const urls = noticias.map(n => {
-          const lastmod = (n.updatedAt || n.publishAt || new Date())
-            .toISOString()
-            .split('T')[0];
-
-          return `
-      <url>
-        <loc>${SITE_URL}/noticia/${encodeURIComponent(n.slug)}</loc>
-        <lastmod>${lastmod}</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.9</priority>
-      </url>`;
-        }).join('');
-
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
-    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    ${urls}
-    </urlset>`;
-
-        res.setHeader('Content-Type', 'application/xml');
-        res.status(200).send(xml);
-
-      } catch (err) {
-        console.error('Error generando sitemap:', err);
-        res.status(500).send('Error sitemap');
-      }
-    });
-
+  res.json(urls);
+});
 
 
     router.post('/sign-upload', async (req, res) => {
