@@ -17,3 +17,4 @@ Disallow: /admin/noticiaseditar/
 
 # Sitemap
 Sitemap: https://www.maslatino.com/sitemap.xml
+
