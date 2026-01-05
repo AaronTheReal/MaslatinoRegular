@@ -402,11 +402,11 @@ router.post('/google-login', async (req, res) => {
 
     
     router.get('/categorias/:id', CategoriasController.obtenerCategoriaPorId);
-    router.post('/categorias/by-ids', CategoriasController.obtenerCategoriasPorIds); // Add this
+    //router.post('/categorias/by-ids', CategoriasController.obtenerCategoriasPorIds); // Add this
     router.put('/categorias/:id', CategoriasController.actualizarCategoria);
     router.delete('/categorias/:id', CategoriasController.eliminarCategoria);
     router.get('/categoriasUsuario/:id',CategoriasController.obtenerCategoriasUsuario);
-    router.delete('/categoriasUsuarioDelete/:userId/:id', CategoriasController.categoriasUsuarioDelete);
+    //router.delete('/categoriasUsuarioDelete/:userId/:id', CategoriasController.categoriasUsuarioDelete);
 
     // Obtener noticias por ID de categoría
     router.get('/noticias/categoria/:id', NoticiasController.obtenerNoticiasPorCategoriaId);

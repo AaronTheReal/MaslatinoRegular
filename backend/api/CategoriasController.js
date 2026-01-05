@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import Category from '../models/Category.js';
+import Category from '../models/Categorias.js';
 import User from '../models/Usuarios.js';
 
 dotenv.config();
