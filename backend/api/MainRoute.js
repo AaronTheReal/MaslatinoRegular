@@ -488,7 +488,7 @@ router.post('/google-login', async (req, res) => {
 
     // GET /aaron/maslatino/sitemap-data
 router.get('/sitemap-data', async (req, res) => {
-  const noticias = await Noticia.find({ state: 'published' })
+  const noticias = await Noticia.find({})
     .select('slug updatedAt');
 
   const urls = noticias.map(n => ({
