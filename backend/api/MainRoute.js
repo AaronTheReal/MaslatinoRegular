@@ -492,15 +492,13 @@ router.post('/google-login', async (req, res) => {
 
         // Importa el modelo directamente
         const noticias = await Noticia.find({
-          state: 'published',
           autorizada: true,
-          $or: [
-            { publishAt: { $lte: new Date() } },
-            { publishAt: null }
-          ]
+
         })
         .select('slug updatedAt publishAt')
         .lean();
+
+        console.log("noticias"+ noticias);
 
         const urls = noticias.map(n => {
           const lastmod = (n.updatedAt || n.publishAt || new Date())
