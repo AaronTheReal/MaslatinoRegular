@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Bloquear panel administrativo
+Disallow: /admin-panel
+Disallow: /usuarios-panel
+Disallow: /calendario-panel
+Disallow: /calendario-panel-pc
+Disallow: /multimedia-panel
+Disallow: /noticias-panel
+Disallow: /podcast-panel
+Disallow: /radio-panel
+Disallow: /categorias-panel
+Disallow: /admin-noticias
+Disallow: /admin-login
+Disallow: /admin/noticiaseditar/
+
+# Sitemap
+Sitemap: https://www.maslatino.com/sitemap.xml

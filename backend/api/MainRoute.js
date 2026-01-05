@@ -485,6 +485,50 @@ router.post('/google-login', async (req, res) => {
 
     router.get('/share/podcast/:podcastId/episode/:episodeId', SmartLinkController.redirectPodcastLink);
 
+
+    router.get('/sitemap.xml', async (req, res) => {
+      try {
+        const SITE_URL = 'https://www.maslatino.com';
+
+        // Importa el modelo directamente
+        const noticias = await Noticia.find({
+          state: 'published',
+          autorizada: true,
+          publishAt: { $lte: new Date() }
+        })
+          .select('slug updatedAt publishAt')
+          .lean();
+
+        const urls = noticias.map(n => {
+          const lastmod = (n.updatedAt || n.publishAt || new Date())
+            .toISOString()
+            .split('T')[0];
+
+          return `
+      <url>
+        <loc>${SITE_URL}/noticia/${encodeURIComponent(n.slug)}</loc>
+        <lastmod>${lastmod}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+      </url>`;
+        }).join('');
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    ${urls}
+    </urlset>`;
+
+        res.setHeader('Content-Type', 'application/xml');
+        res.status(200).send(xml);
+
+      } catch (err) {
+        console.error('Error generando sitemap:', err);
+        res.status(500).send('Error sitemap');
+      }
+    });
+
+
+
     router.post('/sign-upload', async (req, res) => {
       try {
         const { filename = 'archivo', contentType = 'application/octet-stream', approxSize = 0 } = req.body || {};
