@@ -1,8 +1,12 @@
-// netlify/functions/sitemap.js
+interface SitemapEntry {
+  loc: string;
+  lastmod: string;
+  changefreq: string;
+  priority: string;
+}
 
 export async function handler() {
   try {
-    // 👉 aquí llamas a tu backend en Render
     const res = await fetch(
       'https://maslatinoregular.onrender.com/aaron/maslatino/sitemap-data'
     );
@@ -11,10 +15,9 @@ export async function handler() {
       throw new Error('No se pudo obtener el sitemap');
     }
 
-    const urls = await res.json(); 
-    // urls = [{ loc, lastmod, changefreq, priority }]
+    const urls: SitemapEntry[] = await res.json();
 
-    const xmlUrls = urls.map(u => `
+    const xmlUrls = urls.map((u: SitemapEntry) => `
       <url>
         <loc>${u.loc}</loc>
         <lastmod>${u.lastmod}</lastmod>
@@ -37,10 +40,10 @@ ${xmlUrls}
       body: xml
     };
 
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       statusCode: 500,
-      body: error.message
+      body: error instanceof Error ? error.message : 'Unknown error'
     };
   }
 }

@@ -2,6 +2,7 @@
   "name": "nombre-proyecto",
   "scripts": {
     "ng": "ng",
+    "prebuild": "node scripts/generate-sitemap.js",
     "build": "ng build",
     "start": "ng serve",
     "watch": "ng build --watch --configuration development",
@@ -36,10 +37,12 @@
     "@ckeditor/ckeditor5-media-embed": "^47.2.0",
     "@ckeditor/ckeditor5-upload": "^47.1.0",
     "@ng-select/ng-select": "^20.3.1",
+    "apicache": "^1.6.3",
     "express": "^5.1.0",
     "fuse.js": "^7.1.0",
     "marked": "^16.4.0",
     "rxjs": "~7.8.0",
+    "sitemap": "^9.0.0",
     "swiper": "^12.0.2",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
@@ -49,6 +52,7 @@
     "@angular/cli": "^20.1.2",
     "@angular/compiler-cli": "^20.1.0",
     "@netlify/angular-runtime": "^3.0.0",
+    "@types/apicache": "^1.6.8",
     "@types/express": "^5.0.1",
     "@types/jasmine": "~5.1.0",
     "@types/node": "^20.17.19",

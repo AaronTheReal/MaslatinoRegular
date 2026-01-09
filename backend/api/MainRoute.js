@@ -501,6 +501,27 @@ router.get('/sitemap-data', async (req, res) => {
   res.json(urls);
 });
 
+// GET /aaron/maslatino/news-sitemap-data
+router.get('/news-sitemap-data', async (req, res) => {
+  const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
+
+  const noticias = await Noticia.find({
+    state: 'published',
+    autorizada: true,
+    publishAt: { $gte: since }
+  })
+  .select('slug title publishAt')
+  .sort({ publishAt: -1 })
+  .limit(1000);
+
+  const urls = noticias.map(n => ({
+    loc: `https://www.maslatino.com/noticia/${n.slug}`,
+    title: n.title,
+    publication_date: n.publishAt.toISOString()
+  }));
+
+  res.json(urls);
+});
 
     router.post('/sign-upload', async (req, res) => {
       try {
