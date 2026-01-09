@@ -5,9 +5,15 @@ const OUT = 'public/news-sitemap.xml';
 
 async function run() {
   const res = await fetch(API);
-  if (!res.ok) throw new Error('No se pudo obtener news-sitemap-data');
+  if (!res.ok) {
+    throw new Error('No se pudo obtener news-sitemap-data');
+  }
 
   const urls = await res.json();
+
+  if (!Array.isArray(urls) || urls.length === 0) {
+    console.log('⚠️ No hay noticias recientes (48h)');
+  }
 
   const xmlUrls = urls.map(u => `
   <url>

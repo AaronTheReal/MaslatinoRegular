@@ -2,7 +2,7 @@
   "name": "nombre-proyecto",
   "scripts": {
     "ng": "ng",
-    "prebuild": "node scripts/generate-sitemap.js",
+    "prebuild": "node scripts/generate-sitemap.js && node scripts/generate-news-sitemap.js",
     "build": "ng build",
     "start": "ng serve",
     "watch": "ng build --watch --configuration development",
