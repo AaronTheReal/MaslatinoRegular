@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, Renderer2, PLATFORM_ID } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule, DatePipe, isPlatformBrowser, isPlatformServer, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NoticiasService } from '../../services/noticias-service';
@@ -8,8 +8,7 @@ import { Noticia, Category } from '../../../models/noticia.model';
 import { Meta, Title, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
-import { isPlatformBrowser, isPlatformServer } from '@angular/common';
- declare const twttr: any;
+declare const twttr: any;
 
 @Component({
   selector: 'app-noticias-individuales',
@@ -27,7 +26,8 @@ export class NoticiasIndividuales {
   private readonly meta = inject(Meta);
   private readonly renderer = inject(Renderer2);
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly sanitizer = inject(DomSanitizer); 
+  private readonly sanitizer = inject(DomSanitizer);
+  private readonly document = inject(DOCUMENT);
 
 
   busqueda = '';
@@ -51,13 +51,15 @@ export class NoticiasIndividuales {
           if (!noticia) return of(null);
 
           const categoryIds = (noticia.categories ?? [])
-            .map(cat => (typeof cat === 'string' ? cat : cat._id))
+            .map(cat => (typeof cat === 'string' ? cat : (cat as any)._id))
             .filter((id): id is string => !!id);
 
           if (categoryIds.length === 0) {
             noticia.categories = [];
             return of(noticia);
+
           }
+          console.log("antes",noticia);
 
           return this.categoriasService.getCategoriasByIds(categoryIds).pipe(
             catchError(() =>
@@ -76,6 +78,7 @@ export class NoticiasIndividuales {
             const image = noticia.meta?.image || '/assets/og.jpg';
             const url = noticia.originalUrl || `https://maslatino.com/noticia/${encodeURIComponent(noticia.slug ?? '')}`;
 
+            // Basic meta tags
             this.title.setTitle(`${title} | Mas Latino`);
             this.meta.updateTag({ name: 'description', content: description });
             this.meta.updateTag({ name: 'keywords', content: noticia.tags?.join(', ') || 'noticias, Mas Latino' });
@@ -89,36 +92,55 @@ export class NoticiasIndividuales {
             this.meta.updateTag({ name: 'twitter:description', content: description });
             this.meta.updateTag({ name: 'twitter:image', content: image });
 
+            // canonical link — keep browser-only to avoid duplicate link handling issues
             if (isPlatformBrowser(this.platformId)) {
               const link = this.renderer.createElement('link');
               this.renderer.setAttribute(link, 'rel', 'canonical');
               this.renderer.setAttribute(link, 'href', url);
-              this.renderer.appendChild(document.head, link);
-
-              const schema = {
-                '@context': 'https://schema.org',
-                '@type': 'NewsArticle',
-                headline: title,
-                description: description,
-                image: [image],
-                datePublished: noticia.createdAt || new Date().toISOString(),
-                dateModified: noticia.updatedAt || noticia.createdAt || new Date().toISOString(),
-                author: { '@type': 'Person', name: noticia.authorName || 'Anónimo' },
-                publisher: {
-                  '@type': 'Organization',
-                  name: 'Mas Latino',
-                  logo: { '@type': 'ImageObject', url: 'https://maslatino.com/logo.png' }
-                },
-                mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-                keywords: noticia.tags?.join(', ') || '',
-                articleSection: this.getCategoryNames(noticia.categories as Category[])
-              };
-              const script = this.renderer.createElement('script');
-              this.renderer.setAttribute(script, 'type', 'application/ld+json');
-              this.renderer.setProperty(script, 'textContent', JSON.stringify(schema));
-              this.renderer.appendChild(document.head, script);
+              this.renderer.appendChild(this.document.head, link);
             }
-           this.loadTwitterWidgetsIfNeeded(noticia);
+
+            // Build JSON-LD schema (INJECT ON SERVER & BROWSER)
+            const publishedDate = (noticia as any).publishAt ?? noticia.createdAt ?? new Date().toISOString();
+            const modifiedDate = noticia.updatedAt ?? (noticia as any).publishAt ?? noticia.createdAt ?? new Date().toISOString();
+
+            const schema = {
+              '@context': 'https://schema.org',
+              '@type': 'NewsArticle',
+              headline: title,
+              description: description,
+              image: [image],
+              datePublished: (new Date(publishedDate)).toISOString(),
+              dateModified: (new Date(modifiedDate)).toISOString(),
+              author: {
+                '@type': 'Organization',
+                name: 'Redacción Mas Latino',
+                url: 'https://maslatino.com'
+              },
+              publisher: {
+                '@type': 'Organization',
+                name: 'Mas Latino',
+                logo: { '@type': 'ImageObject', url: 'https://maslatino.com/logo.png' }
+              },
+              mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+              keywords: noticia.tags?.join(', ') || '',
+              articleSection: this.getCategoryNames(noticia.categories as Category[])
+            };
+
+            try {
+              if (isPlatformServer(this.platformId)) {
+                const script = this.renderer.createElement('script');
+                this.renderer.setAttribute(script, 'type', 'application/ld+json');
+                this.renderer.setProperty(script, 'textContent', JSON.stringify(schema));
+                this.renderer.appendChild(this.document.head, script);
+              }
+            } catch (e) {
+              // Fallback: log but don't break rendering
+              console.warn('Could not append JSON-LD schema to head:', e);
+            }
+
+            // Load Twitter widgets only in browser
+            this.loadTwitterWidgetsIfNeeded(noticia);
 
           } else {
             this.title.setTitle('Noticia no encontrada | Mas Latino');
@@ -146,6 +168,7 @@ export class NoticiasIndividuales {
       this.generarMesesDesde2025();
     }
   }
+
 
   getCategoryNames(categories: Array<string | Category> | undefined): string {
     const names = (categories ?? [])
@@ -207,72 +230,72 @@ export class NoticiasIndividuales {
     return !!x && typeof x === 'object' && 'name' in (x as any);
   }
 
-    // ====== EMBEDS ======
-getEmbedHtml(block: any): SafeHtml {
-  if (!block) {
-    return this.sanitizer.bypassSecurityTrustHtml('');
-  }
-
-  // Si el backend ya mandó HTML embebido directamente
-  if (typeof block.html === 'string' && block.html.trim()) {
-    return this.sanitizer.bypassSecurityTrustHtml(block.html);
-  }
-
-  const url: string = (block.url || '').toString().trim();
-  if (!url) {
-    return this.sanitizer.bypassSecurityTrustHtml('');
-  }
-
-  // Provider en minúsculas
-  let provider = (block.provider || '').toString().toLowerCase();
-
-  // Detectar provider por URL si viniera 'generic' o vacío
-  try {
-    const u = new URL(url);
-    const host = (u.hostname || '').toLowerCase();
-
-    if (!provider || provider === 'generic') {
-      if (host.includes('youtube.com') || host.includes('youtu.be')) {
-        provider = 'youtube';
-      } else if (host.includes('twitter.com') || host.includes('x.com')) {
-        provider = 'twitter';
-      }
+  // ====== EMBEDS ======
+  getEmbedHtml(block: any): SafeHtml {
+    if (!block) {
+      return this.sanitizer.bypassSecurityTrustHtml('');
     }
-  } catch {
-    // si falla el parseo no pasa nada, seguimos con provider
-  }
 
-  // ---- YouTube (por si luego lo usas) ----
-  if (provider === 'youtube') {
-    const embedUrl = this.buildYoutubeEmbedUrl(url);
-    const html = `
-      <div class="embed-responsive embed-responsive-16by9">
-        <iframe
-          src="${embedUrl}"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-          loading="lazy">
-        </iframe>
-      </div>
-    `;
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
+    // Si el backend ya mandó HTML embebido directamente
+    if (typeof block.html === 'string' && block.html.trim()) {
+      return this.sanitizer.bypassSecurityTrustHtml(block.html);
+    }
 
-  // ---- Twitter / X ----
-  if (provider === 'twitter') {
-    const html = `
-      <blockquote class="twitter-tweet">
-        <a href="${url}"></a>
-      </blockquote>
-    `;
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
+    const url: string = (block.url || '').toString().trim();
+    if (!url) {
+      return this.sanitizer.bypassSecurityTrustHtml('');
+    }
 
-  // ---- Fallback genérico: solo link ----
-  const safeHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">Ver contenido incrustado</a>`;
-  return this.sanitizer.bypassSecurityTrustHtml(safeHtml);
-}
+    // Provider en minúsculas
+    let provider = (block.provider || '').toString().toLowerCase();
+
+    // Detectar provider por URL si viniera 'generic' o vacío
+    try {
+      const u = new URL(url);
+      const host = (u.hostname || '').toLowerCase();
+
+      if (!provider || provider === 'generic') {
+        if (host.includes('youtube.com') || host.includes('youtu.be')) {
+          provider = 'youtube';
+        } else if (host.includes('twitter.com') || host.includes('x.com')) {
+          provider = 'twitter';
+        }
+      }
+    } catch {
+      // si falla el parseo no pasa nada, seguimos con provider
+    }
+
+    // ---- YouTube (por si luego lo usas) ----
+    if (provider === 'youtube') {
+      const embedUrl = this.buildYoutubeEmbedUrl(url);
+      const html = `
+        <div class="embed-responsive embed-responsive-16by9">
+          <iframe
+            src="${embedUrl}"
+            frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            loading="lazy">
+          </iframe>
+        </div>
+      `;
+      return this.sanitizer.bypassSecurityTrustHtml(html);
+    }
+
+    // ---- Twitter / X ----
+    if (provider === 'twitter') {
+      const html = `
+        <blockquote class="twitter-tweet">
+          <a href="${url}"></a>
+        </blockquote>
+      `;
+      return this.sanitizer.bypassSecurityTrustHtml(html);
+    }
+
+    // ---- Fallback genérico: solo link ----
+    const safeHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">Ver contenido incrustado</a>`;
+    return this.sanitizer.bypassSecurityTrustHtml(safeHtml);
+  }
 
 
   private buildYoutubeEmbedUrl(raw: string): string {
@@ -291,58 +314,60 @@ getEmbedHtml(block: any): SafeHtml {
       return raw;
     }
   }
-private loadTwitterWidgets() {
-  if (!isPlatformBrowser(this.platformId)) return;
-  setTimeout(() => this.loadTwitterWidgets(), 0);
 
-  // Evitar duplicados
-  const already = document.querySelector('script[data-twitter-wjs="true"]');
-  if (already) {
-    // Si ya existe, pedir que reprocese los embeds
-    (window as any).twttr?.widgets?.load();
-    return;
-  }
+  private loadTwitterWidgets() {
+    if (!isPlatformBrowser(this.platformId)) return;
+    setTimeout(() => this.loadTwitterWidgets(), 0);
 
-  const script = this.renderer.createElement('script');
-  this.renderer.setAttribute(script, 'src', 'https://platform.twitter.com/widgets.js');
-  this.renderer.setAttribute(script, 'async', '');
-  this.renderer.setAttribute(script, 'charset', 'utf-8');
-  this.renderer.setAttribute(script, 'data-twitter-wjs', 'true');
-  this.renderer.appendChild(document.body, script);
-}
-normalizeTwitterUrl(raw: string): string {
-  if (!raw) return '';
-  try {
-    const u = new URL(raw);
-    if (u.hostname === 'x.com' || u.hostname === 'www.x.com') {
-      u.hostname = 'twitter.com';
-      return u.toString();
+    // Evitar duplicados
+    const already = document.querySelector('script[data-twitter-wjs="true"]');
+    if (already) {
+      // Si ya existe, pedir que reprocese los embeds
+      (window as any).twttr?.widgets?.load();
+      return;
     }
-    return u.toString();
-  } catch {
-    return raw;
-  }
-}
-private loadTwitterWidgetsIfNeeded(noticia: Noticia | null) {
-  if (!noticia || !Array.isArray(noticia.content)) return;
-  const hasTwitterEmbed = noticia.content.some(
-    (b: any) => b?.type === 'embed' && b?.provider === 'twitter'
-  );
-  if (!hasTwitterEmbed) return;
 
-  if (isPlatformBrowser(this.platformId)) {
+    const script = this.renderer.createElement('script');
+    this.renderer.setAttribute(script, 'src', 'https://platform.twitter.com/widgets.js');
+    this.renderer.setAttribute(script, 'async', '');
+    this.renderer.setAttribute(script, 'charset', 'utf-8');
+    this.renderer.setAttribute(script, 'data-twitter-wjs', 'true');
+    this.renderer.appendChild(document.body, script);
+  }
+
+  normalizeTwitterUrl(raw: string): string {
+    if (!raw) return '';
     try {
-      // Pequeño retraso para dejar que Angular pinte el DOM
-      setTimeout(() => {
-        const w: any = window as any;
-        if (w.twttr && w.twttr.widgets && typeof w.twttr.widgets.load === 'function') {
-          w.twttr.widgets.load();
-        }
-      }, 0);
-    } catch (e) {
-      console.warn('No se pudo cargar widgets de Twitter:', e);
+      const u = new URL(raw);
+      if (u.hostname === 'x.com' || u.hostname === 'www.x.com') {
+        u.hostname = 'twitter.com';
+        return u.toString();
+      }
+      return u.toString();
+    } catch {
+      return raw;
     }
   }
-}
+  private loadTwitterWidgetsIfNeeded(noticia: Noticia | null) {
+    if (!noticia || !Array.isArray(noticia.content)) return;
+    const hasTwitterEmbed = noticia.content.some(
+      (b: any) => b?.type === 'embed' && b?.provider === 'twitter'
+    );
+    if (!hasTwitterEmbed) return;
+
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        // Pequeño retraso para dejar que Angular pinte el DOM
+        setTimeout(() => {
+          const w: any = window as any;
+          if (w.twttr && w.twttr.widgets && typeof w.twttr.widgets.load === 'function') {
+            w.twttr.widgets.load();
+          }
+        }, 0);
+      } catch (e) {
+        console.warn('No se pudo cargar widgets de Twitter:', e);
+      }
+    }
+  }
 
 }

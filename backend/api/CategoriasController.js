@@ -223,6 +223,31 @@ class CategoriasController {
       return res.status(500).json({ error: 'Error interno' });
     }
   }
+
+  // ─────────────────────────────
+  // 9. Obtener categorías por IDs (nueva función para el frontend)
+  // ─────────────────────────────
+  async obtenerCategoriasPorIds(req, res) {
+    try {
+      const { ids } = req.body;
+
+      console.log(req.body);
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: 'Se requiere un array de IDs válido.' });
+      }
+
+      // Buscar categorías por _id en $in, solo las publicadas
+      const categorias = await Category.find({
+        _id: { $in: ids }
+        }).sort({ order: 1 });
+
+      console.log(categorias);
+      return res.status(200).json(categorias);
+    } catch (error) {
+      console.error('Error al obtener categorías por IDs:', error);
+      return res.status(500).json({ error: 'Error interno al obtener categorías' });
+    }
+  }
 }
 
 const categoriasController = new CategoriasController();

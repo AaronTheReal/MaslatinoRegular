@@ -3,4 +3,16 @@
   xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
 
+  <url>
+    <loc>https://www.maslatino.com/noticia/boricorridor-2026-talento-puertorriqueno-vuelve-a-boston</loc>
+    <news:news>
+      <news:publication>
+        <news:name>Mas Latino</news:name>
+        <news:language>en</news:language>
+      </news:publication>
+      <news:publication_date>2026-01-09T12:37:00.000Z</news:publication_date>
+      <news:title><![CDATA[BoriCorridor 2026: Talento puertorriqueño vuelve a Boston]]></news:title>
+    </news:news>
+  </url>
+
 </urlset>

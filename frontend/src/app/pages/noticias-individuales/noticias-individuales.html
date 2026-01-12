@@ -32,16 +32,16 @@
   <div class="row">
     <!-- Contenido principal -->
     <div class="col-lg-9 col-md-12 mb-4 content-column">
-      <article class="noticia-card" itemscope itemtype="https://schema.org/NewsArticle">
+    <article class="noticia-card">
         <!-- Title fallback if no hero image -->
         <h1 class="noticia-title no-hero" *ngIf="!noticia?.meta?.image" itemprop="headline">
           {{ noticia?.title || 'Título no disponible' }}
         </h1>
 
         <div class="noticia-meta mb-3">
-          <span *ngIf="noticia?.authorName" itemprop="author" itemscope itemtype="https://schema.org/Person">
-            <span itemprop="name">{{ noticia?.authorName || 'Anónimo' }}</span>
-          </span>
+      <span itemprop="author" itemscope itemtype="https://schema.org/Organization">
+        <span itemprop="name">Redacción Mas Latino</span>
+      </span>
           <time
             *ngIf="noticia?.createdAt"
             class="ms-2"
@@ -211,6 +211,7 @@
                [attr.aria-label]="'Ver categoría: ' + (cat?.name || 'Sin nombre')">
               {{ cat?.name || 'Sin nombre' }}
             </a>
+
           </div>
         </section>
 
