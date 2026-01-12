@@ -402,7 +402,7 @@ router.post('/google-login', async (req, res) => {
 
     
     router.get('/categorias/:id', CategoriasController.obtenerCategoriaPorId);
-    //router.post('/categorias/by-ids', CategoriasController.obtenerCategoriasPorIds); // Add this
+    router.post('/categorias/by-ids', CategoriasController.obtenerCategoriasPorIds); // Add this
     router.put('/categorias/:id', CategoriasController.actualizarCategoria);
     router.delete('/categorias/:id', CategoriasController.eliminarCategoria);
     router.get('/categoriasUsuario/:id',CategoriasController.obtenerCategoriasUsuario);
