@@ -665,3 +665,96 @@
   }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* src/app/componentes/despliegues/podcast/podcast.css */
+
+/* Estilos para el modal (agrega esto para que sea overlay full-screen) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8); /* Fondo semi-transparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegura que esté por encima de todo */
+}
+
+.modal-content {
+  background-color: white;
+  width: 80%;
+  max-width: 1200px;
+  height: 80vh;
+  display: flex;
+  flex-direction: row;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.modal-left {
+  flex: 1;
+  padding: 20px;
+  border-right: 1px solid #ccc;
+}
+
+.modal-right {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto; /* Scroll si hay muchos episodios */
+}
+
+.modal-right ul {
+  list-style: none;
+  padding: 0;
+}
+
+.modal-right li {
+  cursor: pointer;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-right li.selected {
+  background-color: #f0f0f0;
+}
+
+.modal-content button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 10px 20px;
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* Tus estilos existentes para hero, player, etc. se mantienen */
