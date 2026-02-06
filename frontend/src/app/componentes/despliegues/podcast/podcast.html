@@ -1,37 +1,37 @@
-  <section class="hero-section">
-    <div class="hero-background">
-      <img src="assets/podcastdespliegue/cecy.png" alt="Background" class="hero-bg-image">
-    </div>
+<!-- src/app/componentes/despliegues/podcast/podcast.html -->
 
-    <div class="hero-content-wrapper">
-      <div class="hero-text">
-        <h1 class="hero-title">Viva Latino<br>Morning Show</h1>
-        <p class="hero-description">
-           ¡Comienza tu día con energía e información!<br>
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-background">
+    <img src="assets/podcastdespliegue/cecy.png" alt="Background" class="hero-bg-image">
+  </div>
+  <div class="hero-content-wrapper">
+    <div class="hero-text">
+      <h1 class="hero-title">Viva Latino<br>Morning Show</h1>
+      <p class="hero-description">
+         ¡Comienza tu día con energía e información!<br>
  De lunes a viernes, de 6:00 a 8:00 a.m., Viva Latino te trae las noticias más importantes, debates actuales y entrevistas con invitados sorprendentes cada mañana.<br>
 Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
  Sintoniza Más Latino 99.9 FM / 1300 AM o escúchanos en nuestra App.
-
-        </p>
-        <div class="available-badges">
-          <p class="available-label">DISPONIBLE EN</p>
-          <div class="badge-group">
-            <div class="badge-wrapper">
-              <a (click)="openAndroid($event)"><img src="https://api.builder.io/api/v1/image/assets/TEMP/b66f3912d6f06a77ee1e63fc1a920667a8aceaf9?width=287" alt="Google Play" class="badge-image"></a>
-            </div>
-            <div class="badge-wrapper">
-              <a (click)="openIOS($event)"><img src="https://api.builder.io/api/v1/image/assets/TEMP/968df345bb7bbc8b6f0e47327e6679135dd4af37?width=287" alt="App Store" class="badge-image"></a>
-            </div>
-            
+      </p>
+      <div class="available-badges">
+        <p class="available-label">DISPONIBLE EN</p>
+        <div class="badge-group">
+          <div class="badge-wrapper">
+            <a (click)="openAndroid($event)"><img src="https://api.builder.io/api/v1/image/assets/TEMP/b66f3912d6f06a77ee1e63fc1a920667a8aceaf9?width=287" alt="Google Play" class="badge-image"></a>
+          </div>
+          <div class="badge-wrapper">
+            <a (click)="openIOS($event)"><img src="https://api.builder.io/api/v1/image/assets/TEMP/968df345bb7bbc8b6f0e47327e6679135dd4af37?width=287" alt="App Store" class="badge-image"></a>
           </div>
         </div>
       </div>
-      <div class="hero-image-wrapper">
-      </div>
     </div>
-  </section>
-<!--        <img src="https://api.builder.io/api/v1/image/assets/TEMP/bd17cdfc93d7c5b97152a962abce74a6149e6c89?width=3095" alt="Podcast host with headphones" class="hero-person-image">
--->
+    <div class="hero-image-wrapper">
+    </div>
+  </div>
+</section>
+
+<!-- Player Section -->
 <section class="player-section overlap-on-hero">
   <div class="player-card">
     <div class="player-content">
@@ -44,7 +44,6 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
         <h2 class="episode-title">New England<br>Deportes</h2>
         <p class="episode-number">Episodio 1</p>
         <div class="player-controls">
-          <!-- 👇 AQUI AGREGAMOS (click)="onPlay()" -->
           <button class="play-btn"
                   aria-label="Play episode"
                   (click)="onPlay()">
@@ -53,12 +52,10 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
               <path d="M25 47.9V19.7L49.4 33.8L25 47.9Z" fill="white"/>
             </svg>
           </button>
-
           <div class="progress-bar">
             <div class="progress-track"></div>
             <div class="progress-indicator"></div>
           </div>
-
           <button class="volume-btn" aria-label="Volume control">
             <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
               <path d="M21 0C9.402 0 0 9.402 0 21C0 32.598 9.402 42 21 42C32.598 42 42 32.598 42 21C42 9.402 32.598 0 21 0Z" fill="black"/>
@@ -70,118 +67,46 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
   </div>
 </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!--
-
-
-
-
-
-
-
-
-
-
-<section class="player-section overlap-on-hero">
-    <div class="player-card">
-      <div class="player-content">
-        <div class="album-art">
-          <img src="https://maslatino.com/wp-content/uploads/New-England-Deportes-2048x2048.png" alt="Episode cover" class="album-image">
-        </div>
-        <div class="player-info">
-          <h2 class="episode-title">New England<br>Deportes</h2>
-          <p class="episode-number">Episodio 1</p>
-          <div class="player-controls">
-            <button class="play-btn" aria-label="Play episode">
-              <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
-                <circle cx="34" cy="34" r="34" fill="black"/>
-                <path d="M25 47.9V19.7L49.4 33.8L25 47.9Z" fill="white"/>
-              </svg>
-            </button>
-            <div class="progress-bar">
-              <div class="progress-track"></div>
-              <div class="progress-indicator"></div>
-            </div>
-            <button class="volume-btn" aria-label="Volume control">
-              <svg width="42" height="42" viewBox="0 0 42 42" fill="none">
-                <path d="M21 0C9.402 0 0 9.402 0 21C0 32.598 9.402 42 21 42C32.598 42 42 32.598 42 21C42 9.402 32.598 0 21 0Z" fill="black"/>
-              </svg>
-            </button>
-          </div>
-        </div>
+<!-- Lista de Podcasts -->
+<section class="more-podcasts-section">
+  <h2 class="section-title">MAS PODCAST</h2>
+  <div class="more-podcasts-grid">
+    <div class="podcast-item" *ngFor="let podcast of podcasts(); trackBy: trackById" (click)="openPodcastModal(podcast)">
+      <div class="podcast-thumbnail">
+        <img [src]="podcast.coverImage" [alt]="podcast.title" class="thumbnail-image">
       </div>
+      <h3 class="podcast-item-title">{{ podcast.title }}</h3>
     </div>
-  </section>
+  </div>
+</section>
 
-
-
-
-
-
-
-  <section class="more-podcasts-section">
-    <h2 class="section-title">MAS PODCAST</h2>
-    <div class="more-podcasts-grid">
-      <div class="podcast-item">
-        <div class="podcast-thumbnail">
-          <img src="https://api.builder.io/api/v1/image/assets/TEMP/614b4e4d89705b4a7bd5d74def4c7c6bf8f7d2fe?width=424" alt="Salud Vital" class="thumbnail-image">
-        </div>
-        <h3 class="podcast-item-title">SALUD VITAL</h3>
-      </div>
-      <div class="podcast-item">
-        <div class="podcast-thumbnail">
-          <img src="https://api.builder.io/api/v1/image/assets/TEMP/5336adda5a7de99796bc4c1023ad2717c3a3e0c2?width=425" alt="New England Deportes" class="thumbnail-image">
-        </div>
-        <h3 class="podcast-item-title">NEW ENGLAND<br>DEPORTES</h3>
-      </div>
-      <div class="podcast-item">
-        <div class="podcast-thumbnail">
-          <img src="https://api.builder.io/api/v1/image/assets/TEMP/b58b77f797ece7b5e09710516627c817dec01c33?width=425" alt="New England Deportes" class="thumbnail-image">
-        </div>
-        <h3 class="podcast-item-title">NEW ENGLAND<br>DEPORTES</h3>
-      </div>
+<!-- Modal (con *ngIf y CSS para overlay) -->
+<div *ngIf="showModal()" class="modal-overlay">
+  <div class="modal-content">
+    <!-- Izquierda: Player (video/audio) -->
+    <div class="modal-left">
+      <h3>{{ selectedEpisode()?.title || 'Selecciona un episodio' }}</h3>
+      <mux-player 
+        *ngIf="selectedEpisode()"
+        [playback-id]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
+        stream-type="on-demand"
+        autoplay
+        controls
+        style="width: 100%; height: 400px;">
+      </mux-player>
     </div>
-  </section>
 
--->
+    <!-- Derecha: Lista de episodios -->
+    <div class="modal-right">
+      <h3>Episodios de {{ selectedPodcast()?.title }}</h3>
+      <ul>
+        <li *ngFor="let episode of selectedPodcast()?.episodes" (click)="playEpisode(episode)" [class.selected]="episode._id === selectedEpisode()?._id">
+          {{ episode.title }}
+        </li>
+      </ul>
+    </div>
+
+    <!-- Botón cerrar -->
+    <button (click)="closeModal()">Cerrar</button>
+  </div>
+</div>

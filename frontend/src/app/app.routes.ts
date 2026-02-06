@@ -19,7 +19,7 @@ import {EditarNoticias} from './componentes/admin/panel-noticias/editar-noticias
 import {NoticiasDespliegue} from './pages/noticias-despliegue/noticias-despliegue'
 import {NoticiasRecomendadas} from './componentes/despliegues/noticias-recomendadas/noticias-recomendadas'
 import {DescargaLaApp} from './pages/descarga-la-app/descarga-la-app'
-import {Podcast} from './componentes/despliegues/podcast/podcast'
+import {PodcastComponent} from './componentes/despliegues/podcast/podcast'
 import {Nosotros} from './pages/nosotros/nosotros'
 import {NoticiasTodas} from './componentes/despliegues/noticias-todas/noticias-todas'
 import { LoginForm } from './componentes/admin/login-form/login-form'; 
@@ -63,7 +63,7 @@ export const routes: Routes = [
 
     { path: 'eventos-show', component: Eventos },
     { path: 'recomendadas-show', component: NoticiasRecomendadas },
-  { path: 'podcast-show', component: Podcast },
+  { path: 'podcast-show', component: PodcastComponent },
   {path: 'descarga-la-app', component:DescargaLaApp},
   {path: 'nosotros-pagina', component:Nosotros},
   {path: 'noticias-todas', component:NoticiasTodas},

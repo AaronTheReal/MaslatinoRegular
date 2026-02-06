@@ -36,8 +36,10 @@
     "@ckeditor/ckeditor5-image": "^47.1.0",
     "@ckeditor/ckeditor5-media-embed": "^47.2.0",
     "@ckeditor/ckeditor5-upload": "^47.1.0",
+    "@mux/mux-player-react": "^3.10.2",
     "@ng-select/ng-select": "^20.3.1",
     "apicache": "^1.6.3",
+    "axios": "^1.13.4",
     "express": "^5.1.0",
     "fuse.js": "^7.1.0",
     "marked": "^16.4.0",
@@ -45,7 +47,8 @@
     "sitemap": "^9.0.0",
     "swiper": "^12.0.2",
     "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "zone.js": "~0.15.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@angular/build": "^20.1.2",
