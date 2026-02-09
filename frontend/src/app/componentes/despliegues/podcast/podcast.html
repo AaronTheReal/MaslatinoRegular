@@ -83,19 +83,32 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
 <!-- Modal (con *ngIf y CSS para overlay) -->
 <div *ngIf="showModal()" class="modal-overlay">
   <div class="modal-content">
-    <!-- Izquierda: Player (video/audio) -->
+    <!-- Izquierda: Player (video/audio) 
+             [playback-id]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
+        playback-id="VV6smPRZeyMxllUiv3KfQb9ZQRVnQ6GP7ET7rnzkfPo"
+
+    
+    -->
     <div class="modal-left">
       <h3>{{ selectedEpisode()?.title || 'Selecciona un episodio' }}</h3>
-      <mux-player 
+
+      <mux-player
+        #muxPlayer
         *ngIf="selectedEpisode()"
-        [playback-id]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
+        [playbackId]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
         stream-type="on-demand"
-        autoplay
         controls
         style="width: 100%; height: 400px;">
       </mux-player>
-    </div>
 
+
+    </div>
+<!--selectedEpisode()?.mux?.playbackIds?.[0]?.id
+      [playback-id]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
+      playback-id="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
+
+
+-->
     <!-- Derecha: Lista de episodios -->
     <div class="modal-right">
       <h3>Episodios de {{ selectedPodcast()?.title }}</h3>
@@ -110,3 +123,20 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
     <button (click)="closeModal()">Cerrar</button>
   </div>
 </div>
+
+
+
+
+<!--
+
+      <mux-player 
+        #muxPlayer
+        *ngIf="selectedEpisode()"
+        playback-id="VV6smPRZeyMxllUiv3KfQb9ZQRVnQ6GP7ET7rnzkfPo" 
+        stream-type="on-demand"
+        autoplay
+        controls
+        muted  
+        style="width: 100%; height: 400px;">
+      </mux-player>
+-->
