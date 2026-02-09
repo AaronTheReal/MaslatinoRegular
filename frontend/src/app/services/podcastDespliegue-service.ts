@@ -37,7 +37,8 @@ export interface Podcast {
 
 @Injectable({ providedIn: 'root' })
 export class PodcastService {
-  private baseUrl = 'https://maslatino-q7fe.onrender.com/aaron/maslatino'; // Ajusta según tu backend
+  //private baseUrl = 'https://maslatino-q7fe.onrender.com/aaron/maslatino'; // Ajusta según tu backend
+  private baseUrl = 'http://localhost:3000/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 
@@ -64,7 +65,9 @@ export class PodcastService {
       catchError(() => of({ _id: '', title: '', episodes: [] } as Podcast))
     );
   }
-
+  getSignedToken(playbackId: string): Observable<{ token: string }> {
+    return this.http.post<{ token: string }>(`${this.baseUrl}/mux/playback/:playbackId/token'`, { playbackId });
+  }
   // Obtener todos los podcasts
   getPodcasts(): Observable<Podcast[]> {
       return this.http.get<unknown>(`${this.baseUrl}/podcasts`).pipe(
