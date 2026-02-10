@@ -30,19 +30,20 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
     </div>
   </div>
 </section>
-
 <!-- Player Section -->
-<section class="player-section overlap-on-hero">
+<section class="player-section overlap-on-hero" *ngIf="featuredPodcast()">
   <div class="player-card">
     <div class="player-content">
+
       <div class="album-art">
-        <img src="https://maslatino-contenido.s3.us-east-2.amazonaws.com/wp-content/uploads/New-England-Deportes-2048x2048.png"
-             alt="Episode cover"
+        <img [src]="featuredPodcast()?.coverImage || 'https://via.placeholder.com/2048x2048'"
+             alt="Podcast cover"
              class="album-image">
+
       </div>
       <div class="player-info">
-        <h2 class="episode-title">New England<br>Deportes</h2>
-        <p class="episode-number">Episodio 1</p>
+        <h2 class="episode-title2">{{ featuredPodcast()?.title }}</h2>
+        <p class="episode-number">Episodio más reciente</p>
         <div class="player-controls">
           <button class="play-btn"
                   aria-label="Play episode"
@@ -79,28 +80,6 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
     </div>
   </div>
 </section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <!-- Modal Mejorado - Dark Premium -->
 <div *ngIf="showModal()" class="modal-overlay">

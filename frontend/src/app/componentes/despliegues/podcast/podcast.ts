@@ -1,4 +1,3 @@
-// src/app/componentes/despliegues/podcast/podcast.ts
 import { Component, computed, effect, signal, CUSTOM_ELEMENTS_SCHEMA, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -110,6 +109,9 @@ export class PodcastComponent {
   // Add to class properties
   playbackToken = signal<string | null>(null);
 
+  // Podcast destacado (el primero de la lista ordenada)
+  featuredPodcast = computed(() => this.sorted()[0] || null);
+
   constructor(private api: PodcastService, private playerService: PlayerService) {
     this.fetchAll();
 
@@ -189,10 +191,11 @@ export class PodcastComponent {
   podcasts = computed(() => {
     const size = this.pageSize;
     const page = this.page();
-    return this.sorted().slice(0, page * size);
+    // Muestra el resto de la lista (excluyendo el primero, que es el destacado)
+    return this.sorted().slice(1, 1 + page * size);
   });
 
-  hasMore = computed(() => this.sorted().length > this.podcasts().length);
+  hasMore = computed(() => this.sorted().length > this.podcasts().length + 1);
 
   // ====== Acciones UI ======
   onSearchInput(value: string) {
@@ -227,7 +230,7 @@ export class PodcastComponent {
   openPodcastModal(podcast: Podcast) {
     this.selectedPodcast.set(podcast);
     this.showModal.set(true);
-    // Opcional: Reproducir el primer episodio por default
+    // Opcional: Reproducir el primer episodio por default (asumiendo episodes[0] es el más reciente)
     if (podcast.episodes.length > 0) {
       this.playEpisode(podcast.episodes[0]);
     }
@@ -333,8 +336,9 @@ export class PodcastComponent {
 
   onPlay() {
     console.log('▶️ [Podcast detalle] click en PLAY');
-    // Implementa la lógica deseada aquí, por ejemplo, abrir un reproductor o redirigir
-    // Si no necesitas nada específico, puedes dejarlo como log o remover el (click) del template
+    if (this.featuredPodcast()) {
+      this.openPodcastModal(this.featuredPodcast()!);
+    }
   }
 
   // Utils presentación
