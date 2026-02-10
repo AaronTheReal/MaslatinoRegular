@@ -723,6 +723,7 @@
 
 .podcast-name { color: #d3d3d3; font-size: 0.95rem; margin: 0; }
 .episode-title { color: white; margin: 4px 0 0; font-size: 1.45rem; font-weight: 600; }
+.episode-title2 { color: rgb(0, 0, 0); margin: 4px 0 0; font-size: 1.45rem; font-weight: 600; }
 
 .close-btn {
   background: #1f1f1f;
