@@ -17,6 +17,8 @@ export class RadioPlayerComponent {
   isMuted = false;
   private lastVolume = 1;
 
+  isHidden = false; // Nuevo para esconder
+
   constructor(private player: RadioPlayerService) {
     this.isPlaying$ = this.player.isPlaying$;
     this.volume$ = this.player.volume$;
@@ -25,7 +27,6 @@ export class RadioPlayerComponent {
   togglePlay() {
     this.player.toggle();
   }
-
 
   toggleMute() {
     if (this.isMuted) {
@@ -63,24 +64,32 @@ export class RadioPlayerComponent {
       console.error('Error al compartir:', err);
     }
   }
+
   onVolumeChange(event: Event) {
-  const input = event.target as HTMLInputElement;
-  const value = Number(input.value);
-  this.player.setVolume(value);
-  this.lastVolume = value;
-  this.isMuted = value === 0;
+    const input = event.target as HTMLInputElement;
+    const value = Number(input.value);
+    this.player.setVolume(value);
+    this.lastVolume = value;
+    this.isMuted = value === 0;
 
-  this.updateSliderVisual(input, value);
-}
+    this.updateSliderVisual(input, value);
+  }
 
-// NUEVO:
-private updateSliderVisual(input: HTMLInputElement, value: number) {
-  const min = Number(input.min || 0);
-  const max = Number(input.max || 1);
-  const percent = ((value - min) / (max - min)) * 100;
+  // NUEVO:
+  private updateSliderVisual(input: HTMLInputElement, value: number) {
+    const min = Number(input.min || 0);
+    const max = Number(input.max || 1);
+    const percent = ((value - min) / (max - min)) * 100;
 
-  // guardamos el porcentaje en una CSS variable
-  input.style.setProperty('--volume-percent', `${percent}%`);
-}
+    // guardamos el porcentaje en una CSS variable
+    input.style.setProperty('--volume-percent', `${percent}%`);
+  }
 
+  // Nueva función para esconder/restaurar
+  toggleHide() {
+    this.isHidden = !this.isHidden;
+    if (this.isHidden) {
+      this.player.pause(); // Pausa al esconder (opcional, pero útil)
+    }
+  }
 }

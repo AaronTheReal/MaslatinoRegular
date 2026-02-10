@@ -18,6 +18,9 @@ export interface Episode {
   };
   releaseDate?: Date | string;
   createdAt?: Date | string;
+  progress?: number;    
+  publishedAt?: string | Date; // ← Agrega esto (fecha de publicación)
+  thumbnail?: string;          // ← Agrega esto (URL de miniatura)      
 }
 
 export interface Podcast {
@@ -37,8 +40,8 @@ export interface Podcast {
 
 @Injectable({ providedIn: 'root' })
 export class PodcastService {
-  //private baseUrl = 'https://maslatino-q7fe.onrender.com/aaron/maslatino'; // Ajusta según tu backend
-  private baseUrl = 'http://localhost:3000/aaron/maslatino';
+  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino'; // Ajusta según tu backend
+  //private baseUrl = 'http://localhost:3000/aaron/maslatino';
 
   constructor(private http: HttpClient) {}
 

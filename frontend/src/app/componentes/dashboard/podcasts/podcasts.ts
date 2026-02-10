@@ -121,7 +121,7 @@ export class Podcasts implements OnInit {
   }
 isComingSoon(idx: number): boolean {
   // 0 sí, 1 sí, 2 no, 3 sí, 4 sí
-  return idx !== 2;
+  return idx !== 1 && idx !== 2;
 }
 
   private ensureIndexInBounds(): void {
