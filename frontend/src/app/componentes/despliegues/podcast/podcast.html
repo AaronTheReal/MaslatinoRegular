@@ -80,63 +80,104 @@ Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
   </div>
 </section>
 
-<!-- Modal (con *ngIf y CSS para overlay) -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Modal Mejorado - Dark Premium -->
 <div *ngIf="showModal()" class="modal-overlay">
+
   <div class="modal-content">
-    <!-- Izquierda: Player (video/audio) 
-             [playback-id]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
-        playback-id="VV6smPRZeyMxllUiv3KfQb9ZQRVnQ6GP7ET7rnzkfPo"
 
-    
-    -->
-    <div class="modal-left">
-      <h3>{{ selectedEpisode()?.title || 'Selecciona un episodio' }}</h3>
-
-      <mux-player
-        #muxPlayer
-        *ngIf="selectedEpisode()"
-        [playbackId]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
-        stream-type="on-demand"
-        controls
-        style="width: 100%; height: 400px;">
-      </mux-player>
-
-
-    </div>
-<!--selectedEpisode()?.mux?.playbackIds?.[0]?.id
-      [playback-id]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
-      playback-id="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
-
-
--->
-    <!-- Derecha: Lista de episodios -->
-    <div class="modal-right">
-      <h3>Episodios de {{ selectedPodcast()?.title }}</h3>
-      <ul>
-        <li *ngFor="let episode of selectedPodcast()?.episodes" (click)="playEpisode(episode)" [class.selected]="episode._id === selectedEpisode()?._id">
-          {{ episode.title }}
-        </li>
-      </ul>
+    <!-- Header Superior -->
+    <div class="modal-header">
+      <div>
+        <p class="podcast-name">{{ selectedPodcast()?.title }}</p>
+        <h2 class="episode-title">{{ selectedEpisode()?.title }}</h2>
+      </div>
+      <button class="close-btn" (click)="closeModal()">
+        ✕
+      </button>
     </div>
 
-    <!-- Botón cerrar -->
-    <button (click)="closeModal()">Cerrar</button>
+    <div class="modal-body">
+
+      <!-- Left: Player + Info -->
+      <div class="modal-left">
+
+        <mux-player
+          #muxPlayer
+          *ngIf="selectedEpisode()"
+          [playbackId]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
+          stream-type="on-demand"
+          theme="minimal"
+          primary-color="#a855f7"
+          secondary-color="#1f1f1f"
+          title="{{ selectedEpisode()?.title }}"
+          [start-time]="resumeTime || 0"
+          muted="false"
+          controls
+          style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;">
+        </mux-player>
+
+        <!-- Episode Info #ffffff-->
+        <div class="episode-info">
+          <div class="episode-meta">
+            <span>{{ selectedEpisode()?.duration | date:'mm:ss' }}</span>
+            <span>{{ selectedEpisode()?.publishedAt | date:'mediumDate' }}</span>
+          </div>
+          <br>
+          <p class="episode-description">
+            {{ selectedEpisode()?.description || 'Sin descripción disponible.' }}
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Right: Lista de Episodios -->
+      <div class="modal-right">
+        <h3 class="sidebar-title">Episodios ({{ selectedPodcast()?.episodes?.length }})</h3>
+
+        <div class="episodes-list">
+          <div *ngFor="let episode of selectedPodcast()?.episodes"
+               class="episode-card"
+               (click)="playEpisode(episode)"
+               [class.active]="episode._id === selectedEpisode()?._id">
+
+            <div class="thumbnail">
+              <img [src]="episode.image || 'https://via.placeholder.com/120x68'" alt="thumbnail">
+              <div class="play-overlay">▶</div>
+            </div>
+
+            <div class="card-content">
+              <h4>{{ episode.title }}</h4>
+              <div class="card-meta">
+                <span>{{ episode.duration | date:'mm:ss' }}</span>
+                <span *ngIf="episode.progress" class="progress">{{ episode.progress }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
-
-
-
-
-<!--
-
-      <mux-player 
-        #muxPlayer
-        *ngIf="selectedEpisode()"
-        playback-id="VV6smPRZeyMxllUiv3KfQb9ZQRVnQ6GP7ET7rnzkfPo" 
-        stream-type="on-demand"
-        autoplay
-        controls
-        muted  
-        style="width: 100%; height: 400px;">
-      </mux-player>
--->

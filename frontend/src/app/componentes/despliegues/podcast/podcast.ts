@@ -22,6 +22,19 @@ interface CategoryChip {
 type SortKey = 'newest'|'az'|'episodes';
 type LayoutKey = 'frame'|'list';
 
+// Asumiendo que actualizas la interfaz Episode en podcastDespliegue-service.ts para incluir los campos faltantes:
+// export interface Episode {
+//   _id: string;
+//   title: string;
+//   description?: string;
+//   duration?: number; // en segundos
+//   mux?: { playbackIds: { id: string; policy: string }[] };
+//   publishedAt?: string; // ← Agrega esto (fecha de publicación)
+//   thumbnail?: string;   // ← Agrega esto (URL de miniatura)
+//   progress?: number;    // ← Agrega esto (progreso del usuario en %, 0-100)
+//   // Otros campos existentes...
+// }
+
 @Component({
   selector: 'app-podcast',
   standalone: true,
@@ -31,7 +44,7 @@ type LayoutKey = 'frame'|'list';
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class PodcastComponent {
-@ViewChild('muxPlayer', { static: false }) muxPlayerRef!: ElementRef<any>;
+  @ViewChild('muxPlayer', { static: false }) muxPlayerRef!: ElementRef<any>;
 
   // ====== Estado UI / Filtros ======
   search = signal<string>('');
@@ -57,6 +70,9 @@ export class PodcastComponent {
   showModal = signal<boolean>(false);
   selectedPodcast = signal<Podcast | null>(null);
   selectedEpisode = signal<Episode | null>(null); // Episodio seleccionado para reproducir
+
+  // Agregado para corregir el error: resumeTime no existe
+  resumeTime = signal<number>(0);
 
   // Diccionario de idiomas
   readonly langLabels: Record<string, string> = {
@@ -226,72 +242,94 @@ export class PodcastComponent {
   }
 
   playEpisode(episode: Episode) {
-  this.selectedEpisode.set(episode);
+    this.selectedEpisode.set(episode);
 
-  const playbackIds = episode.mux?.playbackIds || [];
-  const publicPlayback = playbackIds.find(p => p.policy === 'public');
-  const playback = publicPlayback || playbackIds[0];
+    // Calcular resumeTime basado en progress (si existe)
+    if (episode.progress && episode.duration) {
+      this.resumeTime.set((episode.progress / 100) * episode.duration);
+    } else {
+      this.resumeTime.set(0);
+    }
 
-  const playbackId = playback?.id;
-  const policy = playback?.policy;
+    const playbackIds = episode.mux?.playbackIds || [];
+    const publicPlayback = playbackIds.find(p => p.policy === 'public');
+    const playback = publicPlayback || playbackIds[0];
 
-  console.log('🎧 Episode mux:', episode.mux);
-  console.log('🆔 playbackId:', playbackId, 'policy:', policy);
+    const playbackId = playback?.id;
+    const policy = playback?.policy;
 
-  if (!playbackId) {
-    console.error('❌ No playbackId');
-    return;
-  }
+    console.log('🎧 Episode mux:', episode.mux);
+    console.log('🆔 playbackId:', playbackId, 'policy:', policy);
 
-  const applyToPlayer = (token: string | null) => {
-    const el = this.muxPlayerRef?.nativeElement;
-    if (!el) return;
+    if (!playbackId) {
+      console.error('❌ No playbackId');
+      return;
+    }
 
-    // 🔥 Reset duro (evita pantalla negra)
-    el.pause?.();
-    el.playbackId = null;
-    el.playbackToken = null;
-
-    setTimeout(() => {
-      el.playbackId = playbackId;
-      el.playbackToken = token;
-      el.streamType = 'on-demand';
-
-      if (typeof el.load === 'function') {
-        el.load();
-      }
-
-      el.play?.().catch((e: any) => {
-        console.warn('Autoplay bloqueado:', e);
-      });
-    }, 60);
-  };
-
-if (policy === 'signed') {
-  this.api.getSignedToken(playbackId).subscribe({
-    next: (res) => {
+    const applyToPlayer = (token: string | null) => {
       const el = this.muxPlayerRef?.nativeElement;
       if (!el) return;
 
+      // 🔥 Reset duro (evita pantalla negra)
+      el.pause?.();
+      el.playbackId = null;
+      el.playbackToken = null;
+
+      setTimeout(() => {
+        el.playbackId = playbackId;
+        el.playbackToken = token;
+        el.streamType = 'on-demand';
+
+        if (typeof el.load === 'function') {
+          el.load();
+        }
+
+        el.play?.().catch((e: any) => {
+          console.warn('Autoplay bloqueado:', e);
+        });
+      }, 60);
+    };
+
+    if (policy === 'signed') {
+      this.api.getSignedToken(playbackId).subscribe({
+        next: (res) => {
+          const el = this.muxPlayerRef?.nativeElement;
+          if (!el) return;
+
+          el.playbackId = playbackId;
+          el.playbackToken = res.token; // SOLO aquí
+          el.load();
+          el.play?.();
+        }
+      });
+    } else {
+      // PUBLIC
+      const el = this.muxPlayerRef?.nativeElement;
+      if (!el) return;
+
+      // 🔴 MUY IMPORTANTE
+      delete el.playbackToken; // o no tocarlo nunca
+
       el.playbackId = playbackId;
-      el.playbackToken = res.token; // SOLO aquí
       el.load();
-      el.play?.();
     }
-  });
-} else {
-  // PUBLIC
-  const el = this.muxPlayerRef?.nativeElement;
-  if (!el) return;
 
-  // 🔴 MUY IMPORTANTE
-  delete el.playbackToken; // o no tocarlo nunca
-
-  el.playbackId = playbackId;
-  el.load();
-}
-
-}
+    // Agregar listener para actualizar progress (opcional, para funcionalidad extra)
+    const el = this.muxPlayerRef?.nativeElement;
+    if (el) {
+      const updateProgress = () => {
+        const current = el.currentTime;
+        const dur = el.duration;
+        if (dur > 0) {
+          episode.progress = Math.round((current / dur) * 100);
+          // Aquí puedes guardar en backend o localStorage
+          console.log('Progreso actualizado:', episode.progress);
+        }
+      };
+      el.addEventListener('timeupdate', updateProgress);
+      // Limpieza al cambiar episodio o cerrar (en closeModal o ngOnDestroy)
+    }
+  }
 
   onPlay() {
     console.log('▶️ [Podcast detalle] click en PLAY');
