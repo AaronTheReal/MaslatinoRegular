@@ -57,17 +57,17 @@ export const routes: Routes = [
   { path: 'categorias-panel', component: PanelCategorias, canActivate: [adminAuthGuard] },
   { path: 'admin-noticias', component: AdminNoticias, canActivate: [adminAuthGuard] },
   { path: 'admin/noticiaseditar/:id', component: EditarNoticias, canActivate: [adminAuthGuard] },
-
   { path: 'archivo/:anio/:mes', component: NoticiasDespliegue },
   { path: 'categoria/:slug', component: NoticiasDespliegue },
-
     { path: 'eventos-show', component: Eventos },
     { path: 'recomendadas-show', component: NoticiasRecomendadas },
+
   { path: 'podcast-show', component: PodcastComponent },
+    { path: 'podcast-show/:id',  component: PodcastComponent },
+
   {path: 'descarga-la-app', component:DescargaLaApp},
   {path: 'nosotros-pagina', component:Nosotros},
   {path: 'noticias-todas', component:NoticiasTodas},
-
   {path: 'prueba-component', component:PruebaComponent},
   {path: 'contactanos', component:Contactanos},
 
