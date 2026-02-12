@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { PodcastPCService, PodcastDesktopPayload } from './../../../services/podcast-servicePC';
+import { RouterModule, Router } from '@angular/router';
+import { PodcastService, Podcast } from './../../../services/podcastDespliegue-service';
 import { MegaphonePlayerService } from './../../../shared/megaphone-player/megaphone.service';
 
 @Component({
@@ -15,18 +15,19 @@ export class Podcasts implements OnInit {
   private readonly maxVisible = 5;
   private readonly megaphoneEmbedUrl = 'https://playlist.megaphone.fm?p=MTSTA4599725524'; // Verifica este URL
 
-  podcasts: PodcastDesktopPayload[] = [];
+  podcasts: Podcast[] = [];
   errorMessage: string | null = null;
   loading = true;
   currentIndex = 0; // Índice para el carrusel
 
   constructor(
-    private podcastServicePC: PodcastPCService,
-    private megaphonePlayerService: MegaphonePlayerService
+    private podcastService: PodcastService,
+    private megaphonePlayerService: MegaphonePlayerService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.podcastServicePC.obtenerPodcastsHome().subscribe({
+    this.podcastService.getPodcasts().subscribe({
       next: (data) => {
         this.podcasts = data ?? [];
         this.loading = false;
@@ -41,7 +42,7 @@ export class Podcasts implements OnInit {
     });
   }
 
-  podcastsLimited(): PodcastDesktopPayload[] {
+  podcastsLimited(): Podcast[] {
     return this.podcasts.slice(0, this.maxVisible);
   }
 
@@ -72,25 +73,38 @@ export class Podcasts implements OnInit {
     return `Podcast ${index + 1} de ${this.totalSlides}: ${title}`;
   }
 
-  trackById = (_: number, p: PodcastDesktopPayload) =>
-    (p as any)._id ?? (p as any).id ?? (p as any).slug ?? _;
+  trackById = (_: number, p: Podcast) =>
+    p._id ?? _;
 
-  getCover(p: PodcastDesktopPayload): string {
-    return (p as any).coverImage || (p as any).image || (p as any).bannerImage || 'assets/placeholders/podcast-cover.png';
+  getCover(p: Podcast): string {
+    return p.coverImage || 'assets/placeholders/podcast-cover.png';
   }
 
-  getTitle(p: PodcastDesktopPayload): string {
-    return (p as any).title || (p as any).name || 'Podcast';
+  getTitle(p: Podcast): string {
+    return p.title || 'Podcast';
   }
 
-  onPlay(p: PodcastDesktopPayload) {
-    console.log('▶️ Play:', this.getTitle(p), p);
-    try {
-      this.megaphonePlayerService.open(this.megaphoneEmbedUrl);
-      console.log('Player abierto con éxito');
-    } catch (error) {
-      console.error('Error al abrir player:', error);
+  onPlay(p: Podcast, evt?: Event) {
+    if (evt) evt.stopPropagation(); // Mantén esto para evitar propagación
+    const id = p._id;
+    if (!id) return;
+    this.router.navigate(['/podcast-show', id]);
+  }
+
+  /**
+   * Navegar a la página del show/podcast. Evita navegar si el click fue sobre el botón de play.
+   */
+  onOpenShow(evt: Event, p: Podcast) {
+    const target = evt.target as HTMLElement | null;
+    // Si el elemento clicado está dentro del botón .play-button, no navegues
+    if (target && target.closest && target.closest('.play-button')) {
+      return;
     }
+
+    const id = p._id;
+    if (!id) return;
+
+    this.router.navigate(['/podcast-show', id]);
   }
 
   getSizeClass(idx: number): string {
@@ -119,10 +133,10 @@ export class Podcasts implements OnInit {
     if (size === 'podcast-card-large') return 'M21 17L39 27.5L21 38V17Z';
     return 'M17 13L31 22.5L17 32V13Z';
   }
-isComingSoon(idx: number): boolean {
-  // 0 sí, 1 sí, 2 no, 3 sí, 4 sí
-  return idx !== 1 && idx !== 2;
-}
+  isComingSoon(idx: number): boolean {
+    // 0 sí, 1 sí, 2 no, 3 sí, 4 sí
+    return idx !== 1 && idx !== 2 && idx !== 4;
+  }
 
   private ensureIndexInBounds(): void {
     if (this.totalSlides === 0) {

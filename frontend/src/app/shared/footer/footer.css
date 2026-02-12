@@ -5,14 +5,14 @@
   font-family: Arial, sans-serif;
 }
 
-/* GRID: 
-   Fila 1: redes sociales centradas
-   Fila 2: logo (izq) | nav (der/centro) */
+/* =======================
+   GRID BASE (MOBILE FIRST)
+======================= */
 .footer-container {
   max-width: 1280px;
   margin: 0 auto;
   display: grid;
-  gap: 1.5rem;
+  gap: 2rem;
   justify-items: center;
   text-align: center;
 
@@ -23,44 +23,27 @@
     "nav";
 }
 
-@media (min-width: 768px) {
-  .footer-container {
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-    grid-template-areas:
-      "social social"
-      "logo   nav";
-    align-items: center;
-    text-align: left;
-  }
-}
-
-/* LOGO */
+/* =======================
+   LOGO
+======================= */
 .footer-logo {
   grid-area: logo;
 }
 
 .footer-logo img {
-  width: 8rem;
+  width: 7.5rem;
 }
 
-@media (min-width: 768px) {
-  .footer-logo img {
-    width: 9rem;
-  }
-
-  .footer-logo {
-    justify-self: flex-start;
-  }
-}
-
-/* NAV */
+/* =======================
+   NAV – MOBILE
+======================= */
 .footer-nav {
   grid-area: nav;
-  display: flex;
-  gap: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.5rem;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .footer-nav a {
@@ -72,46 +55,86 @@
   text-decoration: underline;
 }
 
-/* 🔁 AQUÍ EL CAMBIO IMPORTANTE */
-@media (min-width: 768px) {
-  .footer-nav {
-    justify-self: center; /* antes: flex-end → ahora se mueve hacia el centro */
-    transform: translateX(-140px); /* 👈 mueve todo el bloque 40px a la izquierda */
-
-  }
-}
-
-/* REDES SOCIALES */
+/* =======================
+   REDES SOCIALES – MOBILE
+======================= */
 .footer-social {
   grid-area: social;
   display: flex;
-  gap: 1.5rem;
+  gap: 1.8rem;
   justify-content: center;
 }
 
 .footer-social a svg {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 1.7rem;
+  height: 1.7rem;
   fill: white;
-  transition: fill 0.3s;
+  transition: fill 0.3s, transform 0.2s;
 }
 
+.footer-social a:hover svg {
+  transform: scale(1.15);
+}
+
+/* Colores hover */
 .footer-social a:hover[aria-label="Instagram"] svg {
   fill: #E1306C;
 }
-
 .footer-social a:hover[aria-label="TikTok"] svg {
   fill: #25F4EE;
 }
-
 .footer-social a:hover[aria-label="Facebook"] svg {
   fill: #1877F2;
 }
-
 .footer-social a:hover[aria-label="YouTube"] svg {
   fill: #FF0000;
 }
-
 .footer-social a:hover[aria-label="Twitter"] svg {
   fill: #1DA1F2;
+}
+
+/* =======================
+   TABLET / DESKTOP
+======================= */
+@media (min-width: 768px) {
+  .footer-container {
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "social social"
+      "logo   nav";
+    align-items: center;
+    text-align: left;
+  }
+
+  .footer-logo img {
+    width: 9rem;
+  }
+
+  .footer-logo {
+    justify-self: flex-start;
+  }
+
+  .footer-nav {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    justify-self: center;
+    transform: translateX(-140px);
+  }
+
+  .footer-social a svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+}
+
+/* =======================
+   EXTRA SMALL (teléfonos muy chicos)
+======================= */
+@media (max-width: 360px) {
+  .footer-nav {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
 }

@@ -1,4 +1,3 @@
-// src/app/services/podcastDespliegue-service.ts
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
@@ -69,7 +68,7 @@ export class PodcastService {
     );
   }
   getSignedToken(playbackId: string): Observable<{ token: string }> {
-    return this.http.post<{ token: string }>(`${this.baseUrl}/mux/playback/:playbackId/token'`, { playbackId });
+    return this.http.post<{ token: string }>(`${this.baseUrl}/mux/playback/${playbackId}/token`, { playbackId });
   }
   // Obtener todos los podcasts
   getPodcasts(): Observable<Podcast[]> {

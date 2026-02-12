@@ -1,7 +1,7 @@
-import { Component, computed, effect, signal, CUSTOM_ELEMENTS_SCHEMA, ViewChild, ElementRef } from '@angular/core';
+import { Component, computed, effect, signal, CUSTOM_ELEMENTS_SCHEMA, ViewChild, ElementRef, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { PodcastService, Podcast, Episode } from '../../../services/podcastDespliegue-service';
 import { PlayerService } from '../../../services/PodcastDesplieguePlayer-service';
@@ -21,19 +21,6 @@ interface CategoryChip {
 type SortKey = 'newest'|'az'|'episodes';
 type LayoutKey = 'frame'|'list';
 
-// Asumiendo que actualizas la interfaz Episode en podcastDespliegue-service.ts para incluir los campos faltantes:
-// export interface Episode {
-//   _id: string;
-//   title: string;
-//   description?: string;
-//   duration?: number; // en segundos
-//   mux?: { playbackIds: { id: string; policy: string }[] };
-//   publishedAt?: string; // ← Agrega esto (fecha de publicación)
-//   thumbnail?: string;   // ← Agrega esto (URL de miniatura)
-//   progress?: number;    // ← Agrega esto (progreso del usuario en %, 0-100)
-//   // Otros campos existentes...
-// }
-
 @Component({
   selector: 'app-podcast',
   standalone: true,
@@ -42,17 +29,17 @@ type LayoutKey = 'frame'|'list';
   styleUrls: ['./podcast.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class PodcastComponent {
+export class PodcastComponent implements OnInit {
   @ViewChild('muxPlayer', { static: false }) muxPlayerRef!: ElementRef<any>;
 
-  // ====== Estado UI / Filtros ======
+  // ====== Estado UI / Filtros (para vista de lista) ======
   search = signal<string>('');
   selectedLang = signal<Lang | ''>('');
   selectedCats = signal<string[]>([]);
   sort = signal<SortKey>('newest');
   layout = signal<LayoutKey>('frame');
 
-  // Paginación (cliente)
+  // Paginación (cliente, para vista de lista)
   page = signal<number>(1);
   pageSize = 12;
 
@@ -62,13 +49,17 @@ export class PodcastComponent {
   podcastsAll = signal<Podcast[]>([]);
   error = signal<string>('');
 
-  // Chips de categorías
+  // Chips de categorías (para vista de lista)
   categories = signal<CategoryChip[]>([]);
 
-  // Estado para modal
-  showModal = signal<boolean>(false);
+  // Estado para vista de detalle (modal-like)
+  isDetailView = signal<boolean>(false);
+  podcastId: string | null = null;
   selectedPodcast = signal<Podcast | null>(null);
   selectedEpisode = signal<Episode | null>(null); // Episodio seleccionado para reproducir
+
+  // Para animaciones del "modal"
+  modalVisible = signal<boolean>(false); // Controla fade-in/out
 
   // Agregado para corregir el error: resumeTime no existe
   resumeTime = signal<number>(0);
@@ -109,23 +100,56 @@ export class PodcastComponent {
   // Add to class properties
   playbackToken = signal<string | null>(null);
 
-  // Podcast destacado (el primero de la lista ordenada)
+  // Podcast destacado (el primero de la lista ordenada, para vista de lista)
   featuredPodcast = computed(() => this.sorted()[0] || null);
 
-  constructor(private api: PodcastService, private playerService: PlayerService) {
-    this.fetchAll();
-
-    // Reset de página al cambiar filtros
+  constructor(
+    private api: PodcastService,
+    private playerService: PlayerService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {
+    // Reset de página al cambiar filtros (solo para lista)
     effect(() => {
-      this.search();
-      this.selectedLang();
-      this.selectedCats();
-      this.sort();
-      this.page.set(1);
+      if (!this.isDetailView()) {
+        this.search();
+        this.selectedLang();
+        this.selectedCats();
+        this.sort();
+        this.page.set(1);
+      }
     });
   }
 
-  /** Carga todos los podcasts desde tu API (una vez). */
+  ngOnInit(): void {
+    this.podcastId = this.route.snapshot.paramMap.get('id');
+    this.isDetailView.set(!!this.podcastId);
+
+    if (this.isDetailView() && this.podcastId) {
+      this.fetchPodcastById(this.podcastId);
+      // Activa la animación de entrada
+      setTimeout(() => this.modalVisible.set(true), 100); // Pequeño delay para animación
+    } else {
+      this.fetchAll();
+    }
+  }
+
+  // Listener para tecla Escape (cierra el "modal")
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (this.isDetailView() && event.key === 'Escape') {
+      this.closeModalLike();
+    }
+  }
+
+  // Cerrar al click en backdrop (overlay)
+  onBackdropClick(event: MouseEvent) {
+    if ((event.target as HTMLElement).classList.contains('modal-overlay')) {
+      this.closeModalLike();
+    }
+  }
+
+  /** Carga todos los podcasts desde tu API (una vez, para vista de lista). */
   private fetchAll() {
     this.loading.set(true);
     this.error.set('');
@@ -142,7 +166,27 @@ export class PodcastComponent {
     });
   }
 
-  /** Construye chips únicas de categorías. */
+  /** Carga un podcast específico por ID (para vista de detalle). */
+  private fetchPodcastById(id: string) {
+    this.loading.set(true);
+    this.error.set('');
+    this.api.getPodcastById(id).subscribe({
+      next: (podcast: Podcast) => {
+        this.selectedPodcast.set(podcast);
+        // Opcional: Reproducir el primer episodio por default (asumiendo episodes[0] es el más reciente)
+        if (podcast.episodes.length > 0) {
+          this.playEpisode(podcast.episodes[0]);
+        }
+      },
+      error: (e) => {
+        this.error.set(e?.message ?? 'Error al cargar el podcast.');
+        this.selectedPodcast.set(null);
+      },
+      complete: () => this.loading.set(false)
+    });
+  }
+
+  /** Construye chips únicas de categorías (para vista de lista). */
   private buildCategoryChips(all: Podcast[]): CategoryChip[] {
     const set = new Set<string>();
     for (const p of all) {
@@ -151,8 +195,9 @@ export class PodcastComponent {
     return Array.from(set).map(name => ({ _id: name, name, color: '#8e4ef6' }));
   }
 
-  // ====== Computeds para filtrar, ordenar y paginar ======
+  // ====== Computeds para filtrar, ordenar y paginar (solo para vista de lista) ======
   private filtered = computed(() => {
+    if (this.isDetailView()) return [];
     const q = this.search().toLowerCase().trim();
     const lang = this.selectedLang();
     const cats = new Set(this.selectedCats());
@@ -166,6 +211,7 @@ export class PodcastComponent {
   });
 
   private sorted = computed(() => {
+    if (this.isDetailView()) return [];
     const data = [...this.filtered()];
     const sort = this.sort();
 
@@ -189,6 +235,7 @@ export class PodcastComponent {
   });
 
   podcasts = computed(() => {
+    if (this.isDetailView()) return [];
     const size = this.pageSize;
     const page = this.page();
     // Muestra el resto de la lista (excluyendo el primero, que es el destacado)
@@ -197,7 +244,7 @@ export class PodcastComponent {
 
   hasMore = computed(() => this.sorted().length > this.podcasts().length + 1);
 
-  // ====== Acciones UI ======
+  // ====== Acciones UI (para vista de lista) ======
   onSearchInput(value: string) {
     this.search.set(value ?? '');
   }
@@ -226,22 +273,21 @@ export class PodcastComponent {
     this.page.update(p => p + 1);
   }
 
-  // Nueva funcionalidad: Abrir modal al click en podcast
-  openPodcastModal(podcast: Podcast) {
-    this.selectedPodcast.set(podcast);
-    this.showModal.set(true);
-    // Opcional: Reproducir el primer episodio por default (asumiendo episodes[0] es el más reciente)
-    if (podcast.episodes.length > 0) {
-      this.playEpisode(podcast.episodes[0]);
+  // Nueva funcionalidad: Navegar a detalle al click en podcast (en vista de lista)
+  navigateToPodcast(podcast: Podcast) {
+    const id = podcast._id;
+    if (id) {
+      this.router.navigate(['/podcast-show', id]);
     }
   }
 
-  // Cerrar modal
-  closeModal() {
-    this.showModal.set(false);
-    this.selectedPodcast.set(null);
-    this.selectedEpisode.set(null);
-    this.playerService.clear(); // Limpiar player al cerrar
+  // Cerrar detalle (simulando close de modal)
+  closeModalLike() {
+    // Animación de salida
+    this.modalVisible.set(false);
+    setTimeout(() => {
+      this.router.navigate(['/podcast-show']);
+    }, 300); // Espera a que termine la animación (duración del transition en CSS)
   }
 
   playEpisode(episode: Episode) {
@@ -296,25 +342,12 @@ export class PodcastComponent {
     if (policy === 'signed') {
       this.api.getSignedToken(playbackId).subscribe({
         next: (res) => {
-          const el = this.muxPlayerRef?.nativeElement;
-          if (!el) return;
-
-          el.playbackId = playbackId;
-          el.playbackToken = res.token; // SOLO aquí
-          el.load();
-          el.play?.();
+          applyToPlayer(res.token);
         }
       });
     } else {
       // PUBLIC
-      const el = this.muxPlayerRef?.nativeElement;
-      if (!el) return;
-
-      // 🔴 MUY IMPORTANTE
-      delete el.playbackToken; // o no tocarlo nunca
-
-      el.playbackId = playbackId;
-      el.load();
+      applyToPlayer(null);
     }
 
     // Agregar listener para actualizar progress (opcional, para funcionalidad extra)
@@ -330,14 +363,14 @@ export class PodcastComponent {
         }
       };
       el.addEventListener('timeupdate', updateProgress);
-      // Limpieza al cambiar episodio o cerrar (en closeModal o ngOnDestroy)
+      // Limpieza al cambiar episodio o cerrar (en ngOnDestroy si es necesario)
     }
   }
 
   onPlay() {
     console.log('▶️ [Podcast detalle] click en PLAY');
-    if (this.featuredPodcast()) {
-      this.openPodcastModal(this.featuredPodcast()!);
+    if (this.featuredPodcast() && !this.isDetailView()) {
+      this.navigateToPodcast(this.featuredPodcast()!);
     }
   }
 
@@ -394,5 +427,4 @@ export class PodcastComponent {
       }
     }, 800);
   }
-  
 }
