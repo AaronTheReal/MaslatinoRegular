@@ -96,10 +96,13 @@
 
     <!-- Header Superior -->
     <div class="detail-header">
-      <button class="back-btn" (click)="closeModalLike()">← Volver a la lista</button>
-      <div>
+
         <p class="podcast-name">{{ selectedPodcast()?.title }}</p>
-        <h2 class="episode-title">{{ selectedEpisode()?.title }}</h2>
+
+            <h2 class="episode-title">{{ selectedEpisode()?.title }}</h2>
+
+      <div>
+          <button class="back-btn" (click)="closeModalLike()">X</button>
       </div>
     </div>
 
