@@ -1,12 +1,11 @@
 <!-- src/app/componentes/despliegues/podcast/podcast.html -->
 
-<div *ngIf="loading()" class="loading">Cargando...</div>
 <div *ngIf="error()" class="error">{{ error() }}</div>
 
 <!-- Vista de Lista: Hero + Featured + Grid -->
-<div *ngIf="!isDetailView() && !loading() && !error()">
+<div *ngIf="!isDetailView()">
 
-  <!-- Hero Section -->
+  <!-- Hero Section (estática, se muestra siempre) -->
   <section class="hero-section">
     <div class="hero-background">
       <img src="assets/podcastdespliegue/cecy.png" alt="Background" class="hero-bg-image">
@@ -37,8 +36,26 @@
     </div>
   </section>
 
-  <!-- Player Section (Featured) -->
-  <section class="player-section overlap-on-hero" *ngIf="featuredPodcast()">
+  <!-- Skeleton para Player Section (Featured) -->
+  <section class="player-section overlap-on-hero" *ngIf="loading()">
+    <div class="player-card">
+      <div class="player-content">
+        <div class="album-art skeleton skeleton-rect"></div>
+        <div class="player-info">
+          <h2 class="episode-title2 skeleton skeleton-text" style="width: 80%; height: 28px;"></h2>
+          <p class="episode-number skeleton skeleton-text" style="width: 60%; height: 16px;"></p>
+          <div class="player-controls">
+            <div class="play-btn skeleton skeleton-circle" style="width: 68px; height: 68px;"></div>
+            <div class="progress-bar skeleton skeleton-rect" style="flex: 1; height: 4px;"></div>
+            <div class="volume-btn skeleton skeleton-circle" style="width: 40px; height: 40px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Player Section (Featured) real -->
+  <section class="player-section overlap-on-hero" *ngIf="!loading() && featuredPodcast()">
     <div class="player-card">
       <div class="player-content">
         <div class="album-art">
@@ -62,16 +79,26 @@
               <div class="progress-track"></div>
               <div class="progress-indicator"></div>
             </div>
-            <button class="volume-btn" aria-label="Volume control">
-            </button>
+        
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Lista de Podcasts -->
-  <section class="more-podcasts-section">
+  <!-- Skeleton para Lista de Podcasts -->
+  <section class="more-podcasts-section" *ngIf="loading()">
+    <h2 class="section-title skeleton skeleton-text" style="width: 200px; height: 34px; margin: 0 auto 60px;"></h2>
+    <div class="more-podcasts-grid">
+      <div class="podcast-item skeleton-item" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="podcast-thumbnail skeleton skeleton-rect"></div>
+        <h3 class="podcast-item-title skeleton skeleton-text" style="width: 80%; height: 18px;"></h3>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lista de Podcasts real -->
+  <section class="more-podcasts-section" *ngIf="!loading()">
     <h2 class="section-title">MAS PODCAST</h2>
     <div class="more-podcasts-grid">
       <div class="podcast-item" *ngFor="let podcast of podcasts(); trackBy: trackById" (click)="navigateToPodcast(podcast)">
@@ -87,12 +114,65 @@
 </div>
 
 <!-- Vista de Detalle: Simulada como Modal (con overlay y content) -->
-<div *ngIf="isDetailView() && selectedPodcast() && !loading() && !error()" 
+<div *ngIf="isDetailView()" 
      class="modal-overlay" 
      [class.visible]="modalVisible()"
      (click)="onBackdropClick($event)">
 
-  <div class="modal-content" [class.visible]="modalVisible()">
+  <!-- Skeleton para Detalle -->
+  <div class="modal-content" [class.visible]="modalVisible()" *ngIf="loading()">
+
+    <!-- Header Skeleton -->
+    <div class="detail-header">
+      <p class="podcast-name skeleton skeleton-text" style="width: 150px; height: 16px;"></p>
+      <h2 class="episode-title skeleton skeleton-text" style="width: 80%; height: 24px;"></h2>
+      <div>
+        <button class="back-btn skeleton skeleton-circle" style="width: 42px; height: 42px;"></button>
+      </div>
+    </div>
+
+    <div class="detail-body">
+
+      <!-- Left: Player + Info Skeleton -->
+      <div class="detail-left">
+        <div class="skeleton skeleton-rect" style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px;"></div>
+        <div class="episode-info">
+          <div class="episode-meta">
+            <span class="skeleton skeleton-text" style="width: 60px; height: 14px;"></span>
+            <span class="skeleton skeleton-text" style="width: 100px; height: 14px;"></span>
+          </div>
+          <br>
+          <p class="episode-description">
+            <span class="skeleton skeleton-text" style="width: 100%; height: 16px; margin-bottom: 8px;"></span>
+            <span class="skeleton skeleton-text" style="width: 90%; height: 16px; margin-bottom: 8px;"></span>
+            <span class="skeleton skeleton-text" style="width: 70%; height: 16px;"></span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: Lista de Episodios Skeleton -->
+      <div class="detail-right">
+        <h3 class="sidebar-title skeleton skeleton-text" style="width: 120px; height: 16px; margin-bottom: 18px;"></h3>
+        <div class="episodes-list">
+          <div class="episode-card skeleton-item" *ngFor="let i of [1,2,3,4,5]">
+            <div class="thumbnail skeleton skeleton-rect"></div>
+            <div class="card-content">
+              <h4 class="skeleton skeleton-text" style="width: 80%; height: 16px; margin-bottom: 6px;"></h4>
+              <div class="card-meta">
+                <span class="skeleton skeleton-text" style="width: 50px; height: 12px;"></span>
+                <span class="skeleton skeleton-text" style="width: 40px; height: 12px;"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Contenido real de Detalle -->
+  <div class="modal-content" [class.visible]="modalVisible()" *ngIf="!loading() && selectedPodcast()">
 
     <!-- Header Superior -->
     <div class="detail-header">
@@ -154,7 +234,6 @@
               <img [src]="episode.image || 'https://via.placeholder.com/120x68'" alt="thumbnail">
               <div class="play-overlay">▶</div>
             </div>
-
             <div class="card-content">
               <h4>{{ episode.title }}</h4>
               <div class="card-meta">

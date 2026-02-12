@@ -4,26 +4,14 @@
   xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
 
   <url>
-    <loc>https://www.maslatino.com/noticia/crisis-combustible-con-aviacion-de-cuba-un-mes-sin-vuelos</loc>
+    <loc>https://www.maslatino.com/noticia/ice-cbp-y-uscis-testifica-en-congreso-dhs-enfrenta-cierre</loc>
     <news:news>
       <news:publication>
         <news:name>Mas Latino</news:name>
         <news:language>en</news:language>
       </news:publication>
-      <news:publication_date>2026-02-09T12:20:00.000Z</news:publication_date>
-      <news:title><![CDATA[Crisis combustible con aviación de Cuba: un mes sin vuelos]]></news:title>
-    </news:news>
-  </url>
-
-  <url>
-    <loc>https://www.maslatino.com/noticia/cierre-de-empresas-en-massachusetts-crisis-de-empleos</loc>
-    <news:news>
-      <news:publication>
-        <news:name>Mas Latino</news:name>
-        <news:language>en</news:language>
-      </news:publication>
-      <news:publication_date>2026-02-09T00:17:00.000Z</news:publication_date>
-      <news:title><![CDATA[Cierre de empresas en Massachusetts: Crisis de empleos]]></news:title>
+      <news:publication_date>2026-02-11T15:35:00.000Z</news:publication_date>
+      <news:title><![CDATA[ICE, CBP y USCIS testifica en Congreso: DHS enfrenta cierre]]></news:title>
     </news:news>
   </url>
 
