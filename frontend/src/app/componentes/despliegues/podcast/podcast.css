@@ -19,6 +19,7 @@
   overflow: hidden;
   background: #dbe5fe;
   margin-top: 50px;
+  
 }
 
 .hero-background {
@@ -116,6 +117,7 @@
   padding-bottom: 80px;
   display: flex;
   justify-content: center;
+  position: relative;
 }
 
 .player-card {
