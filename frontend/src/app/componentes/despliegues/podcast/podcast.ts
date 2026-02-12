@@ -291,7 +291,9 @@ export class PodcastComponent implements OnInit {
   }
 
   playEpisode(episode: Episode) {
+
     this.selectedEpisode.set(episode);
+
 
     // Calcular resumeTime basado en progress (si existe)
     if (episode.progress && episode.duration) {
@@ -301,11 +303,13 @@ export class PodcastComponent implements OnInit {
     }
 
     const playbackIds = episode.mux?.playbackIds || [];
+
     const publicPlayback = playbackIds.find(p => p.policy === 'public');
     const playback = publicPlayback || playbackIds[0];
 
     const playbackId = playback?.id;
     const policy = playback?.policy;
+    console.log("que es?",playbackId);
 
     console.log('🎧 Episode mux:', episode.mux);
     console.log('🆔 playbackId:', playbackId, 'policy:', policy);
@@ -322,11 +326,13 @@ export class PodcastComponent implements OnInit {
       // 🔥 Reset duro (evita pantalla negra)
       el.pause?.();
       el.playbackId = null;
-      el.playbackToken = null;
+      delete el.playbackToken;
 
       setTimeout(() => {
         el.playbackId = playbackId;
-        el.playbackToken = token;
+        if (token) {
+          el.playbackToken = token;
+        }
         el.streamType = 'on-demand';
 
         if (typeof el.load === 'function') {
