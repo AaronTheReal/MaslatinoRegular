@@ -7,6 +7,7 @@ import {NoticiasDestacadas} from './noticias-destacadas/noticias-destacadas'
 import {Podcasts} from './podcasts/podcasts'
 import {Recomendadas} from './recomendadas/recomendadas'
 import {Unete} from './unete/unete'
+import {Publicidad} from './publicidad/publicidad'
 import {CarruselEventos} from './carrusel-eventos/carrusel-eventos'
 import { CommonModule } from '@angular/common';
 
@@ -23,6 +24,7 @@ import { CommonModule } from '@angular/common';
     Recomendadas,
     Unete,
     CarruselEventos,
+    Publicidad,
     CommonModule
   ],
   templateUrl: './dashboard.html',

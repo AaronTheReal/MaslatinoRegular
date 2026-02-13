@@ -107,7 +107,8 @@ export class PodcastComponent implements OnInit {
     private api: PodcastService,
     private playerService: PlayerService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    
   ) {
     // Reset de página al cambiar filtros (solo para lista)
     effect(() => {
