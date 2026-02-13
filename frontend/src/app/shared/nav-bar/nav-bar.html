@@ -1,5 +1,7 @@
-<!-- Floating actions -->
-<div class="floating-icons">
+<!-- Floating actions: se muestran solo si showFloatingActions === true
+     y hideFloatingActionsOnPodcastDetail === false -->
+<div class="floating-icons" *ngIf="showFloatingActions && !hideFloatingActionsOnPodcastDetail">
+
   <img
     src="assets/iconosnavbar/lupa.png"
     alt="Buscar"
@@ -20,7 +22,6 @@
     (click)="toggleMenu($event)"
     (keydown.enter)="toggleMenu($event)"
   >
-    <!-- Tu mismo ícono SVG -->
     <svg class="sabor" width="37" height="32" viewBox="0 0 37 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M34 32H3C1.343 32 0 30.657 0 29C0 27.343 1.343 26 3 26H34C35.657 26 37 27.343 37 29C37 30.657 35.657 32 34 32Z" fill="black"/>
       <path d="M34 19H3C1.343 19 0 17.657 0 16C0 14.343 1.343 13 3 13H34C35.657 13 37 14.343 37 16C37 17.657 35.657 19 34 19Z" fill="black"/>
@@ -37,6 +38,7 @@
   role="menu"
   aria-labelledby="nav-quick-menu"
   (click)="$event.stopPropagation()"
+  *ngIf="showFloatingActions && !hideFloatingActionsOnPodcastDetail"
 >
   <div class="menu-section">
     <div class="menu-title">Navegación</div>
@@ -60,11 +62,10 @@
     <div class="menu-title">Productos</div>
     <ul class="menu-list">
       <li role="menuitem">
-        <!--<button type="button"[routerLink]="['https://maslatinonetwork.com/']" ></button>-->
         <a href="https://maslatinonetwork.com">Más Latino Network</a>
       </li>
       <li role="menuitem">
-        <a href="https://www.youtube.com/@Mas.Latino">Morning show</a>
+        <a href="https://www.youtube.com/@Mas.Latino" target="_blank" rel="noopener">Morning show</a>
       </li>
       <li role="menuitem">
         <a [routerLink]="['/contactanos']" >Contáctanos</a>
@@ -73,14 +74,9 @@
   </div>
 </div>
 
-
 <!-- Nav -->
 <nav class="navbar">
   <div class="navbar-center">
     <img src="assets/iconosnavbar/maslatinologo.png" [routerLink]="['/']" alt="Logo Más Latino" class="logo" />
   </div>
 </nav>
-
-
-
-        <!--<li class="nav-item"><a class="nav-link text-dark" routerLink="/admin-panel">Panel Admin</a></li>-->

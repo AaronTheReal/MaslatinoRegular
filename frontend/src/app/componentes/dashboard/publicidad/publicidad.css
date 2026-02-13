@@ -1,0 +1,29 @@
+.ad-section {
+  width: 100%;
+  background: #ffffff;
+}
+
+.ad-divider {
+  height: 1px;
+  background: #e5e5e5;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ad-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 30px 0;
+}
+
+.ad-container a {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.ad-container img {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}

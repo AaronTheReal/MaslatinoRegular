@@ -1,12 +1,19 @@
 <!-- src/app/app.html -->
-<app-nav-bar (searchClicked)="isSearchOpen = true"></app-nav-bar>
+
+<app-nav-bar
+  [showFloatingActions]="true"
+  [hideFloatingActionsOnPodcastDetail]="isPodcastDetailRoute"
+  (searchClicked)="isSearchOpen = true">
+</app-nav-bar>
 
 <app-overlay
   [open]="isSearchOpen"
   (closed)="isSearchOpen = false"
   (selected)="onSearchPicked($event)">
 </app-overlay>
-<router-outlet />
-  <app-radio-player></app-radio-player>
+
+<router-outlet></router-outlet>
+
+<app-radio-player></app-radio-player>
 <app-megaphone-global-player></app-megaphone-global-player>
-<app-footer ></app-footer>
+<app-footer></app-footer>

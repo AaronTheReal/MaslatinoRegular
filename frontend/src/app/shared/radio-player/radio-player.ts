@@ -17,7 +17,7 @@ export class RadioPlayerComponent {
   isMuted = false;
   private lastVolume = 1;
 
-  isHidden = false; // Nuevo para esconder
+  isHidden = true; // Nuevo para esconder
 
   constructor(private player: RadioPlayerService) {
     this.isPlaying$ = this.player.isPlaying$;

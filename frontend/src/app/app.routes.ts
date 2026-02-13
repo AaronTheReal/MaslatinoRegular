@@ -32,6 +32,7 @@ import{Contactanos} from './pages/contactanos/contactanos'
 import{PrivacyPolicy} from './pages/privacy-policy/privacy-policy'
 import {Terminos} from './pages/terminos/terminos'
 
+
 export const routes: Routes = [
   { path: '', component: Dashboard },
   { path: 'noticias-recientes', component: NoticiasRecientes },
