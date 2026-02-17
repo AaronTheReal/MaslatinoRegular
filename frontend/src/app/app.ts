@@ -9,7 +9,7 @@ import { RadioPlayerComponent } from './shared/radio-player/radio-player';
 import { PLATFORM_ID } from '@angular/core';
 import { filter } from 'rxjs/operators';
 import { MegaphoneGlobalPlayerComponent } from './shared/megaphone-player/megaphone-player-global/megaphone-player-global';
-
+import {AdsComponent} from './componentes/ads/ads'
 declare global {
   interface Window {
     dataLayer: any[];
@@ -27,7 +27,8 @@ declare global {
     ReactiveFormsModule,
     Overlay,
     MegaphoneGlobalPlayerComponent,
-    RadioPlayerComponent
+    RadioPlayerComponent,
+    AdsComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

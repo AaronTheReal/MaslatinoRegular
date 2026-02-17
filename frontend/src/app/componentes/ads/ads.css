@@ -1,0 +1,5 @@
+.ads-container {
+  width: 100%;        /* permite que tenga un ancho calculable */
+  max-width: 728px;   /* opcional, ajusta a tu diseño */
+  margin: 40px auto;  /* espacio arriba y abajo + centrado */
+}
