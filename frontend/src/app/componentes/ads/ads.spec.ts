@@ -1,0 +1,23 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { Ads } from './ads';
+
+describe('Ads', () => {
+  let component: Ads;
+  let fixture: ComponentFixture<Ads>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [Ads]
+    })
+    .compileComponents();
+
+    fixture = TestBed.createComponent(Ads);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

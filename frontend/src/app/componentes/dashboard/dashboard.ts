@@ -10,6 +10,7 @@ import {Unete} from './unete/unete'
 import {Publicidad} from './publicidad/publicidad'
 import {CarruselEventos} from './carrusel-eventos/carrusel-eventos'
 import { CommonModule } from '@angular/common';
+import {AdsComponent} from '../ads/ads'
 
 
 @Component({
@@ -25,7 +26,8 @@ import { CommonModule } from '@angular/common';
     Unete,
     CarruselEventos,
     Publicidad,
-    CommonModule
+    CommonModule,
+    AdsComponent
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',
