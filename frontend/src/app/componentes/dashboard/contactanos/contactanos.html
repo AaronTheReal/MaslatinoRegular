@@ -2,15 +2,40 @@
   <div class="contenedor-contacto">
     <h2 class="titulo-contacto">Contáctanos</h2>
 
-    <form class="formulario-contacto">
+    <form 
+      class="formulario-contacto"
+      action="https://formspree.io/f/xwpqbnrj"
+      method="POST"
+    >
       <div class="fila-inputs">
-        <input type="text" placeholder="Nombre" class="input-contacto" />
-        <input type="email" placeholder="Correo" class="input-contacto" />
+        <input 
+          type="text" 
+          name="name"
+          placeholder="Nombre" 
+          class="input-contacto"
+          required
+        />
+
+        <input 
+          type="email" 
+          name="email"
+          placeholder="Correo" 
+          class="input-contacto"
+          required
+        />
       </div>
 
-      <textarea placeholder="Mensaje" rows="6" class="textarea-contacto"></textarea>
+      <textarea 
+        name="message"
+        placeholder="Mensaje" 
+        rows="6" 
+        class="textarea-contacto"
+        required
+      ></textarea>
 
-      <button type="submit" class="boton-contacto">ENVIAR</button>
+      <button type="submit" class="boton-contacto">
+        ENVIAR
+      </button>
     </form>
   </div>
 </section>
