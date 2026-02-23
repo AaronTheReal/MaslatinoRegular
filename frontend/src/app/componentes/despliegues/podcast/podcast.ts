@@ -6,6 +6,9 @@ import { HttpClientModule } from '@angular/common/http';
 import { PodcastService, Podcast, Episode } from '../../../services/podcastDespliegue-service';
 import { PlayerService } from '../../../services/PodcastDesplieguePlayer-service';
 import '@mux/mux-player';  // ← Agrega esto para cargar Mux Player
+import {AdsComponent} from '../../ads/ads'
+
+
 
 type Lang =
   | 'es'|'es-MX'|'es-AR'|'es-BO'|'es-CL'|'es-CO'|'es-CR'|'es-CU'|'es-DO'
@@ -24,7 +27,7 @@ type LayoutKey = 'frame'|'list';
 @Component({
   selector: 'app-podcast',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule,AdsComponent],
   templateUrl: './podcast.html',
   styleUrls: ['./podcast.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

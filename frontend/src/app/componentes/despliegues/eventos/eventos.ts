@@ -2,6 +2,7 @@ import { Component, HostListener, OnInit, computed, signal } from '@angular/core
 import { CommonModule } from '@angular/common';
 import { CalendarioService, CalendarItem, PaginatedResponse } from '../../../services/calendario-service';
 import { RouterModule } from '@angular/router';
+import {AdsComponent} from '../../ads/ads'
 
 type Filtro = 'Todo' | 'Esta semana' | 'Próxima semana';
 
@@ -24,7 +25,7 @@ interface EventVM {
 @Component({
   selector: 'app-eventos',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,AdsComponent],
   templateUrl: './eventos.html',
   styleUrls: ['./eventos.css'],
 })

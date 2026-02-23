@@ -111,7 +111,12 @@
     <button *ngIf="hasMore()" (click)="loadMore()" class="load-more-btn">Cargar más</button>
   </section>
 
+  
+      <app-ads></app-ads>
+
+
 </div>
+
 
 <!-- Vista de Detalle: Simulada como Modal (con overlay y content) -->
 <div *ngIf="isDetailView()" 
@@ -244,6 +249,8 @@
           </div>
         </div>
       </div>
+
+
 
     </div>
 
