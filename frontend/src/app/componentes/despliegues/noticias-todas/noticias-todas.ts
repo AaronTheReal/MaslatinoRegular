@@ -5,13 +5,14 @@ import { RouterModule } from '@angular/router';
 import { Noticia, Category } from '../../../../models/noticia.model';
 import { NoticiasService } from '../../../services/noticias-service';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
+import {AdsComponent} from '../../ads/ads'
 
 type CatLike = string | { _id?: string; $oid?: string; slug?: string; name?: string } | Category;
 
 @Component({
   selector: 'app-noticias',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule,AdsComponent],
   templateUrl: './noticias-todas.html',
   styleUrls: ['./noticias-todas.css'],
 })
