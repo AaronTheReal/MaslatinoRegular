@@ -4,13 +4,12 @@
     <!-- Encabezado general -->
     <div class="contacto-header">
       <p class="contacto-eyebrow">Ponte en contacto</p>
-
     </div>
 
-    <!-- Grid principal: izquierda ubicación, derecha formulario -->
+    <!-- Grid principal -->
     <div class="contacto-grid">
 
-      <!-- Panel izquierda: ubicación -->
+      <!-- Panel izquierda -->
       <div class="panel-ubicacion">
         <div class="panel-ubicacion-bg"></div>
 
@@ -21,38 +20,55 @@
             el sabor latino y nuestras historias a todas partes.
           </p>
 
-          <!-- Espacio para mapa / iframe -->
           <div class="mapa-card">
-            <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d47126.64724685576!2d-71.104978!3d42.418891!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e376b643bfdd3f%3A0xa35c27c9b5be486a!2s100%20George%20P%20Hassett%20Dr%20%23105%2C%20Medford%2C%20MA%2002155!5e0!3m2!1ses-419!2sus!4v1763141397498!5m2!1ses-419!2sus" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d47126.64724685576!2d-71.104978!3d42.418891!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89e376b643bfdd3f%3A0xa35c27c9b5be486a!2s100%20George%20P%20Hassett%20Dr%20%23105%2C%20Medford%2C%20MA%2002155!5e0!3m2!1ses-419!2sus!4v1763141397498!5m2!1ses-419!2sus"
+              width="600"
+              height="450"
+              style="border:0;"
+              allowfullscreen=""
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
           </div>
         </div>
       </div>
 
-      <!-- Panel derecha: formulario contacto -->
+      <!-- Panel derecha -->
       <div class="panel-formulario">
         <h3 class="panel-formulario-titulo">Envíanos un mensaje</h3>
         <p class="panel-formulario-texto">
           Llena el formulario y nos pondremos en contacto contigo lo antes posible.
         </p>
 
-        <form class="formulario-contacto">
+        <form 
+          class="formulario-contacto"
+          action="https://formspree.io/f/xwpqbnrj"
+          method="POST"
+        >
           <div class="fila-inputs">
             <input
               type="text"
+              name="name"
               placeholder="Nombre"
               class="input-contacto"
+              required
             />
             <input
               type="email"
+              name="email"
               placeholder="Correo"
               class="input-contacto"
+              required
             />
           </div>
 
           <textarea
+            name="message"
             placeholder="Mensaje"
             rows="6"
             class="textarea-contacto"
+            required
           ></textarea>
 
           <button type="submit" class="boton-contacto">
@@ -60,6 +76,7 @@
           </button>
         </form>
       </div>
+
     </div>
   </div>
 </section>
