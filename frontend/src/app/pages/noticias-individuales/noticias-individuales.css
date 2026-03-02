@@ -14,9 +14,9 @@
 
 /* Asegura que el header ocupe todo el ancho disponible */
 .header-bleed-wrapper .section-header {
-  width: 50vw;
+  width: 24vw;
   max-width: none;
-  margin-left: calc(50vw - 50%);
+  margin-left: calc(0vw - 0%);
   border-radius: 0;
   padding-right: 32px; /* opcional: padding interno a la derecha */
   box-sizing: border-box;
@@ -422,3 +422,69 @@
 }
 
 
+/* ===== SKELETON LOADERS ===== */
+.skeleton-container .hero-overlay {
+  background: none !important;
+}
+
+.skeleton {
+  background: #e9ecef;
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.75), transparent);
+  animation: skeleton-shimmer 1.5s linear infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { transform: translateX(-150%); }
+  100% { transform: translateX(350%); }
+}
+
+.skeleton-hero {
+  background: #e9ecef !important;
+}
+
+.skeleton-category-label { width: 160px; height: 28px; }
+.skeleton-hero-title    { width: 88%; height: 72px; }
+
+.skeleton-meta    { height: 20px; width: 420px; max-width: 100%; }
+.skeleton-summary { height: 48px; width: 100%; }
+
+.skeleton-h2 { height: 36px; width: 68%; margin: 28px 0 16px; }
+.skeleton-p  { height: 20px; width: 100%; margin-bottom: 16px; }
+.skeleton-image { height: 340px; width: 100%; border-radius: 8px; margin: 24px 0; }
+
+.skeleton-ads { height: 100px; margin-top: 40px; }
+
+.skeleton-search-input { height: 46px; width: 100%; }
+
+.skeleton-sidebar-header { height: 36px; width: 200px; }
+.skeleton-sidebar-title  { 
+  height: 26px; 
+  width: 220px; 
+  background: #fff; 
+  border-radius: 3px;
+}
+
+.skeleton-tag {
+  height: 36px;
+  width: 110px;
+  border-radius: 22px;
+  display: inline-block;
+}
+
+.skeleton-entry,
+.skeleton-archive {
+  height: 24px;
+  width: 96%;
+}

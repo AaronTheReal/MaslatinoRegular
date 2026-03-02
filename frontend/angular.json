@@ -16,7 +16,7 @@
             "outputPath": "dist/nombre-proyecto",
             "browser": "src/main.ts",
             "server": "src/main.server.ts",
-            "ssr": { "entry": "src/server.ts" },
+            "ssr": false,
             "prerender": false,
             "allowedCommonJsDependencies": ["@ckeditor/ckeditor5-build-classic"],
             "polyfills": [
@@ -24,6 +24,7 @@
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
+             "src/favicon.ico",
               {
                 "glob": "**/*",
                 "input": "public"
@@ -50,8 +51,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
-                  "maximumError": "16kB"
+                  "maximumWarning": "2.5mb",
+                  "maximumError": "3mb"
                 }
               ],
               "outputHashing": "all"
