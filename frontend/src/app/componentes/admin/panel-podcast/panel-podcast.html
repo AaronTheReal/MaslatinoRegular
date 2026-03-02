@@ -372,4 +372,28 @@
 
 
 
-<app-panel-podcast-pc></app-panel-podcast-pc>
+    <!-- ==================== MODAL DE CONFIRMACIÓN ==================== -->
+    <div *ngIf="showDeleteConfirm" class="modal-overlay">
+      <div class="modal-content">
+        <div class="text-center">
+          <div class="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-5">
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-2">¿Eliminar podcast?</h3>
+
+        </div>
+
+        <div class="flex gap-4">
+          <button 
+            (click)="cancelDeletePodcast()"
+            class="flex-1 py-3 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-xl font-medium transition">
+            Cancelar
+          </button>
+          <button 
+            (click)="confirmDeletePodcast()"
+            class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition">
+            Sí, eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- ================================================================ -->

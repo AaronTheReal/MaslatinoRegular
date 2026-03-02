@@ -28,7 +28,8 @@ export class PanelPodcast implements OnInit {
   categorias: CategoriaPayload[] = [];
   successMessage: string | null = null;
   errorMessage: string | null = null;
-
+  showDeleteConfirm: boolean = false;
+  podcastToDeleteId: string | null = null;
   podcastForm = new FormGroup({
     title: new FormControl('', Validators.required),
     description: new FormControl(''),
@@ -195,12 +196,35 @@ onSubmitPodcast() {
   }
 
   eliminarPodcast(podcastId: string) {
-    this.podcastService.eliminarPodcast(podcastId).subscribe(() => {
-      this.loadPodcasts();
-      this.selectedPodcast = null;
+      this.podcastToDeleteId = podcastId;
+      this.showDeleteConfirm = true;
+    }
+      confirmDeletePodcast() {
+    if (!this.podcastToDeleteId) return;
+
+    this.podcastService.eliminarPodcast(this.podcastToDeleteId).subscribe({
+      next: () => {
+        this.loadPodcasts();
+        this.selectedPodcast = null;
+        this.successMessage = '✅ Podcast eliminado correctamente';
+      },
+      error: (err) => {
+        this.errorMessage = '❌ Error al eliminar el podcast';
+        console.error(err);
+      }
     });
+
+    this.closeDeleteModal();
   }
 
+  cancelDeletePodcast() {
+    this.closeDeleteModal();
+  }
+
+  private closeDeleteModal() {
+    this.showDeleteConfirm = false;
+    this.podcastToDeleteId = null;
+  }
   gestionarEpisodios(podcast: PodcastPayload) {
     this.selectedPodcast = podcast;
     this.resetEpisodeForm();
