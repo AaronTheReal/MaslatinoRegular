@@ -340,4 +340,25 @@ getNoticiasByArchive(
       catchError(() => of(true)) // Fallback if endpoint not implemented
     );
   }
+    /** NUEVO: Para panel admin (paginado + filtros en backend) */
+  getAdminNoticiasPaginadas(
+    page = 1,
+    limit = 20,
+    q = '',
+    state = 'all',
+    categoryId?: string,
+    sort = '-updatedAt'   // ← nuevo parámetro
+  ): Observable<any> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString())
+      .set('sort', sort);
+
+    if (q.trim()) params = params.set('q', q.trim());
+    if (state !== 'all') params = params.set('state', state);
+    if (categoryId) params = params.set('categoryId', categoryId);
+
+    return this.http.get<any>(`${this.baseUrl}/admin/paginadas`, { params })
+      .pipe(shareReplay(1));
+  }
 }

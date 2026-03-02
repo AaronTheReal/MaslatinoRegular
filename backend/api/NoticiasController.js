@@ -1175,6 +1175,62 @@ async createNoticia(req, res, next) {
   }
 }
 
+
+async getAdminNoticiasPaginadas(req, res) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(50, parseInt(req.query.limit) || 20);
+
+    const { q, state, autorizada, categoryId, sort = 'updatedAt' } = req.query;
+
+    const filtro = {};
+
+    if (autorizada !== undefined) filtro.autorizada = autorizada === 'true';
+    if (state && ['draft','review','published'].includes(state)) filtro.state = state;
+    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+      filtro.categories = new mongoose.Types.ObjectId(categoryId);
+    }
+    if (q) {
+      filtro.$or = [
+        { title: { $regex: q, $options: 'i' } },
+        { slug: { $regex: q, $options: 'i' } },
+        { 'meta.description': { $regex: q, $options: 'i' } }
+      ];
+    }
+
+    const projection = 'title slug createdAt updatedAt state autorizada meta.image meta.description categories authorName';
+
+    const sortOption = sort.includes('-') 
+      ? { [sort.replace('-','')]: -1 } 
+      : { [sort]: 1 };
+
+    const [items, total] = await Promise.all([
+      Noticia.find(filtro)
+        .select(projection)
+        .populate('categories', 'name slug color')
+        .sort(sortOption)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+
+      Noticia.countDocuments(filtro)
+    ]);
+
+    res.json({
+      items,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      limit,
+      hasNextPage: page < Math.ceil(total / limit),
+      hasPrevPage: page > 1
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error cargando noticias admin' });
+  }
+}
+
 }
 
 const NoticiasController = new noticiasController();
