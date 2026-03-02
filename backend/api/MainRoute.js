@@ -130,14 +130,12 @@ export default class MainRoute {
 
 
 
-
-
-
-
-
-
-    
     router.route('/shows').get(SpotifyController.getShowsAndEpisodes);
+
+
+
+
+
 
     //noticias
     //router.route('/noticiasGet').get(NoticiasController.getAllNoticias);
@@ -153,7 +151,7 @@ export default class MainRoute {
     router.get('/categorias', NoticiasController.getCategorias);
     
     router.route('/por-categorias-relevantes/:userId').get(NoticiasController.getNoticiasUsuario);
-
+    router.get('/noticias/categoria/:id', NoticiasController.obtenerNoticiasPorCategoriaId);
 
     router.route('/getNoticiaDespliegue').post(NoticiasController.getNoticiaDespliegue);
     router.route('/noticia/:id').get(NoticiasController.getNoticiaById);
@@ -163,7 +161,7 @@ export default class MainRoute {
     router.patch('/noticia/:id/autorizar', NoticiasController.toggleAutorizarNoticia);
     router.get('/noticias/paginadas', NoticiasController.getNoticiasPaginadas);
 
-    
+    router.get('/admin/paginadas', NoticiasController.getAdminNoticiasPaginadas);
     
     
     router.route('/registrarUsuario').post(UsuariosController.postNuevoUsuario);
@@ -408,8 +406,7 @@ router.post('/google-login', async (req, res) => {
     router.get('/categoriasUsuario/:id',CategoriasController.obtenerCategoriasUsuario);
     //router.delete('/categoriasUsuarioDelete/:userId/:id', CategoriasController.categoriasUsuarioDelete);
 
-    // Obtener noticias por ID de categoría
-    router.get('/noticias/categoria/:id', NoticiasController.obtenerNoticiasPorCategoriaId);
+
 
     // Obtener podcasts por ID de categoría
     router.get('/podcasts/categoria/:id', PodcastController.obtenerPodcastsPorCategoriaId);
