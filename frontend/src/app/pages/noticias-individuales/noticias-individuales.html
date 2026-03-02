@@ -265,8 +265,99 @@
 </main>
 
 <ng-template #loading>
-  <div class="container mt-8">
-    <p aria-live="polite">Cargando noticia...</p>
+  <div class="container mt-8 skeleton-container">
+    <!-- HERO skeleton -->
+    <section class="hero-section hero-fullbleed mb-5 skeleton-hero">
+      <div class="hero-overlay">
+        <div class="skeleton skeleton-category-label"></div>
+        <div class="skeleton skeleton-hero-title"></div>
+      </div>
+    </section>
+
+    <div class="row">
+      <!-- Contenido principal skeleton -->
+      <div class="col-lg-9 col-md-12 mb-4 content-column">
+        <article class="noticia-card">
+          <div class="noticia-meta mb-3">
+            <div class="skeleton skeleton-meta"></div>
+          </div>
+          <div class="skeleton skeleton-summary"></div>
+
+          <!-- Cuerpo con bloques simulados -->
+          <div class="content">
+            <div class="skeleton skeleton-h2"></div>
+            <div class="skeleton skeleton-p" style="width: 100%;"></div>
+            <div class="skeleton skeleton-p" style="width: 97%;"></div>
+            <div class="skeleton skeleton-p" style="width: 89%;"></div>
+
+            <div class="skeleton skeleton-h2"></div>
+            <div class="skeleton skeleton-p" style="width: 100%;"></div>
+            <div class="skeleton skeleton-image"></div>
+            <div class="skeleton skeleton-p" style="width: 95%;"></div>
+            <div class="skeleton skeleton-p" style="width: 82%;"></div>
+            <div class="skeleton skeleton-p" style="width: 100%;"></div>
+          </div>
+        </article>
+
+        <div class="skeleton skeleton-ads"></div>
+      </div>
+
+      <!-- Sidebar skeleton -->
+      <div class="col-lg-3 col-md-12 sidebar-column">
+        <aside class="sidebar sidebar-bleed">
+          <!-- Search -->
+          <div class="sidebar-search mb-4">
+            <div class="skeleton skeleton-search-input"></div>
+          </div>
+
+          <!-- Categorías -->
+          <section class="sidebar-section categories-section">
+            <div class="skeleton skeleton-sidebar-header"></div>
+            <div class="category-tags">
+              <div class="skeleton skeleton-tag"></div>
+              <div class="skeleton skeleton-tag"></div>
+              <div class="skeleton skeleton-tag"></div>
+              <div class="skeleton skeleton-tag"></div>
+              <div class="skeleton skeleton-tag"></div>
+              <div class="skeleton skeleton-tag"></div>
+            </div>
+          </section>
+
+          <!-- Entradas recientes -->
+          <section class="sidebar-section recent-entries">
+            <div class="header-bleed-wrapper">
+              <div class="section-header">
+                <div class="plus-icon" aria-hidden="true">+</div>
+                <div class="skeleton skeleton-sidebar-title"></div>
+              </div>
+            </div>
+            <ul class="entries-list">
+              <li class="entry-item"><div class="skeleton skeleton-entry"></div></li>
+              <li class="entry-item"><div class="skeleton skeleton-entry"></div></li>
+              <li class="entry-item"><div class="skeleton skeleton-entry"></div></li>
+              <li class="entry-item"><div class="skeleton skeleton-entry"></div></li>
+              <li class="entry-item"><div class="skeleton skeleton-entry"></div></li>
+            </ul>
+          </section>
+
+          <!-- Archivos -->
+          <section class="sidebar-section archives">
+            <div class="header-bleed-wrapper">
+              <div class="section-header">
+                <div class="plus-icon" aria-hidden="true">+</div>
+                <div class="skeleton skeleton-sidebar-title"></div>
+              </div>
+            </div>
+            <ul class="archives-list">
+              <li class="archive-item"><div class="skeleton skeleton-archive"></div></li>
+              <li class="archive-item"><div class="skeleton skeleton-archive"></div></li>
+              <li class="archive-item"><div class="skeleton skeleton-archive"></div></li>
+              <li class="archive-item"><div class="skeleton skeleton-archive"></div></li>
+              <li class="archive-item"><div class="skeleton skeleton-archive"></div></li>
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </div>
   </div>
 </ng-template>
-

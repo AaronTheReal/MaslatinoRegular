@@ -294,3 +294,17 @@
   transform: translateY(0);
   box-shadow: none;
 }
+
+
+.contacto-centrado {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.panel-formulario {
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+}
