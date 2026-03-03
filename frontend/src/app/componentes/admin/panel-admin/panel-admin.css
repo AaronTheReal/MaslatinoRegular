@@ -98,3 +98,27 @@ h2 {
 
 /* Si en algún breakpoint prefieres mostrar 2 por fila en vez de 3, podrías cambiar col classes, 
    pero la sugerencia actual es 3 en desktop. */
+
+   .btn-cerrar-sesion {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 10px;
+  align-items: center;
+}
+
+.btn-cerrar-sesion:hover {
+  background-color: #c82333;
+    align-items: center;
+
+}.centrar-boton {
+  display: flex;
+  justify-content: center;   /* centra horizontalmente */
+  align-items: center;       /* centra verticalmente si hay altura */
+  width: 100%;               /* ocupa todo el ancho disponible */
+  margin: 20px 0;            /* espacio arriba y abajo */
+}

@@ -54,18 +54,16 @@ export class LoginForm {
 
     this.adminUserService.login({ email, password }).subscribe({
       next: (res) => {
-        // Guarda token sencillo para el admin panel
         localStorage.setItem('admin_token', res.token);
         localStorage.setItem('admin_user', JSON.stringify(res.user));
 
+        // ← NUEVA LÍNEA (por si el backend devuelve datos extra)
         this.loading = false;
 
-        // Si venía redirectTo desde el guard, vuelve ahí
         const redirectTo = this.route.snapshot.queryParamMap.get('redirectTo');
         if (redirectTo) {
           this.router.navigateByUrl(redirectTo);
         } else {
-          // Ruta por defecto al iniciar sesión
           this.router.navigate(['/admin-panel']);
         }
       },
