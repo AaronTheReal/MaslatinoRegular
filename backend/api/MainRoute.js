@@ -160,7 +160,7 @@ export default class MainRoute {
     router.delete('/noticia/:id', NoticiasController.deleteNoticia);
     router.patch('/noticia/:id/autorizar', NoticiasController.toggleAutorizarNoticia);
     router.get('/noticias/paginadas', NoticiasController.getNoticiasPaginadas);
-
+    router.get('/noticias/press', NoticiasController.getNoticiasPress);
     router.get('/admin/paginadas', NoticiasController.getAdminNoticiasPaginadas);
     
     

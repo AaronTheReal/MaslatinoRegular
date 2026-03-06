@@ -1226,6 +1226,42 @@ async getAdminNoticiasPaginadas(req, res) {
     res.status(500).json({ error: 'Error cargando noticias admin' });
   }
 }
+async getNoticiasPress(req, res) {
+  try {
+    const page  = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(20, parseInt(req.query.limit) || 12);
+
+    const skip = (page - 1) * limit;
+
+    const filtro = {
+      autorizada: true,
+      press: true
+    };
+
+    const [items, total] = await Promise.all([
+      Noticia.find(filtro)
+        .populate('categories', 'name slug color')
+        .sort({ createdAt: -1 })        // más recientes primero
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      Noticia.countDocuments(filtro)
+    ]);
+
+    return res.json({
+      items,
+      total,
+      page,
+      totalPages: total > 0 ? Math.ceil(total / limit) : 1,
+      limit,
+      hasNextPage: page < Math.ceil(total / limit),
+      hasPrevPage: page > 1
+    });
+  } catch (e) {
+    console.error('Error en getNoticiasPress:', e);
+    return res.status(500).json({ error: 'Error al obtener noticias Press' });
+  }
+}
 }
 
 const NoticiasController = new noticiasController();
