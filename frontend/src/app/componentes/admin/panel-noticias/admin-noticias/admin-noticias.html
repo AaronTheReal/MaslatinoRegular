@@ -25,7 +25,15 @@
           <option value="draft">Borrador</option>
         </select>
       </div>
-
+      <!-- Press -->
+      <div>
+        <label class="form-label d-block small mb-1" for="press">Press</label>
+        <select class="form-select" id="press" style="min-width:120px" [formControl]="form.controls.press" aria-label="Filtrar por Press">
+          <option value="all">Todos</option>
+          <option value="true">Sí (Press)</option>
+          <option value="false">No</option>
+        </select>
+      </div>
       <!-- Categorías (Custom Multiselect) -->
       <div class="position-relative">
         <label class="form-label d-block small mb-1" for="category-select">Categorías</label>
@@ -130,6 +138,7 @@
               <th scope="col" style="width:150px">Fecha</th>
               <th scope="col" style="width:150px">Autor</th>
               <th scope="col" style="width:160px" class="text-end">Acciones</th>
+              <th scope="col" style="width:90px">Press</th>
             </tr>
           </thead>
           <tbody>
@@ -152,7 +161,11 @@
               <span class="badge" [ngClass]="{'text-bg-success': r.autorizada, 'text-bg-secondary': !r.autorizada}">
                 {{ r.autorizada ? 'Autorizada' : 'No autorizada' }}
               </span>
-            </td>            
+            </td>         
+            <td>
+              <span *ngIf="isPress(r)" class="badge text-bg-warning">PRESS</span>
+              <span *ngIf="!isPress(r)" class="text-muted small">—</span>
+            </td>   
               <td>
                 <div *ngIf="dateFor(r) as d; else noDate">
                   {{ d | date:'yyyy-MM-dd HH:mm' }}

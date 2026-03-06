@@ -10,7 +10,7 @@ import { CategorySearchPipe } from '../../../pipe/category-search.pipe';
 type AdminRole = 'Periodista' | 'Escritor' | 'Administrador' | 'Tecnico';
 type StateOpt = 'all' | 'draft' | 'review' | 'published';
 type SortOpt = '-updatedAt' | 'updatedAt' | '-createdAt' | 'createdAt' | 'title' | '-title';
-
+type PressOpt = 'all' | 'true' | 'false';
 @Component({
   selector: 'app-admin-noticias',
   standalone: true,
@@ -45,6 +45,7 @@ export class AdminNoticias {
     to: [''],
     sort: ['-updatedAt' as SortOpt],
     pageSize: [20],
+    press: ['all' as PressOpt]
   });
 
   // UI dropdown categorías
@@ -103,7 +104,8 @@ export class AdminNoticias {
       f.q,
       f.state,
       serverCategoryId,
-      f.sort
+      f.sort,
+      f.press   // ← nuevo parámetro
     ).subscribe({
       next: (res: any) => {
         this.items.set(res.items || []);
@@ -198,7 +200,9 @@ export class AdminNoticias {
   dateFor(n: Noticia): Date | null {
     return n?.createdAt ? new Date(n.createdAt) : null;
   }
-
+  isPress(n: Noticia): boolean {
+      return n?.press === true;
+    }
   // ==================== SELECTOR MULTI-CATEGORÍA ====================
   isCatSelected(id?: string): boolean {
     if (!id) return false;

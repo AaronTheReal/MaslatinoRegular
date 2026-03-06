@@ -153,4 +153,5 @@ export interface Noticia {
   updatedAt?: string;
   slug?: string;
   autorizada?: boolean;
+  press?: boolean;
 }
