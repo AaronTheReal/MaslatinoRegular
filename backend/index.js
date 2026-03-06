@@ -41,7 +41,9 @@ const allowedOrigins = [
    'https://www.maslatino.com',
     'https://maslatino.com',
    'www.maslatino.com',
-   'https://maslatinoregular.onrender.com'
+   'https://maslatinoregular.onrender.com',
+   'https://maslatinonetwork.com'
+
 
 
 ];
