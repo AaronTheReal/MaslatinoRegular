@@ -265,7 +265,6 @@ async updateNoticia(req, res) {
       existing.meta.imageCaptionHtml.trim() &&
       !meta.imageCaption && !meta.imageCaptionUrl
     ) {
-      // si no mandan nada nuevo, conserva el existente
       imageCaptionHtml = existing.meta.imageCaptionHtml.trim();
     } else if (meta.imageCaption || meta.imageCaptionUrl) {
       const txt = (meta.imageCaption || '').toString().trim();
@@ -285,7 +284,6 @@ async updateNoticia(req, res) {
     // === Normalización de META hero a CDN (image / imageKey)
     const CDN = process.env.CDN_BASE_URL;
 
-    // preferimos valores nuevos; si no, caemos a los existentes
     let metaImageUrl = meta.image || '';
     let metaImageKey = meta.imageKey || undefined;
 
@@ -336,10 +334,11 @@ async updateNoticia(req, res) {
       ? new Date(data.publishAt)
       : (existing.publishAt || null);
 
+    const press = typeof data.press === 'boolean' ? data.press : (existing.press ?? false);   // ← NUEVO
+
     // 5) bodyHtml / content (normalizar listas, imágenes a CDN y EMBEDS)
     let bodyHtml = String(data.bodyHtml || data.body || existing.bodyHtml || '').trim();
 
-    // tidy nested <p><p>…</p></p> si el editor los genera
     bodyHtml = bodyHtml
       .replace(/<p>\s*<p>/g, '<p>')
       .replace(/<\/p>\s*<\/p>/g, '</p>');
@@ -352,7 +351,6 @@ async updateNoticia(req, res) {
       const out = { ...b };
       if (!out.type) return out;
 
-      // Asegura style.textAlign válido
       if (out.style) {
         const ta = (out.style.textAlign ?? '').toString().trim();
         if (!['left', 'center', 'right'].includes(ta)) {
@@ -360,13 +358,11 @@ async updateNoticia(req, res) {
         }
       }
 
-      // Listas: preserva arrays
       if (out.type === 'list') {
         if (!Array.isArray(out.items)) out.items = [];
         if (!Array.isArray(out.itemsHtml)) out.itemsHtml = [];
       }
 
-      // Imágenes: aceptar cdnKey o url y normalizar a CDN
       if (out.type === 'image') {
         const cdnKey  = out.cdnKey || '';
         const mime    = out.mime || '';
@@ -380,14 +376,12 @@ async updateNoticia(req, res) {
           out.url = toCdnUrl(out.url, CDN);
         }
 
-        // mime solo image/*
         if (mime && !/^image\//i.test(mime)) delete out.mime;
 
         if (bytes !== undefined) out.bytes = Number(bytes) || undefined;
         if (width !== undefined) out.width = Number(width) || undefined;
         if (height !== undefined) out.height = Number(height) || undefined;
 
-        // Variantes (si existen)
         if (out.variants) {
           const v = { ...out.variants };
           if (v.sm) v.sm = toCdnUrl(v.sm, CDN);
@@ -397,7 +391,6 @@ async updateNoticia(req, res) {
         }
       }
 
-      // 🔥 EMBEDS sociales (tweet, post, video…)
       if (out.type === 'embed') {
         if (typeof out.url === 'string') {
           out.url = out.url.trim();
@@ -422,7 +415,7 @@ async updateNoticia(req, res) {
       data.categories || existing.categories || []
     );
 
-    // 7) Meta final alineado con el Schema (sin imageCaption / imageCaptionUrl)
+    // 7) Meta final
     const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL;
     const canonical = String(
       meta.canonical ||
@@ -472,6 +465,7 @@ async updateNoticia(req, res) {
       bodyHtml,
       content: normContent,
       meta: metaFinal,
+      press,                    // ← AQUÍ SE ACTUALIZA
       updatedAt: new Date()
     };
 
@@ -487,12 +481,11 @@ async updateNoticia(req, res) {
       return res.status(404).json({ error: 'Error al actualizar la noticia' });
     }
 
-    // 10) Recache on publish / slug change
+    // 10) Recache
     try {
       if (state === 'published') {
         await recacheNoticia(updated.slug);
         if (slugChanged) {
-          // opcional: invalidar slug antiguo
           await recacheNoticia(existing.slug).catch(() => {});
         }
       }
@@ -985,7 +978,8 @@ async createNoticia(req, res, next) {
       bodyHtml,
       state,
       publishAt,
-      meta = {}
+      meta = {},
+      press   // ← NUEVO
     } = req.body;
 
     // Requisitos mínimos
@@ -1141,21 +1135,21 @@ async createNoticia(req, res, next) {
       bodyHtml: html,
       meta: {
         description:    meta.description,
-        image:          metaImageUrl,                // ya normalizada a CDN
+        image:          metaImageUrl,
         imageAltGlobal: meta.imageAltGlobal || '',
         canonical:      meta.canonical || '',
         ogTitle:        meta.ogTitle || title,
         ogDescription:  meta.ogDescription || (summary || meta.description),
         twitterCard:    meta.twitterCard || 'summary_large_image',
         imageCaptionHtml,
-        // nuevos opcionales
         imageKey:       meta.imageKey || undefined,
         imageWidth:     meta.imageWidth || undefined,
         imageHeight:    meta.imageHeight || undefined,
         imageType:      meta.imageType || undefined
       },
       state: state || 'draft',
-      publishAt: publishAt || null
+      publishAt: publishAt || null,
+      press: typeof press === 'boolean' ? press : false   // ← AQUÍ SE GUARDA
     });
 
     const saved = await doc.save();
@@ -1175,13 +1169,12 @@ async createNoticia(req, res, next) {
   }
 }
 
-
 async getAdminNoticiasPaginadas(req, res) {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 20);
 
-    const { q, state, autorizada, categoryId, sort = 'updatedAt' } = req.query;
+    const { q, state, autorizada, categoryId, press, sort = 'updatedAt' } = req.query;   // ← press agregado
 
     const filtro = {};
 
@@ -1189,6 +1182,9 @@ async getAdminNoticiasPaginadas(req, res) {
     if (state && ['draft','review','published'].includes(state)) filtro.state = state;
     if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
       filtro.categories = new mongoose.Types.ObjectId(categoryId);
+    }
+    if (press !== undefined) {                       // ← NUEVO: filtro por press
+      filtro.press = press === 'true';
     }
     if (q) {
       filtro.$or = [
@@ -1198,7 +1194,7 @@ async getAdminNoticiasPaginadas(req, res) {
       ];
     }
 
-    const projection = 'title slug createdAt updatedAt state autorizada meta.image meta.description categories authorName';
+    const projection = 'title slug createdAt updatedAt state autorizada press meta.image meta.description categories authorName';   // ← press en proyección
 
     const sortOption = sort.includes('-') 
       ? { [sort.replace('-','')]: -1 } 
@@ -1230,7 +1226,6 @@ async getAdminNoticiasPaginadas(req, res) {
     res.status(500).json({ error: 'Error cargando noticias admin' });
   }
 }
-
 }
 
 const NoticiasController = new noticiasController();

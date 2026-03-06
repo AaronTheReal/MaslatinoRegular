@@ -245,7 +245,8 @@ const NoticiaSchema = new Schema({
 
   createdAt:  { type: Date, default: Date.now },
   updatedAt:  { type: Date, default: Date.now },
-  autorizada: { type: Boolean, default: false }
+  autorizada: { type: Boolean, default: false },
+  press: { type: Boolean, default: false },   // ← nueva propiedad "press"
 });
 
 // Helper: refuerza <a> con target/rel si faltan
