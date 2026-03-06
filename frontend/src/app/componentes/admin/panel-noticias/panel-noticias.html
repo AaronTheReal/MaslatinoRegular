@@ -373,7 +373,18 @@
                 <div *ngIf="publishAtError" class="text-danger mt-1 small">{{ publishAtError }}</div>
               </div>
             </div>
-
+            <!-- Press (checkbox especial) -->
+            <div class="form-check mb-4">
+              <input 
+                type="checkbox" 
+                class="form-check-input" 
+                id="press" 
+                formControlName="press">
+              <label class="form-check-label fs-5 fw-bold" for="press">
+                🌟 Marcar como <span class="text-warning">PRESS</span> 
+                <small class="text-muted d-block">(noticia especial / destacada)</small>
+              </label>
+            </div>
             <!-- BODY -->
             <div class="form-group mb-3">
               <label>Contenido</label>
