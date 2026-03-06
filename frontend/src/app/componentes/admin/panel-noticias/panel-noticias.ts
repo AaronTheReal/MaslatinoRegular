@@ -210,7 +210,7 @@ export class PanelNoticias implements OnInit {
 
       state: ['draft'],
       publishAt: [null],
-
+      press: [false],
       body: ['', [this.bodySeoValidator()]]
     });
 
@@ -1183,7 +1183,8 @@ if (tag === 'iframe') {
       state: 'draft',
       publishAt: null,
       focusKeyphrase: '',
-      body: ''
+      body: '',
+      press: false
     });
     this.wordCount = this.readingTime = this.imageCount = this.headerCount = this.fleschScore = 0;
     this.density = 0;

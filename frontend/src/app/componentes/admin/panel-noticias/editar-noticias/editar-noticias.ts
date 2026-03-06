@@ -192,7 +192,7 @@ export class EditarNoticias implements OnInit {
 
       state: ['draft'],
       publishAt: [null],
-
+      press: [false],
       body: ['', [this.bodySeoValidator()]]
     });
 
@@ -1214,7 +1214,8 @@ private loadNoticia() {
       },
       state: (noticia as any).state || 'draft',
       publishAt: this.formatDateForInput((noticia as any).publishAt || null),
-      body: bodyHtml
+      body: bodyHtml,
+      press: (noticia as any).press ?? false,
     });
 
     // tags
