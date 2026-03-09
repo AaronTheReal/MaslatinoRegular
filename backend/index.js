@@ -42,8 +42,10 @@ const allowedOrigins = [
     'https://maslatino.com',
    'www.maslatino.com',
    'https://maslatinoregular.onrender.com',
-   'https://maslatinonetwork.com'
-
+   'https://maslatinonetwork.com',
+  'https://realmediagroups.com',
+  'https://www.realmediagroups.com',
+  'http://localhost',
 
 
 ];
