@@ -14,16 +14,44 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  padding: 30px 0;
+  padding: 30px 0 12px;
 }
 
-.ad-container a {
+.ad-link {
   width: 100%;
   max-width: 1200px;
+  display: block;
 }
 
 .ad-container img {
   width: 100%;
   height: auto;
   border-radius: 12px;
+  display: block;
+}
+
+.ad-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-bottom: 22px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid #000;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dot.active {
+  background: #000;
+}
+
+.dot:hover {
+  transform: scale(1.1);
 }

@@ -2,22 +2,30 @@
   <div class="ad-divider"></div>
 
   <div class="ad-container">
-
-    <a href="https://saravialaw.com/" target="_blank" rel="noopener">
-      <img 
-        src="assets/publicidad.png" 
-        alt="Publicidad"
+    <a
+      [href]="ads[currentIndex].link"
+      target="_blank"
+      rel="noopener"
+      class="ad-link"
+    >
+      <img
+        [src]="ads[currentIndex].image"
+        [alt]="ads[currentIndex].alt"
         loading="lazy"
       />
     </a>
   </div>
 
+  <div class="ad-dots">
+    <button
+      *ngFor="let ad of ads; let i = index"
+      type="button"
+      class="dot"
+      [class.active]="currentIndex === i"
+      (click)="goToAd(i)"
+      [attr.aria-label]="'Ir a publicidad ' + (i + 1)"
+    ></button>
+  </div>
+
   <div class="ad-divider"></div>
 </div>
-
-
-
-<!--
-assets/publicidad.png
-https://d1w8u1yfnsws5m.cloudfront.net/uploads/2026/02/13/1771006979535-45c7cb9c-sizeweblarge.jpg
--->
