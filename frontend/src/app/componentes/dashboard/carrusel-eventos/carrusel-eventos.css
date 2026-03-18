@@ -3,12 +3,10 @@
   padding: 3rem 1rem;
   margin: 3rem 0 4rem;
 }
-
 .ultimas-noticias-container {
   max-width: 100%;
   margin: 0 auto;
 }
-
 .titulo-seccion {
   position: relative;
   display: inline-block;
@@ -37,12 +35,12 @@
     font-size: 1.8em;
   }
 }
-
 /* Envoltorio con fades */
 .ultimas-noticias-carousel-wrapper {
-  position: relative;
-  overflow: hidden;
+  overflow: visible !important;   /* permite que el peek del último slide se vea desde carga */
 }
+
+
 .fade-left,
 .fade-right {
   position: absolute;
@@ -64,11 +62,13 @@
   border-top-right-radius: 30px;
   border-bottom-right-radius: 30px;
 }
-
 /* Swiper Element container */
 .carrusel-eventos-swiper {
+  overflow: visible !important;
   padding: 1rem 0;
-  display: block; /* asegura layout */
+  display: block;
+  width: 100% !important;
+  overflow: visible !important; /* ← ayuda al peek inicial y final */
 }
 
 /* Tarjeta */
@@ -89,7 +89,6 @@
     flex-direction: row;
   }
 }
-
 .noticia-imagen {
   width: 100%;
   max-width: 350px;
@@ -97,7 +96,6 @@
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1);
 }
-
 .noticia-contenido {
   flex: 1;
   text-align: center;
@@ -107,7 +105,6 @@
     text-align: left;
   }
 }
-
 .noticia-fecha {
   font-size: 0.9rem;
   color: #d1d5db;
@@ -122,7 +119,6 @@
   color: #e5e7eb;
   line-height: 1.5;
 }
-
 /* Botón */
 .boton-contacto {
   background-color: #8e4ef6;
@@ -134,7 +130,6 @@
   border-radius: 9999px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-
   display: inline-block;
   width: auto;
   align-self: center;
@@ -143,7 +138,6 @@
 .boton-contacto:hover {
   background-color: #6d2df0;
 }
-
 /* Skeleton simple mientras carga */
 .loading-wrap {
   display: flex;
@@ -172,8 +166,7 @@
     background-position: -100% 0;
   }
 }
-
-/* Fila inputs (para centrar el botón abajo) */
+/* Fila inputs */
 .fila-inputs {
   display: flex;
   flex-direction: column;
@@ -186,22 +179,41 @@
     justify-content: center;
   }
 }
-
 /* ===== Responsivo adicional ===== */
 @media (max-width: 1024px) {
   .noticia-imagen { max-width: 300px; }
 }
-
 @media (max-width: 768px) {
   .fade-left, .fade-right { width: 56px; }
   .noticia-card { min-height: 280px; padding: 1.25rem; gap: 1rem; }
   .noticia-titulo { font-size: 1.2rem; }
   .boton-contacto { font-size: 1rem; padding: 12px 28px; }
 }
-
 @media (max-width: 480px) {
   .fade-left, .fade-right { width: 40px; }
   .noticia-card { min-height: 240px; padding: 1rem; }
   .noticia-titulo { font-size: 1.1rem; }
   .noticia-descripcion { font-size: 0.9rem; }
+}
+
+/* ===== SWIPER NAVEGACIÓN - FLECHAS TRANSPARENTES ===== */
+.carrusel-eventos-swiper {
+  --swiper-navigation-color: #8e4ef6;
+  --swiper-navigation-size: 48px;
+  overflow: visible !important;
+  width: 100% !important;
+}
+
+.carrusel-eventos-swiper::part(button-prev),
+.carrusel-eventos-swiper::part(button-next) {
+  background-color: transparent !important;
+  z-index: 25;
+}
+
+.carrusel-eventos-swiper::part(button-prev) { left: 12px; }
+.carrusel-eventos-swiper::part(button-next) { right: 12px; }
+
+.carrusel-eventos-swiper::part(button-prev):hover,
+.carrusel-eventos-swiper::part(button-next):hover {
+  --swiper-navigation-color: #6d2df0;
 }

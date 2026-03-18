@@ -5,43 +5,47 @@
     <div class="ultimas-noticias-carousel-wrapper">
       <div class="fade-left"></div>
 
-      <!-- Swiper Web Component (sin instanciar con JS) -->
-      <swiper-container
-        slides-per-view="1.2"
-        centered-slides="true"
-        space-between="24"
-        pagination="true"
-        navigation="true"
-        class="carrusel-eventos-swiper"
-      >
-        <ng-container *ngIf="!loadingList; else cargando">
-          <swiper-slide *ngFor="let item of items">
-            <div class="noticia-card">
-              <img
-                [src]="item.image || 'https://via.placeholder.com/300x200'"
-                [alt]="'Imagen de ' + item.title"
-                class="noticia-imagen"
-                loading="lazy"
-              />
-
-              <div class="noticia-contenido">
-                <p class="noticia-fecha">
-                  {{ item.startAt | date:'longDate':item.timezone }}
-                </p>
-
-                <h3 class="noticia-titulo">
-                  {{ item.title }}
-                </h3>
-
-                <p class="noticia-descripcion">
-                  {{ item.excerpt }}
-                </p>
+        <swiper-container
+          #swiperEl
+          init="false"
+          slides-per-view="1.2"
+          centered-slides="true"
+          space-between="24"
+          pagination="true"
+          navigation="true"
+          loop="true"
+          slides-per-group="1"
+          speed="400"
+          initial-slide="0"
+          watch-overflow="true"
+          observer="true"
+          observe-parents="true"
+          class="carrusel-eventos-swiper"
+        >
+          <ng-container *ngIf="!loadingList; else cargando">
+            <swiper-slide *ngFor="let item of displayItems">
+              <div class="noticia-card">
+                <img
+                  [src]="item.image || 'https://via.placeholder.com/300x200'"
+                  [alt]="'Imagen de ' + item.title"
+                  class="noticia-imagen"
+                  loading="lazy"
+                />
+                <div class="noticia-contenido">
+                  <p class="noticia-fecha">
+                    {{ item.startAt | date:'longDate':item.timezone }}
+                  </p>
+                  <h3 class="noticia-titulo">
+                    {{ item.title }}
+                  </h3>
+                  <p class="noticia-descripcion">
+                    {{ item.excerpt }}
+                  </p>
+                </div>
               </div>
-            </div>
-          </swiper-slide>
-        </ng-container>
-      </swiper-container>
-
+            </swiper-slide>
+          </ng-container>
+        </swiper-container>
       <div class="fade-right"></div>
     </div>
   </div>
