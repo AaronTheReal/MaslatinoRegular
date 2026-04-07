@@ -1,31 +1,37 @@
-<div class="ad-section">
-  <div class="ad-divider"></div>
+<br>
+<div class="publicidad-carousel" #carousel
+     (mousedown)="startDrag($event)"
+     (mousemove)="drag($event)"
+     (mouseup)="endDrag()"
+     (mouseleave)="endDrag()"
+     (touchstart)="startDrag($event)"
+     (touchmove)="drag($event)"
+     (touchend)="endDrag()">
 
-  <div class="ad-container">
-    <a
-      [href]="ads[currentIndex].link"
-      target="_blank"
-      rel="noopener"
-      class="ad-link"
-    >
-      <img
-        [src]="ads[currentIndex].image"
-        [alt]="ads[currentIndex].alt"
-        loading="lazy"
-      />
-    </a>
+  <div class="slider-wrapper">
+    <div class="slides-track"
+         [style.transition]="transitionStyle"
+         [style.transform]="getTransform()">
+
+      <div class="slide" *ngFor="let ad of ads; let i = index">
+        <a [href]="ad.link" target="_blank" rel="noopener noreferrer">
+          <img [src]="ad.image" [alt]="ad.alt" loading="lazy">
+        </a>
+      </div>
+    </div>
   </div>
 
-  <div class="ad-dots">
-    <button
-      *ngFor="let ad of ads; let i = index"
-      type="button"
+  <!-- Flechas laterales -->
+  <button class="nav-arrow left" (click)="prev($event)">‹</button>
+  <button class="nav-arrow right" (click)="next($event)">›</button>
+
+  <!-- Indicadores (dots) -->
+  <div class="indicators">
+    <button 
+      *ngFor="let _ of ads; let i = index"
       class="dot"
-      [class.active]="currentIndex === i"
-      (click)="goToAd(i)"
-      [attr.aria-label]="'Ir a publicidad ' + (i + 1)"
-    ></button>
+      [class.active]="i === currentIndex"
+      (click)="goTo(i)">
+    </button>
   </div>
-
-  <div class="ad-divider"></div>
 </div>
