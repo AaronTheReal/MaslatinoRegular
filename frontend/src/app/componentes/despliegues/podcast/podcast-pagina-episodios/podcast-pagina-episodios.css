@@ -18,11 +18,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), 
-    url('https://picsum.photos/id/1015/1920/1080');
   background-size: cover;
-  background-position: center;
+  background-position: top center;   /* prioriza la parte superior */
   z-index: 1;
 }
 
@@ -34,7 +31,7 @@
   max-width: 1400px;
   height: 50vh;
   margin: 0 auto;
-  padding: 0 8vw 6vh 8vw;           /* ← Más padding abajo para subir la imagen */
+  padding: 200px 8vw 6vh 8vw;   /* ← subí de 170px → 200px */
   display: flex;
   align-items: center;
   gap: 6vw;
