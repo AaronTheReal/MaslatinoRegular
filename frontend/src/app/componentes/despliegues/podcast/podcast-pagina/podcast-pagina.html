@@ -1,5 +1,4 @@
-<app-podcast-pagina-episodios></app-podcast-pagina-episodios>
-
+<app-podcast-pagina-episodios [podcast]="selectedPodcast()"></app-podcast-pagina-episodios>
 <app-podcast-pagina-escucharaqui></app-podcast-pagina-escucharaqui>
 <div class="error" *ngIf="error()">{{ error() }}</div>
 

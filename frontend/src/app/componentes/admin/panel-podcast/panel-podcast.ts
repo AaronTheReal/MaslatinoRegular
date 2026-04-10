@@ -36,6 +36,7 @@ export class PanelPodcast implements OnInit {
     authorName: new FormControl(''),
     language: new FormControl('es'),
     coverImage: new FormControl(''),
+    coverImage2: new FormControl(''),
     categories: new FormControl<string[]>([], Validators.required),
     tags: new FormControl(''),
     metaDescription: new FormControl(''),
@@ -107,6 +108,7 @@ onSubmitPodcast() {
       authorName: this.podcastForm.value.authorName || '',
       language: this.podcastForm.value.language || 'es',
       coverImage: this.podcastForm.value.coverImage || '',
+      coverImage2: this.podcastForm.value.coverImage2 || '',
       categories: this.podcastForm.value.categories as string[],
       tags: this.podcastForm.value.tags
         ? this.podcastForm.value.tags.split(',').map(tag => tag.trim())
@@ -338,6 +340,23 @@ onSubmitPodcast() {
       input.value = '';
     }
   }
+    async onPickPodcastCover2(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    try {
+      const url = await this.uploadToS3(file);
+      this.podcastForm.patchValue({ coverImage2: url });
+      this.podcastForm.get('coverImage2')?.updateValueAndValidity();
+    } catch (err) {
+      console.error(err);
+      alert('No se pudo subir la imagen de portada.');
+    } finally {
+      input.value = '';
+    }
+  }
+
 
   async onPickPodcastMetaImage(event: Event) {
     const input = event.target as HTMLInputElement;

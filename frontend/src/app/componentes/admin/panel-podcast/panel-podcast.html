@@ -63,6 +63,31 @@
         </div>
 
 
+        <div>
+          <label for="coverImage2">Imagen de Portada:</label>
+
+          <!-- input de URL (permite pegar manual si quieres) -->
+          <input id="coverImage2" formControlName="coverImage2" type="text"
+                placeholder="https://...portada.jpg" />
+
+          <!-- botón para subir a S3 -->
+          <div class="mt-2">
+            <label class="btn-upload">
+              <input
+                type="file"
+                accept="image/*"
+                (change)="onPickPodcastCover2($event)"
+              />
+              <span>Seleccionar imagen</span>
+            </label>
+          </div>
+
+          <!-- preview -->
+          <div *ngIf="podcastForm.value.coverImage2" class="image-preview">
+            <img [src]="podcastForm.value.coverImage2" alt="Portada del podcast" />
+          </div>
+        </div>
+
 
       <div>
         <label for="tags">Tags (etiquetas):</label>
