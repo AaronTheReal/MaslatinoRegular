@@ -108,6 +108,7 @@ const PodcastSchema = new Schema({
   title: { type: String, required: true },
   description: { type: String },
   coverImage: { type: String }, // carátula de la serie
+  coverImage2: { type: String }, // carátula de la serie
 
   language: {
     type: String,

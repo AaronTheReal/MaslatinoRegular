@@ -27,6 +27,7 @@ export interface Podcast {
   title: string;
   description?: string;
   coverImage?: string;
+  coverImage2?: string;
   episodes: Episode[];
   authorName?: string;
   categories?: string[];

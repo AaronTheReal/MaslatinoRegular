@@ -1,24 +1,26 @@
-<!-- hero.component.html -->
 <section class="hero">
-  <!-- Imagen de fondo rectangular que ocupa toda la pantalla (con ligera transparencia) -->
-  <div class="hero-background"></div>
+  <!-- Imagen de fondo grande (coverImage2) con ligera transparencia -->
+  <div 
+    class="hero-background" 
+    [style.background-image]="'url(' + (podcast?.coverImage2 || podcast?.coverImage || 'https://picsum.photos/id/1005/1920/1080') + ')'">
+  </div>
 
-  <!-- Contenido principal: reducido y con espacio extra debajo -->
+  <!-- Contenido principal -->
   <div class="content">
     
-    <!-- Texto: reducido de tamaño y ocupa 50% horizontal -->
+    <!-- Texto dinámico -->
     <div class="text-container">
+      <h1 class="title">{{ podcast?.title || 'Cargando podcast...' }}</h1>
       <p class="description">
-        Diseñado con Angular. Ahora más compacto y con espacio debajo de la imagen.
+        {{ podcast?.description || 'Descripción no disponible' }}
       </p>
-
     </div>
 
-    <!-- Imagen cuadrada: más pequeña y con espacio hacia abajo -->
+    <!-- Imagen cuadrada pequeña a la derecha (coverImage) -->
     <div class="image-container">
       <img 
-        src="https://picsum.photos/id/1005/800/800" 
-        alt="Imagen cuadrada de ejemplo" 
+        [src]="podcast?.coverImage || 'https://picsum.photos/id/1005/800/800'" 
+        [alt]="podcast?.title || 'Portada del podcast'" 
         class="square-image">
     </div>
   </div>
