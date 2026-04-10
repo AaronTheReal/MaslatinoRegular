@@ -1,22 +1,24 @@
 <section class="hero">
-  <!-- Imagen de fondo grande (coverImage2) con ligera transparencia -->
+  <!-- Imagen de fondo grande -->
+<!-- Imagen de fondo grande -->
   <div 
     class="hero-background" 
-    [style.background-image]="'url(' + (podcast?.coverImage2 || podcast?.coverImage || 'https://picsum.photos/id/1005/1920/1080') + ')'">
+    [style.background-image]="'linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(' + (podcast?.coverImage2) + ')'">
   </div>
-
   <!-- Contenido principal -->
   <div class="content">
     
-    <!-- Texto dinámico -->
+    <!-- Texto con fondo transparente -->
     <div class="text-container">
-      <h1 class="title">{{ podcast?.title || 'Cargando podcast...' }}</h1>
-      <p class="description">
-        {{ podcast?.description || 'Descripción no disponible' }}
-      </p>
+      <div class="text-overlay">
+        <h1 class="title">{{ podcast?.title || 'Cargando podcast...' }}</h1>
+        <p class="description">
+          {{ podcast?.description || 'Descripción no disponible' }}
+        </p>
+      </div>
     </div>
 
-    <!-- Imagen cuadrada pequeña a la derecha (coverImage) -->
+    <!-- Imagen cuadrada pequeña -->
     <div class="image-container">
       <img 
         [src]="podcast?.coverImage || 'https://picsum.photos/id/1005/800/800'" 
