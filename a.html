@@ -2,3 +2,141 @@
 </p>&mdash; ENBAJA (@enbajafutbol) <a href="https://twitter.com/enbajafutbol/status/1992979809522057343?ref_src=twsrc%5Etfw">
   November 24, 2025</a></blockquote>
    <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+
+<div *ngIf="error()" class="error">{{ error() }}</div>
+
+<!-- Vista de Detalle (ahora página completa) -->
+<div class="modal-content" [class.visible]="modalVisible()" *ngIf="loading()">
+  <!-- Skeleton (igual que antes) -->
+  <div class="detail-header">
+    <p class="podcast-name skeleton skeleton-text" style="width: 150px; height: 16px;"></p>
+    <h2 class="episode-title skeleton skeleton-text" style="width: 80%; height: 24px;"></h2>
+    <div>
+      <button class="back-btn skeleton skeleton-circle" style="width: 42px; height: 42px;"></button>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <div class="detail-left">
+      <div class="skeleton skeleton-rect" style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px;"></div>
+      <div class="episode-info">
+        <div class="episode-meta">
+          <span class="skeleton skeleton-text" style="width: 60px; height: 14px;"></span>
+          <span class="skeleton skeleton-text" style="width: 100px; height: 14px;"></span>
+        </div>
+        <br>
+        <p class="episode-description">
+          <span class="skeleton skeleton-text" style="width: 100%; height: 16px; margin-bottom: 8px;"></span>
+          <span class="skeleton skeleton-text" style="width: 90%; height: 16px; margin-bottom: 8px;"></span>
+          <span class="skeleton skeleton-text" style="width: 70%; height: 16px;"></span>
+        </p>
+      </div>
+    </div>
+
+    <div class="detail-right">
+      <h3 class="sidebar-title skeleton skeleton-text" style="width: 120px; height: 16px; margin-bottom: 18px;"></h3>
+      <div class="episodes-list">
+        <div class="episode-card skeleton-item" *ngFor="let i of [1,2,3,4,5]">
+          <div class="thumbnail skeleton skeleton-rect"></div>
+          <div class="card-content">
+            <h4 class="skeleton skeleton-text" style="width: 80%; height: 16px; margin-bottom: 6px;"></h4>
+            <div class="card-meta">
+              <span class="skeleton skeleton-text" style="width: 50px; height: 12px;"></span>
+              <span class="skeleton skeleton-text" style="width: 40px; height: 12px;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-content" [class.visible]="modalVisible()" *ngIf="!loading() && selectedPodcast()">
+  <!-- Header -->
+  <div class="detail-header">
+    <p class="podcast-name">{{ selectedPodcast()?.title }}</p>
+    <h2 class="episode-title">{{ selectedEpisode()?.title }}</h2>
+    <div>
+      <button class="back-btn" (click)="goBack()">X</button>
+    </div>
+  </div>
+
+  <div class="detail-body">
+    <!-- Left: Player + Info -->
+    <div class="detail-left">
+      <mux-player
+        #muxPlayer
+        *ngIf="selectedEpisode()"
+        [playbackId]="selectedEpisode()?.mux?.playbackIds?.[0]?.id"
+        stream-type="on-demand"
+        theme="minimal"
+        primary-color="#a855f7"
+        secondary-color="#1f1f1f"
+        title="{{ selectedEpisode()?.title }}"
+        [start-time]="resumeTime() || 0"
+        muted="false"
+        controls
+        style="width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden;">
+      </mux-player>
+
+      <div class="episode-info">
+        <div class="episode-meta">
+          <span>{{ selectedEpisode()?.duration | date:'mm:ss' }}</span>
+          <span>{{ selectedEpisode()?.publishedAt | date:'mediumDate' }}</span>
+        </div>
+        <br>
+        <p class="episode-description">
+          {{ selectedEpisode()?.description || 'Sin descripción disponible.' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Right: Lista de Episodios -->
+    <div class="detail-right">
+      <h3 class="sidebar-title">Episodios ({{ selectedPodcast()?.episodes?.length }})</h3>
+      <div class="episodes-list">
+        <div *ngFor="let episode of selectedPodcast()?.episodes"
+             class="episode-card"
+             (click)="playEpisode(episode)"
+             [class.active]="episode._id === selectedEpisode()?._id">
+          <div class="thumbnail">
+            <img [src]="episode.image || 'https://via.placeholder.com/120x68'" alt="thumbnail">
+            <div class="play-overlay">▶</div>
+          </div>
+          <div class="card-content">
+            <h4>{{ episode.title }}</h4>
+            <div class="card-meta">
+              <span>{{ episode.duration | date:'mm:ss' }}</span>
+              <span *ngIf="episode.progress" class="progress">{{ episode.progress }}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

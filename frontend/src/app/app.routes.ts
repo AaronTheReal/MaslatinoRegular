@@ -20,6 +20,7 @@ import {NoticiasDespliegue} from './pages/noticias-despliegue/noticias-despliegu
 import {NoticiasRecomendadas} from './componentes/despliegues/noticias-recomendadas/noticias-recomendadas'
 import {DescargaLaApp} from './pages/descarga-la-app/descarga-la-app'
 import {PodcastComponent} from './componentes/despliegues/podcast/podcast'
+import {PodcastPagina} from './componentes/despliegues/podcast/podcast-pagina/podcast-pagina'
 import {Nosotros} from './pages/nosotros/nosotros'
 import {NoticiasTodas} from './componentes/despliegues/noticias-todas/noticias-todas'
 import { LoginForm } from './componentes/admin/login-form/login-form'; 
@@ -64,7 +65,9 @@ export const routes: Routes = [
     { path: 'recomendadas-show', component: NoticiasRecomendadas },
 
   { path: 'podcast-show', component: PodcastComponent },
-    { path: 'podcast-show/:id',  component: PodcastComponent },
+  { path: 'podcast-show/:id',  component: PodcastComponent },
+      
+  { path: 'podcast-pagina/:id', component: PodcastPagina },
 
   {path: 'descarga-la-app', component:DescargaLaApp},
   {path: 'nosotros-pagina', component:Nosotros},
