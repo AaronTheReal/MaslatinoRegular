@@ -3,8 +3,15 @@
 <!-- Imagen de fondo grande -->
   <div 
     class="hero-background" 
+    [style.background-image]="' url(' + (podcast?.coverImage2) + ')'">
+  </div>
+
+  <!--
+    <div 
+    class="hero-background" 
     [style.background-image]="'linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(' + (podcast?.coverImage2) + ')'">
   </div>
+  -->
   <!-- Contenido principal -->
   <div class="content">
     
