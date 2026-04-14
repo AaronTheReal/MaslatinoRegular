@@ -1,87 +1,31 @@
-
-<!-- src/app/componentes/despliegues/podcast/podcast.html -->
-
 <div *ngIf="error()" class="error">{{ error() }}</div>
+<section class="section1">
+  <!-- Contenido izquierdo -->
+  <div class="contenido-izquierda">
+    <h1 class="titulo">PODCAST</h1>
+    <p class="subtitulo">DISPONIBLE EN</p>
 
-<!-- Vista de Lista: Hero + Featured + Grid -->
-<!-- Hero Section -->
-<section class="hero-section">
-  <div class="hero-background">
-    <img src="assets/podcastdespliegue/fondo.png" alt="Background" class="hero-bg-image">
-  </div>
-  <div class="hero-content-wrapper">
-    <div class="hero-text">
-      <h1 class="hero-title">Viva Latino<br>Morning Show</h1>
-      <p class="hero-description">
-        ¡Comienza tu día con energía e información!<br>
-        De lunes a viernes, de 6:00 a 8:00 a.m., Viva Latino te trae las noticias más importantes, debates actuales y entrevistas con invitados sorprendentes cada mañana.<br>
-        Y ahora lo puedes escuchar cuando quieras y donde quieras.<br>
-        Sintoniza Más Latino 99.9 FM / 1300 AM o escúchanos en nuestra App.
-      </p>
-      <div class="available-badges">
-        <p class="available-label">DISPONIBLE EN</p>
-        <div class="badge-group">
-          <div class="badge-wrapper">
-            <a (click)="openAndroid($event)"><img src="https://api.builder.io/api/v1/image/assets/TEMP/b66f3912d6f06a77ee1e63fc1a920667a8aceaf9?width=287" alt="Google Play" class="badge-image"></a>
-          </div>
-          <div class="badge-wrapper">
-            <a (click)="openIOS($event)"><img src="https://api.builder.io/api/v1/image/assets/TEMP/968df345bb7bbc8b6f0e47327e6679135dd4af37?width=287" alt="App Store" class="badge-image"></a>
-          </div>
-        </div>
+    <div class="badge-group">
+      <div class="badge-wrapper">
+        <a (click)="openAndroid($event)">
+          <img src="assets/podcasts/imagen2.png" alt="Google Play" class="badge-image">
+        </a>
       </div>
-    </div>
-    <div class="hero-image-wrapper"></div>
-  </div>
-</section>
-
-<!-- Skeleton para Player Section (Featured) -->
-<section class="player-section overlap-on-hero" *ngIf="loading()">
-  <div class="player-card">
-    <div class="player-content">
-      <div class="album-art skeleton skeleton-rect"></div>
-      <div class="player-info">
-        <h2 class="episode-title2 skeleton skeleton-text" style="width: 80%; height: 28px;"></h2>
-        <p class="episode-number skeleton skeleton-text" style="width: 60%; height: 16px;"></p>
-        <div class="player-controls">
-          <div class="play-btn skeleton skeleton-circle" style="width: 68px; height: 68px;"></div>
-          <div class="progress-bar skeleton skeleton-rect" style="flex: 1; height: 4px;"></div>
-          <div class="volume-btn skeleton skeleton-circle" style="width: 40px; height: 40px;"></div>
-        </div>
+      <div class="badge-wrapper">
+        <a (click)="openIOS($event)">
+          <img src="assets/podcasts/imagen3.png" alt="App Store" class="badge-image">
+        </a>
       </div>
     </div>
   </div>
+
+  <!-- Imagen pegada abajo-derecha (sin espacio) -->
+  <img 
+    src="assets/podcasts/imagen1.png" 
+    alt="Podcast Cover" 
+    class="imagen-derecha">
 </section>
 
-<!-- Player Section (Featured) real -->
-<section class="player-section overlap-on-hero" *ngIf="!loading() && featuredPodcast()">
-  <div class="player-card">
-    <div class="player-content">
-      <div class="album-art">
-        <img [src]="featuredPodcast()?.coverImage || 'https://via.placeholder.com/2048x2048'"
-             alt="Podcast cover"
-             class="album-image">
-      </div>
-      <div class="player-info">
-        <h2 class="episode-title2">{{ featuredPodcast()?.title }}</h2>
-        <p class="episode-number">Episodio más reciente</p>
-        <div class="player-controls">
-          <button class="play-btn"
-                  aria-label="Play episode"
-                  (click)="onPlay()">
-            <svg width="68" height="68" viewBox="0 0 68 68" fill="none">
-              <circle cx="34" cy="34" r="34" fill="black"/>
-              <path d="M25 47.9V19.7L49.4 33.8L25 47.9Z" fill="white"/>
-            </svg>
-          </button>
-          <div class="progress-bar">
-            <div class="progress-track"></div>
-            <div class="progress-indicator"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
 
 <!-- Skeleton para Lista de Podcasts -->
 <section class="more-podcasts-section" *ngIf="loading()">
@@ -96,7 +40,7 @@
 
 <!-- Lista de Podcasts real -->
 <section class="more-podcasts-section" *ngIf="!loading()">
-  <h2 class="section-title">MAS PODCAST</h2>
+  <h2 class="section-title">PODCASTS</h2>
   <div class="more-podcasts-grid">
     <div class="podcast-item" 
          *ngFor="let podcast of podcasts(); trackBy: trackById" 

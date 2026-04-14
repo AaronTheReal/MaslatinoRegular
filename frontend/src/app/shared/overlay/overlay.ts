@@ -146,7 +146,7 @@ const NOTICIAS_OVERLAY_LIMIT = 20; // ajusta 100, 150, 200 según se sienta
 
       // 2) Noticias -> SearchItem
       const newsItems: SearchItem[] = (noticias || []).map((n: any) => {
-        const id = n?._id || n?.id || '';
+        const id = this.getDocumentId(n);
         const slug = n?.slug || n?.meta?.slug;
         const title = n?.title || n?.meta?.title || 'Sin título';
         const image = n?.meta?.image || n?.image || n?.imagen || undefined;
@@ -172,7 +172,7 @@ const NOTICIAS_OVERLAY_LIMIT = 20; // ajusta 100, 150, 200 según se sienta
 
       // 3) Podcasts -> SearchItem
       const podcastItems: SearchItem[] = (podcasts || []).map((p: PodcastPayload | any) => {
-        const id = p?._id || p?.id || '';
+        const id = this.getDocumentId(p);
         const title = p?.title || p?.name || 'Sin título';
         const image = p?.coverImage || p?.image || p?.images?.[0]?.url || undefined;
 
@@ -230,10 +230,9 @@ const NOTICIAS_OVERLAY_LIMIT = 20; // ajusta 100, 150, 200 según se sienta
   }
 
   private buildPodcastRoute(id?: string) {
-    if (id) return `/podcast/${id}`;
+    if (id) return `/podcast-pagina/${id}`;   // ← corregido
     return '/podcasts';
   }
-
   private pickFirstCat(catIds?: string[]): { name: string; color?: string } | undefined {
     if (!catIds?.length) return undefined;
     const found = this.catMap.get(catIds[0]);
@@ -385,7 +384,15 @@ const NOTICIAS_OVERLAY_LIMIT = 20; // ajusta 100, 150, 200 según se sienta
     const panel = this.panelRef?.nativeElement;
     if (panel && !panel.contains(e.target as Node)) this.close();
   }
-
+  private getDocumentId(doc: any): string {
+    if (!doc) return '';
+    if (typeof doc._id === 'string') return doc._id;
+    if (doc._id && typeof doc._id === 'object' && doc._id.$oid) {
+      return doc._id.$oid;
+    }
+    if (typeof doc.id === 'string') return doc.id;
+    return '';
+  }
   // trackBy para categorías
   trackByCatId = (_: number, cat: CategoriaPayload) => cat._id ?? _;
 }

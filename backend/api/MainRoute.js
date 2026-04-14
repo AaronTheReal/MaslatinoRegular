@@ -32,7 +32,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { flexibleChecksumsMiddlewareOptions } from '@aws-sdk/middleware-flexible-checksums';
 import crypto from 'crypto';
 import { verifyToken, requireRole } from '../authAdmin.js';
-
+import {CorreoController} from './Correo.js'
 dotenv.config();
 
 const CLIENT_ID = '839716319068-kvfo69vbtp239991itvmr367cb9fprkv.apps.googleusercontent.com'; // Your web client ID
@@ -170,7 +170,9 @@ export default class MainRoute {
     router.route('/verificar-codigo').post(UsuariosController.verificarCodigo);
     router.route('/reset-password').post(UsuariosController.resetPassword);
 
-
+    router.post('/correos', correoController.suscribir);           // POST /correos  → suscribirse
+    router.get('/correos', correoController.obtenerCorreos);       // GET /correos   → obtener todos los correos
+    router.delete('/correos/:id', correoController.eliminarCorreo); // DELETE /correos/:id → eliminar un correo
     //UserAdminController
 
 router

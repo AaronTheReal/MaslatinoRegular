@@ -3,15 +3,17 @@
     <h2 class="newsletter-brand">MÁS LATINO</h2>
     <p class="newsletter-title">SUSCRÍBETE AL BOLETÍN SEMANAL</p>
 
-    <form class="newsletter-form">
+    <form class="newsletter-form" (submit)="suscribirse(emailInput.value); $event.preventDefault(); emailInput.value = ''">
       <label for="newsletter-email" class="newsletter-label">EMAIL</label>
 
       <div class="newsletter-row">
         <input
+          #emailInput
           id="newsletter-email"
           type="email"
           class="newsletter-input"
           placeholder="Tu correo electrónico"
+          required
         />
 
         <button type="submit" class="newsletter-button">

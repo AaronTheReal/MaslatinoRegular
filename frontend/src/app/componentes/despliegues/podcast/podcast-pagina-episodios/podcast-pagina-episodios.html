@@ -1,35 +1,38 @@
-<section class="hero">
-  <!-- Imagen de fondo grande -->
-<!-- Imagen de fondo grande -->
-  <div 
-    class="hero-background" 
-    [style.background-image]="' url(' + (podcast?.coverImage2) + ')'">
+<section class="hero" [class.is-loading]="!contentReady">
+  <!-- Fondo principal -->
+  <div
+    class="hero-background"
+    [style.background-image]="heroBackgroundStyle">
   </div>
 
-  <!--
-    <div 
-    class="hero-background" 
-    [style.background-image]="'linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)), url(' + (podcast?.coverImage2) + ')'">
+  <!-- Skeleton loader -->
+  <div class="hero-skeleton" *ngIf="!contentReady" aria-hidden="true">
+    <div class="skeleton-layout">
+      <div class="skeleton-text-area">
+        <div class="skeleton-line skeleton-line-1"></div>
+        <div class="skeleton-line skeleton-line-2"></div>
+        <div class="skeleton-line skeleton-line-3"></div>
+        <div class="skeleton-line skeleton-line-4"></div>
+      </div>
+
+      <div class="skeleton-image"></div>
+    </div>
   </div>
-  -->
+
   <!-- Contenido principal -->
-  <div class="content">
-    
-    <!-- Texto con fondo transparente -->
+  <div class="content" [class.content-hidden]="!contentReady">
     <div class="text-container">
       <div class="text-overlay">
-        <h1 class="title">{{ podcast?.title || 'Cargando podcast...' }}</h1>
         <p class="description">
-          {{ podcast?.description || 'Descripción no disponible' }}
+          {{ descriptionText }}
         </p>
       </div>
     </div>
 
-    <!-- Imagen cuadrada pequeña -->
     <div class="image-container">
-      <img 
-        [src]="podcast?.coverImage || 'https://picsum.photos/id/1005/800/800'" 
-        [alt]="podcast?.title || 'Portada del podcast'" 
+      <img
+        [src]="podcast?.coverImage || 'https://picsum.photos/id/1005/800/800'"
+        [alt]="titleText"
         class="square-image">
     </div>
   </div>
