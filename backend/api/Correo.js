@@ -1,5 +1,5 @@
 // controllers/CorreoController.js
-import Correo from '../models/Correo.js';
+import Correo from '../models/Correos.js';
 import mongoose from 'mongoose';
 
 class CorreoController {
