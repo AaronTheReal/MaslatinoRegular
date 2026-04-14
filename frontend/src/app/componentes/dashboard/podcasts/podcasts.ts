@@ -88,7 +88,7 @@ export class Podcasts implements OnInit {
     if (evt) evt.stopPropagation(); // Mantén esto para evitar propagación
     const id = p._id;
     if (!id) return;
-    this.router.navigate(['/podcast-show', id]);
+    this.router.navigate(['/podcast-pagina', id]);
   }
 
   /**
@@ -104,7 +104,7 @@ export class Podcasts implements OnInit {
     const id = p._id;
     if (!id) return;
 
-    this.router.navigate(['/podcast-show', id]);
+    this.router.navigate(['/podcast-pagina', id]);
   }
 
   getSizeClass(idx: number): string {

@@ -166,11 +166,9 @@ export class PodcastComponent implements OnInit {
   podcasts = computed(() => {
     const size = this.pageSize;
     const page = this.page();
-    return this.sorted().slice(1, 1 + page * size); // excluimos el featured
+    return this.sorted().slice(0, page * size);   // ← ahora desde el 0
   });
-
-  hasMore = computed(() => this.sorted().length > this.podcasts().length + 1);
-
+  hasMore = computed(() => this.sorted().length > this.podcasts().length);
   // ====== ACCIONES ======
   loadMore() {
     if (!this.hasMore()) return;
@@ -184,10 +182,7 @@ export class PodcastComponent implements OnInit {
     }
   }
 
-  onPlay() {
-    const featured = this.featuredPodcast();
-    if (featured) this.navigateToPodcast(featured);
-  }
+
 
   // Métodos de filtros (usados en el template)
   onSearchInput(value: string) { this.search.set(value ?? ''); }

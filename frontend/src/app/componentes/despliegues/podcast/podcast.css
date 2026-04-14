@@ -85,30 +85,6 @@
   color: #000;
 }
 
-.badge-group {
-  display: flex;
-  gap: 16px;
-}
-
-.badge-wrapper {
-  width: clamp(110px, 12vw, 160px);
-  height: clamp(30px, 3.5vw, 40px);
-  border: 1px solid #000;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #fff;
-  transition: transform 0.2s;
-  cursor: pointer;
-}
-
-.badge-wrapper:hover {
-  transform: translateY(-2px);
-}
-
-.badge-image {
-  width: 100%;
-  height: auto;
-}
 
 /* Featured Player */
 .player-section {
@@ -730,4 +706,189 @@
   justify-content: center;
   background: rgba(255,255,255,0.12);
   backdrop-filter: blur(10px);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.section1 {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  height: 100vh;                    /* ← Forzamos altura exacta */
+  background-color: #000000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 8% 0 8%;
+  box-sizing: border-box;
+}
+
+/* ===================== TEXTO + BADGES ===================== */
+.contenido-izquierda {
+  z-index: 3;
+  max-width: 520px;
+  flex-shrink: 0;
+}
+
+.titulo {
+  font-size: clamp(4.5rem, 8vw, 7.5rem);
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  letter-spacing: -4px;
+  text-align: center;
+}
+
+.subtitulo {
+  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  font-weight: 300;
+  color: #ffffff;
+  margin: 0 0 28px 0;
+  letter-spacing: 10px;
+  text-transform: uppercase;
+  text-align: center;
+  opacity: 0.95;
+}
+
+/* Badges */
+.badge-group {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-top: 10px;
+}
+
+.badge-wrapper {
+  width: 168px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.badge-wrapper:hover {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(-3px);
+}
+
+.badge-image {
+  max-width: 92%;
+  max-height: 92%;
+  object-fit: contain;
+}
+
+/* ===================== IMAGEN DERECHA - SIEMPRE PEGADA ===================== */
+.imagen-derecha {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  
+  height: 94vh;
+  width: auto;
+  max-width: 57%;
+
+  object-fit: contain;
+  z-index: 2;
+  box-shadow: -45px -35px 80px -25px rgba(0, 0, 0, 0.8);
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 1200px) {
+  .section1 { padding: 0 6% 0 6%; }
+  .imagen-derecha { height: 90vh; max-width: 60%; }
+}
+
+@media (max-width: 992px) {
+  .titulo { font-size: clamp(3.8rem, 7.5vw, 5.5rem); }
+  .imagen-derecha { height: 85vh; max-width: 65%; }
+}
+
+/* ===================== MÓVIL - AJUSTE DE ESPACIO (lo que pediste) ===================== */
+@media (max-width: 768px) {
+  .section1 {
+    padding: 60px 5% 0 5%;
+    height: 100vh;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .contenido-izquierda {
+    max-width: 100%;
+    margin-bottom: 20px;           /* ← menos bajada del contenedor PODCAST */
+  }
+
+  .imagen-derecha {
+    right: 0;
+    bottom: 0;
+    height: 72vh;
+    max-width: 92%;
+    box-shadow: -30px -25px 60px -15px rgba(0, 0, 0, 0.75);
+  }
+
+  .titulo { font-size: 3.6rem; letter-spacing: -2px; }
+  
+  .subtitulo {
+    font-size: 1.25rem;
+    letter-spacing: 6px;
+    margin-bottom: 18px;           /* ← menos espacio entre "DISPONIBLE EN" y botones */
+  }
+
+  .badge-wrapper { width: 138px; height: 46px; }
+}
+
+/* Móviles muy pequeños */
+@media (max-width: 480px) {
+  .section1 { padding-top: 50px; }
+  .titulo { font-size: 4rem; }
+  .subtitulo { 
+    font-size: 1.5rem; 
+    letter-spacing: 4px;
+    margin-bottom: 16px; 
+  }
+  .imagen-derecha { height: 65vh; max-width: 95%; }
+  .badge-wrapper { width: 172px; height: 92px; }
 }
