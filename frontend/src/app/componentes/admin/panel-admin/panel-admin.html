@@ -71,6 +71,15 @@
       </a>
     </div>
 
+        <!-- Correos (solo Admin) -->
+    <div class="col-12 col-sm-6 col-md-4" *ngIf="canSeeMultimedia()">
+      <a routerLink="/correos-panel" class="text-decoration-none">
+        <div class="admin-card bg-secondary text-white">
+          <i class="bi bi-film admin-icon"></i>
+          <span class="admin-label">Correos</span>
+        </div>
+      </a>
+    </div>
 
   </div>
 </div>

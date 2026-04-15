@@ -1,0 +1,43 @@
+<div class="admin-panel">
+  <h1 class="panel-title">Suscripciones al Boletín</h1>
+  
+  <div *ngIf="loading()" class="loading">Cargando correos...</div>
+  
+  <div *ngIf="error()" class="error-message">{{ error() }}</div>
+
+  <div *ngIf="!loading() && !error()" class="table-container">
+    <table class="correos-table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Fecha de Suscripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of correosPaginados">
+          <td class="email-cell">{{ c.correo }}</td>
+          <td class="date-cell">{{ c.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+        </tr>
+        <tr *ngIf="correosPaginados.length === 0">
+          <td colspan="2" class="no-data">No hay correos suscritos aún.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Paginación -->
+    <div class="pagination">
+      <button (click)="anterior()" [disabled]="currentPage() === 1" class="page-btn">
+        ← Anterior
+      </button>
+      
+      <span class="page-info">
+        Página {{ currentPage() }} de {{ totalPaginas }} 
+        ({{ totalCorreos() }} correos)
+      </span>
+      
+      <button (click)="siguiente()" [disabled]="currentPage() === totalPaginas" class="page-btn">
+        Siguiente →
+      </button>
+    </div>
+  </div>
+</div>

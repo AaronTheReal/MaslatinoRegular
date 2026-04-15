@@ -9,25 +9,6 @@
    PODCAST DETAIL PAGE – Página completa
    ============================================= */
 
-.modal-content {
-  min-height: 100dvh;
-  width: 100%;
-  background: #0f0f0f;
-  color: #fff;
-  margin: 0;
-  border-radius: 0;
-  box-shadow: none;
-  overflow-x: hidden;
-  opacity: 0;
-  transform: none;
-  transition: opacity 0.2s ease;
-  will-change: opacity;
-}
-
-.modal-content.visible {
-  opacity: 1;
-}
-
 /* Header Superior (sticky) */
 .detail-header {
   padding: 20px 28px;
@@ -106,46 +87,76 @@
   min-width: 0;
 }
 
+/* =============================================
+   MODO VIDEO + AUDIO - Player Shell
+   ============================================= */
 .player-shell {
+  position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: 18px;
+  aspect-ratio: 16 / 9;         /* reserva exacta desde el inicio */
   overflow: hidden;
-  background: #111;
+  border-radius: 18px;
+  background: radial-gradient(120% 120% at 50% 0%, #1a1a1a 0%, #0d0d0d 55%, #090909 100%);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
-  min-height: 240px;
+  isolation: isolate;
+  contain: layout paint;
+  margin-bottom: 12px;
 }
 
-.mux-player {
+/* MISMO TAMAÑO EN AMBOS MODOS */
+.player-shell.video-mode,
+.player-shell.audio-mode {
+  aspect-ratio: 16 / 9;
+}
+
+/* Diferencia solo visual, no dimensional */
+.player-shell.audio-mode {
+  background: radial-gradient(120% 120% at 50% 0%, #171717 0%, #101010 58%, #090909 100%);
+}
+
+/* El player siempre llena el shell */
+.player-shell > mux-player,
+.player-shell .mux-player {
+  position: absolute;
+  inset: 0;
   display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Variables visuales de Mux */
+.player-shell mux-player {
+  --media-object-fit: cover;
+  --media-object-position: center;
+  --media-control-bar-height: 56px;
+  --media-icon-size: 30px;
+  --media-font-size: 15px;
+}
+
+/* Audio: misma caja, UI de audio */
+.player-shell.audio-mode mux-player {
+  --media-control-bar-height: 60px;
+  --media-icon-size: 32px;
+}
+
+/* Skeleton que ocupa exactamente el mismo espacio */
+.player-shell .player-skeleton {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  min-height: 0;
+  border-radius: inherit;
 }
 
-.episode-info {
-  margin-top: 28px;
-}
-
-.episode-meta {
-  display: flex;
-  gap: 24px;
-  font-size: 0.97rem;
-  color: #6b7280;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-
-.episode-description {
-  font-size: 1.02rem;
-  line-height: 1.6;
-  color: #374151;
-  min-height: 3.2em;
-}
-
-/* Card de episodios */
+/* =============================================
+   LISTA DE EPISODIOS - ANCHO FIJO (NO CAMBIA NUNCA)
+   ============================================= */
 .detail-right {
-  flex: 4;
-  min-width: 0;
+  flex: 0 0 400px;      /* ← ANCHO FIJO */
+  min-width: 400px;     /* ← ANCHO FIJO */
+  flex-shrink: 0;       /* ← IMPIDE QUE SE ENCOJA */
+  max-width: 400px;     /* ← IMPIDE QUE SE ENSANCHE */
 }
 
 .sidebar-title {
@@ -179,6 +190,33 @@
 
 .episodes-list::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Resto de estilos (sin cambios) */
+.mux-player {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.episode-info {
+  margin-top: 28px;
+}
+
+.episode-meta {
+  display: flex;
+  gap: 24px;
+  font-size: 0.97rem;
+  color: #6b7280;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.episode-description {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: #374151;
+  min-height: 3.2em;
 }
 
 /* Tarjetas de episodios */
@@ -269,12 +307,8 @@
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .detail-header .skeleton,
@@ -309,10 +343,95 @@
   margin-bottom: 8px;
 }
 
+/* Botón de 3 puntitos */
+.mode-switch-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-right: 8px;
+  z-index: 100;
+}
+
+.mode-switch-btn {
+  width: 42px;
+  height: 42px;
+  background: rgba(0, 0, 0, 0.85);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+}
+
+.mode-switch-btn:hover {
+  background: rgba(0, 0, 0, 0.95);
+  transform: scale(1.1);
+}
+
+.mode-switch-btn .dots {
+  letter-spacing: 5px;
+  margin-bottom: 3px;
+}
+
+.mode-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1f1f1f;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  min-width: 190px;
+  border: 1px solid #333;
+}
+
+.dropdown-item {
+  padding: 14px 20px;
+  color: #ddd;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-item:hover {
+  background: #2a2a2a;
+  color: white;
+}
+
+.dropdown-item.active {
+  background: #3a3a3a;
+  color: #a855f7;
+  font-weight: 500;
+}
+
+.mode-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 18px;
+  width: 12px;
+  height: 12px;
+  background: #1f1f1f;
+  border-left: 1px solid #333;
+  border-top: 1px solid #333;
+  transform: rotate(45deg);
+  z-index: -1;
+}
+
 /* =============================================
    RESPONSIVE
    ============================================= */
-
+/* Responsive: no cambies la altura del player, solo el layout general */
 @media (max-width: 1100px) {
   .detail-body {
     flex-direction: column;
@@ -322,6 +441,7 @@
   .detail-left,
   .detail-right {
     width: 100%;
+    flex: none;
   }
 
   .episodes-list {
@@ -330,78 +450,21 @@
 }
 
 @media (max-width: 768px) {
-  .modal-content {
-    min-height: 100dvh;
-  }
-
-  .detail-header {
-    padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 20px 18px;
-  }
-
-  .detail-body {
-    padding: 20px;
-  }
-
-  .card-box {
-    padding: 18px;
-    border-radius: 20px;
-  }
-
-  .episode-title {
-    font-size: 1.35rem;
-  }
-
-  .back-btn {
-    width: 52px;
-    height: 52px;
-    font-size: 1.85rem;
-  }
-
-  .thumbnail {
-    width: 110px;
-    height: 62px;
-  }
-
-  .player-shell {
-    min-height: 220px;
-  }
-
-  .episodes-list {
-    max-height: 380px;
-  }
+  .modal-content { min-height: 100dvh; }
+  .detail-header { padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 20px 18px; }
+  .detail-body { padding: 20px; }
+  .card-box { padding: 18px; border-radius: 20px; }
+  .episode-title { font-size: 1.35rem; }
+  .back-btn { width: 52px; height: 52px; font-size: 1.85rem; }
+  .thumbnail { width: 110px; height: 62px; }
+  .episodes-list { max-height: 380px; }
 }
 
 @media (max-width: 480px) {
-  .detail-header {
-    padding: max(28px, calc(env(safe-area-inset-top) + 20px)) 16px 16px;
-  }
-
-  .detail-body {
-    padding: 16px;
-  }
-
-  .card-box {
-    padding: 16px;
-    border-radius: 18px;
-  }
-
-  .episode-title {
-    font-size: 1.22rem;
-  }
-
-  .podcast-name {
-    font-size: 0.85rem;
-  }
-
-  .player-shell {
-    min-height: 200px;
-  }
-
-  .episodes-list {
-    max-height: 320px;
-  }
-
-  .detail-left mux-player {
-    border-radius: 12px;
-  }
+  .detail-header { padding: max(28px, calc(env(safe-area-inset-top) + 20px)) 16px 16px; }
+  .detail-body { padding: 16px; }
+  .card-box { padding: 16px; border-radius: 18px; }
+  .episode-title { font-size: 1.22rem; }
+  .podcast-name { font-size: 0.85rem; }
+  .episodes-list { max-height: 320px; }
 }

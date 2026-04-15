@@ -32,6 +32,7 @@ import {PruebaComponent} from './componentes/prueba-component/prueba-component'
 import{Contactanos} from './pages/contactanos/contactanos'
 import{PrivacyPolicy} from './pages/privacy-policy/privacy-policy'
 import {Terminos} from './pages/terminos/terminos'
+import { CorreosPanel } from './componentes/admin/correos-panel/correos-panel';
 
 
 export const routes: Routes = [
@@ -58,7 +59,10 @@ export const routes: Routes = [
   { path: 'radio-panel', component: PanelRadio, canActivate: [adminAuthGuard] },
   { path: 'categorias-panel', component: PanelCategorias, canActivate: [adminAuthGuard] },
   { path: 'admin-noticias', component: AdminNoticias, canActivate: [adminAuthGuard] },
+  { path: 'correos-panel', component: CorreosPanel, canActivate: [adminAuthGuard] },
+
   { path: 'admin/noticiaseditar/:id', component: EditarNoticias, canActivate: [adminAuthGuard] },
+
   { path: 'archivo/:anio/:mes', component: NoticiasDespliegue },
   { path: 'categoria/:slug', component: NoticiasDespliegue },
     { path: 'eventos-show', component: Eventos },
