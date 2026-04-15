@@ -18,7 +18,7 @@ import { PodcastPaginaSuscribete } from '../podcast-pagina-suscribete/podcast-pa
 })
 export class PodcastPagina implements OnInit {
   @ViewChild('muxPlayer', { static: false }) muxPlayerRef!: ElementRef<any>;
-
+  audioPlayerOpen = signal<boolean>(false);
   loading = signal<boolean>(true);
   error = signal<string>('');
   selectedPodcast = signal<Podcast | null>(null);
@@ -57,10 +57,7 @@ export class PodcastPagina implements OnInit {
     if (id) this.fetchPodcastById(id);
   }
 
-  @HostListener('window:keydown', ['$event'])
-  handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape') this.goBack();
-  }
+
 
   private fetchPodcastById(id: string) {
     this.loading.set(true);
@@ -79,10 +76,9 @@ export class PodcastPagina implements OnInit {
       complete: () => this.loading.set(false)
     });
   }
-
-  // ==================== REPRODUCIR EPISODIO ====================
   playEpisode(episode: Episode) {
     this.selectedEpisode.set(episode);
+    this.audioPlayerOpen.set(false);
 
     if (episode.progress && episode.duration) {
       this.resumeTime.set((episode.progress / 100) * episode.duration);
@@ -106,7 +102,7 @@ export class PodcastPagina implements OnInit {
 
     const applyToken = (token: string | null) => {
       this.currentPlaybackToken.set(token);
-      this.forceRemount();   // ← Remount completo
+      this.forceRemount();
     };
 
     if (policy === 'signed') {
@@ -127,13 +123,32 @@ export class PodcastPagina implements OnInit {
     }, 50);
   }
 
-  // ==================== CAMBIAR MODO ====================
   selectMode(mode: 'video' | 'audio') {
     this.showModeMenu.set(false);
     if (mode === 'video' && !this.canPlayVideo()) return;
 
     this.preferredMode.set(mode);
-    this.forceRemount();   // ← Remount obligatorio al cambiar modo
+    this.audioPlayerOpen.set(false);
+    this.forceRemount();
+  }
+
+  openAudioPlayer() {
+    if (this.currentMode() !== 'audio') return;
+    this.audioPlayerOpen.set(true);
+  }
+
+  closeAudioPlayer() {
+    this.audioPlayerOpen.set(false);
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Escape' && this.audioPlayerOpen()) {
+      this.closeAudioPlayer();
+      return;
+    }
+
+    if (event.key === 'Escape') this.goBack();
   }
 
   goBack() {

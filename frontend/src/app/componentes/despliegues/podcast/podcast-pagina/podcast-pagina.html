@@ -66,71 +66,91 @@
   </div>
 
   <div class="detail-body">
-    <div class="detail-left card-box">
-      <div
-        class="player-shell"
-        [class.video-mode]="currentMode() === 'video'"
-        [class.audio-mode]="currentMode() === 'audio'"
-      >
-        <mux-player
-          *ngIf="currentPlaybackId()"
-          class="mux-player"
-          [playbackId]="currentPlaybackId()"
-          [attr.playback-token]="currentPlaybackToken() || null"
-          stream-type="on-demand"
-          theme="minimal"
-          primary-color="#a855f7"
-          secondary-color="#1f1f1f"
-          [title]="selectedEpisode()?.title || ''"
-          [videoTitle]="selectedEpisode()?.title || ''"
-          [start-time]="resumeTime() || 0"
-          controls
-          [attr.audio]="currentMode() === 'audio' ? '' : null"
-          [poster]="currentMode() === 'audio' ? (selectedEpisode()?.image || '') : null"
-        ></mux-player>
+   <div class="detail-left card-box">
+    
+  <ng-container [ngSwitch]="currentMode()">
+    <!-- VIDEO -->
+    <div *ngSwitchCase="'video'" class="player-shell video-mode">
+      <mux-player
+        *ngIf="showMuxPlayer() && currentPlaybackId()"
+        class="mux-player"
+        [playbackId]="currentPlaybackId()"
+        [attr.playback-token]="currentPlaybackToken() || null"
+        stream-type="on-demand"
+        theme="minimal"
+        primary-color="#a855f7"
+        secondary-color="#1f1f1f"
+        [title]="selectedEpisode()?.title || ''"
+        [videoTitle]="selectedEpisode()?.title || ''"
+        [start-time]="resumeTime() || 0"
+        controls
+      ></mux-player>
+    </div>
+
+    <!-- AUDIO -->
+    <div *ngSwitchCase="'audio'" class="audio-hero">
+      <div class="audio-hero-cover">
+        <img
+          [src]="selectedEpisode()?.image || 'https://via.placeholder.com/640x360'"
+          [alt]="selectedEpisode()?.title || 'Audio'"
+        />
       </div>
 
-      <div class="mode-switch-wrapper">
-        <button
-          class="mode-switch-btn"
-          (click)="toggleModeMenu($event)"
-          title="Cambiar entre Video y Audio"
-        >
-          <span class="dots">•••</span>
-        </button>
-
-        <div *ngIf="showModeMenu()" class="mode-dropdown">
-          <div
-            class="dropdown-item"
-            [class.active]="currentMode() === 'video'"
-            [class.disabled]="!canPlayVideo()"
-            (click)="canPlayVideo() && selectMode('video')"
-          >
-            🎥 Ver en Video
-          </div>
-          <div
-            class="dropdown-item"
-            [class.active]="currentMode() === 'audio'"
-            (click)="selectMode('audio')"
-          >
-            🎧 Escuchar Audio
-          </div>
-        </div>
-      </div>
-
-      <div class="episode-info">
-        <div class="episode-meta">
-          <span>{{ selectedEpisode()?.duration | date:'mm:ss' }}</span>
-          <span>{{ selectedEpisode()?.publishedAt | date:'mediumDate' }}</span>
-        </div>
-
-        <br />
-
-        <p class="episode-description">
-          {{ selectedEpisode()?.description || 'Sin descripción disponible.' }}
+      <div class="audio-hero-content">
+        <p class="audio-kicker">Modo audio</p>
+        <h3>{{ selectedEpisode()?.title }}</h3>
+        <p class="audio-subtitle">
+          {{ selectedPodcast()?.title }}
         </p>
+
+        <button class="audio-play-btn" (click)="openAudioPlayer()">
+          <span class="audio-play-icon">▶</span>
+          Reproducir audio
+        </button>
       </div>
     </div>
+  </ng-container>
+    <div class="mode-switch-wrapper">
+  <button
+    class="mode-switch-btn"
+    (click)="toggleModeMenu($event)"
+    title="Cambiar entre Video y Audio"
+  >
+    <span class="dots">•••</span>
+  </button>
+
+  <div *ngIf="showModeMenu()" class="mode-dropdown">
+    <div
+      class="dropdown-item"
+      [class.active]="currentMode() === 'video'"
+      [class.disabled]="!canPlayVideo()"
+      (click)="canPlayVideo() && selectMode('video')"
+    >
+      🎥 Ver en Video
+    </div>
+
+    <div
+      class="dropdown-item"
+      [class.active]="currentMode() === 'audio'"
+      (click)="selectMode('audio')"
+    >
+      🎧 Escuchar Audio
+    </div>
+  </div>
+</div>
+  <div class="episode-info">
+    <div class="episode-meta">
+      <span>{{ selectedEpisode()?.duration | date:'mm:ss' }}</span>
+      <span>{{ selectedEpisode()?.publishedAt | date:'mediumDate' }}</span>
+    </div>
+
+    <br />
+
+    <p class="episode-description">
+      {{ selectedEpisode()?.description || 'Sin descripción disponible.' }}
+    </p>
+  </div>
+</div>
 
     <div class="detail-right card-box">
       <h3 class="sidebar-title">Episodios ({{ selectedPodcast()?.episodes?.length }})</h3>
@@ -157,6 +177,56 @@
       </div>
     </div>
   </div>
+
+
+
+
+  <div
+  *ngIf="currentMode() === 'audio' && audioPlayerOpen()"
+  class="audio-floating-player"
+>
+  <div class="audio-floating-header">
+    <div>
+      <span class="audio-floating-badge">Audio</span>
+      <h4>{{ selectedEpisode()?.title }}</h4>
+    </div>
+
+    <button class="audio-close-btn" (click)="closeAudioPlayer()">✕</button>
+  </div>
+
+  <div class="audio-floating-body">
+    <div class="audio-floating-art">
+      <img
+        [src]="selectedEpisode()?.image || 'https://via.placeholder.com/220x220'"
+        [alt]="selectedEpisode()?.title || 'Audio'"
+      />
+    </div>
+
+    <div class="audio-floating-player-shell">
+        <mux-player
+      *ngIf="currentPlaybackId()"
+      class="mux-player audio-mux"
+      [playbackId]="currentPlaybackId()"
+      [attr.playback-token]="currentPlaybackToken() || null"
+      stream-type="on-demand"
+      theme="minimal"
+      primary-color="#a855f7"
+      secondary-color="#1f1f1f"
+      [title]="selectedEpisode()?.title || ''"
+      [start-time]="resumeTime() || 0"
+      controls
+      audio
+      autoplay
+      style="
+        width: 100%;
+        height: 220px;
+        min-height: 220px;
+        --controls-backdrop-color: rgb(0 0 0 / 65%);
+      "
+    ></mux-player>
+    </div>
+  </div>
+</div>
 </ng-template>
 
 <app-podcast-pagina-suscribete></app-podcast-pagina-suscribete>
