@@ -1,16 +1,17 @@
-import { Component, signal, CUSTOM_ELEMENTS_SCHEMA, ViewChild, ElementRef, OnInit, HostListener } from '@angular/core';
+import { Component, signal, CUSTOM_ELEMENTS_SCHEMA, ViewChild, ElementRef, OnInit, HostListener, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PodcastService, Podcast, Episode } from '../../../../services/podcastDespliegue-service';
 import '@mux/mux-player';
-import {PodcastPaginaEpisodios} from '../podcast-pagina-episodios/podcast-pagina-episodios'
-import { PodcastPaginaEscucharaqui} from '../podcast-pagina-escucharaqui/podcast-pagina-escucharaqui'
-import {PodcastPaginaSuscribete} from '../podcast-pagina-suscribete/podcast-pagina-suscribete'
+import { PodcastPaginaEpisodios } from '../podcast-pagina-episodios/podcast-pagina-episodios';
+import { PodcastPaginaEscucharaqui } from '../podcast-pagina-escucharaqui/podcast-pagina-escucharaqui';
+import { PodcastPaginaSuscribete } from '../podcast-pagina-suscribete/podcast-pagina-suscribete';
+
 @Component({
   selector: 'app-podcast-pagina',
   standalone: true,
-  imports: [CommonModule, HttpClientModule,PodcastPaginaEpisodios,PodcastPaginaEscucharaqui,PodcastPaginaSuscribete],
+  imports: [CommonModule, HttpClientModule, PodcastPaginaEpisodios, PodcastPaginaEscucharaqui, PodcastPaginaSuscribete],
   templateUrl: './podcast-pagina.html',
   styleUrl: './podcast-pagina.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -22,9 +23,28 @@ export class PodcastPagina implements OnInit {
   error = signal<string>('');
   selectedPodcast = signal<Podcast | null>(null);
   selectedEpisode = signal<Episode | null>(null);
-  modalVisible = signal<boolean>(true);   // se mantiene por compatibilidad con CSS
+  modalVisible = signal<boolean>(true);
   resumeTime = signal<number>(0);
-  playbackToken = signal<string | null>(null);
+  showModeMenu = signal<boolean>(false);
+
+  // ==================== NUEVAS SEÑALES ====================
+  currentPlaybackId = signal<string>('');
+  currentPlaybackToken = signal<string | null>(null);
+  showMuxPlayer = signal<boolean>(true);        // ← Para forzar remount completo
+  playerKey = signal<number>(0);                // ← Ayuda extra al remount
+
+  private preferredMode = signal<'video' | 'audio'>('video');
+
+  currentMode = computed(() => {
+    const episode = this.selectedEpisode();
+    const pref = this.preferredMode();
+
+    if (episode?.kind === 'audio') return 'audio';
+    if (pref === 'video' && episode?.kind === 'video') return 'video';
+    return pref;
+  });
+
+  canPlayVideo = computed(() => this.selectedEpisode()?.kind === 'video');
 
   constructor(
     private api: PodcastService,
@@ -34,16 +54,12 @@ export class PodcastPagina implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.fetchPodcastById(id);
-    }
+    if (id) this.fetchPodcastById(id);
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      this.goBack();
-    }
+    if (event.key === 'Escape') this.goBack();
   }
 
   private fetchPodcastById(id: string) {
@@ -64,6 +80,7 @@ export class PodcastPagina implements OnInit {
     });
   }
 
+  // ==================== REPRODUCIR EPISODIO ====================
   playEpisode(episode: Episode) {
     this.selectedEpisode.set(episode);
 
@@ -77,55 +94,59 @@ export class PodcastPagina implements OnInit {
     const publicPlayback = playbackIds.find(p => p.policy === 'public');
     const playback = publicPlayback || playbackIds[0];
     const playbackId = playback?.id;
-    const policy = playback?.policy;
 
     if (!playbackId) {
       console.error('❌ No playbackId');
       return;
     }
 
-    const applyToPlayer = (token: string | null) => {
-      const el = this.muxPlayerRef?.nativeElement;
-      if (!el) return;
+    this.currentPlaybackId.set(playbackId);
 
-      el.pause?.();
-      el.playbackId = null;
-      delete el.playbackToken;
+    const policy = playback?.policy;
 
-      setTimeout(() => {
-        el.playbackId = playbackId;
-        if (token) el.playbackToken = token;
-        el.streamType = 'on-demand';
-
-        if (typeof el.load === 'function') el.load();
-        el.play?.().catch((e: any) => console.warn('Autoplay bloqueado:', e));
-      }, 60);
+    const applyToken = (token: string | null) => {
+      this.currentPlaybackToken.set(token);
+      this.forceRemount();   // ← Remount completo
     };
 
     if (policy === 'signed') {
       this.api.getSignedToken(playbackId).subscribe({
-        next: (res) => applyToPlayer(res.token)
+        next: (res) => applyToken(res.token),
+        error: () => applyToken(null)
       });
     } else {
-      applyToPlayer(null);
+      applyToken(null);
     }
+  }
 
-    // Listener de progreso
-    const el = this.muxPlayerRef?.nativeElement;
-    if (el) {
-      const updateProgress = () => {
-        const current = el.currentTime;
-        const dur = el.duration;
-        if (dur > 0) {
-          episode.progress = Math.round((current / dur) * 100);
-          console.log('Progreso actualizado:', episode.progress);
-        }
-      };
-      el.addEventListener('timeupdate', updateProgress);
-    }
+  private forceRemount() {
+    this.showMuxPlayer.set(false);
+    setTimeout(() => {
+      this.showMuxPlayer.set(true);
+      this.playerKey.update(k => k + 1);
+    }, 50);
+  }
+
+  // ==================== CAMBIAR MODO ====================
+  selectMode(mode: 'video' | 'audio') {
+    this.showModeMenu.set(false);
+    if (mode === 'video' && !this.canPlayVideo()) return;
+
+    this.preferredMode.set(mode);
+    this.forceRemount();   // ← Remount obligatorio al cambiar modo
   }
 
   goBack() {
     this.router.navigate(['/podcast-show']);
+  }
+
+  toggleModeMenu(event: Event) {
+    event.stopPropagation();
+    this.showModeMenu.update(v => !v);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event) {
+    this.showModeMenu.set(false);
   }
 }
