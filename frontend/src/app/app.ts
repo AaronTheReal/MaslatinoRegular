@@ -10,6 +10,7 @@ import { PLATFORM_ID } from '@angular/core';
 import { filter } from 'rxjs/operators';
 import { MegaphoneGlobalPlayerComponent } from './shared/megaphone-player/megaphone-player-global/megaphone-player-global';
 import {AdsComponent} from './componentes/ads/ads'
+import {AudioFloatingPlayerComponent} from './shared/audio-floating-player.component/audio-floating-player.component';
 declare global {
   interface Window {
     dataLayer: any[];
@@ -28,7 +29,8 @@ declare global {
     Overlay,
     MegaphoneGlobalPlayerComponent,
     RadioPlayerComponent,
-    AdsComponent
+    AdsComponent,
+    AudioFloatingPlayerComponent
   ],
   templateUrl: './app.html',
   styleUrl: './app.css'

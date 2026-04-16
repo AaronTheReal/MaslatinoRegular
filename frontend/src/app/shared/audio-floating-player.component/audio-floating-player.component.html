@@ -1,0 +1,40 @@
+<ng-container *ngIf="audioPlayer.isOpen()">
+  <div class="audio-floating-player">
+    <div class="audio-floating-top">
+      <div class="audio-header-copy">
+        <p>{{ audioPlayer.podcastTitle() }}</p>
+      </div>
+
+      <button class="audio-close-btn" (click)="closePlayer()">✕</button>
+    </div>
+
+    <div class="audio-floating-body">
+      <div class="audio-floating-art">
+        <img
+          [src]="audioPlayer.image() || fallbackImage"
+          [alt]="audioPlayer.title() || 'Audio'"
+        />
+      </div>
+
+      <div class="audio-floating-content">
+        <div class="audio-floating-player-shell">
+          <mux-player
+            *ngIf="audioPlayer.playbackId()"
+            class="mux-player audio-mux"
+            [playbackId]="audioPlayer.playbackId()"
+            [attr.playback-token]="audioPlayer.playbackToken() || null"
+            stream-type="on-demand"
+            theme="minimal"
+            primary-color="#a855f7"
+            secondary-color="#1f1f1f"
+            [title]="audioPlayer.title() || ''"
+            [start-time]="audioPlayer.resumeTime() || 0"
+            controls
+            audio
+            autoplay
+          ></mux-player>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-container>
