@@ -1,8 +1,18 @@
-import { Component, signal, CUSTOM_ELEMENTS_SCHEMA, ViewChild, ElementRef, OnInit, HostListener, computed } from '@angular/core';
+import {
+  Component,
+  signal,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ViewChild,
+  ElementRef,
+  OnInit,
+  HostListener,
+  computed
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PodcastService, Podcast, Episode } from '../../../../services/podcastDespliegue-service';
+import { AudioPlayerService } from '../../../../services/audio-player.service';
 import '@mux/mux-player';
 import { PodcastPaginaEpisodios } from '../podcast-pagina-episodios/podcast-pagina-episodios';
 import { PodcastPaginaEscucharaqui } from '../podcast-pagina-escucharaqui/podcast-pagina-escucharaqui';
@@ -18,7 +28,7 @@ import { PodcastPaginaSuscribete } from '../podcast-pagina-suscribete/podcast-pa
 })
 export class PodcastPagina implements OnInit {
   @ViewChild('muxPlayer', { static: false }) muxPlayerRef!: ElementRef<any>;
-  audioPlayerOpen = signal<boolean>(false);
+
   loading = signal<boolean>(true);
   error = signal<string>('');
   selectedPodcast = signal<Podcast | null>(null);
@@ -27,11 +37,10 @@ export class PodcastPagina implements OnInit {
   resumeTime = signal<number>(0);
   showModeMenu = signal<boolean>(false);
 
-  // ==================== NUEVAS SEÑALES ====================
   currentPlaybackId = signal<string>('');
   currentPlaybackToken = signal<string | null>(null);
-  showMuxPlayer = signal<boolean>(true);        // ← Para forzar remount completo
-  playerKey = signal<number>(0);                // ← Ayuda extra al remount
+  showMuxPlayer = signal<boolean>(true);
+  playerKey = signal<number>(0);
 
   private preferredMode = signal<'video' | 'audio'>('video');
 
@@ -48,6 +57,7 @@ export class PodcastPagina implements OnInit {
 
   constructor(
     private api: PodcastService,
+    private audioPlayer: AudioPlayerService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -57,11 +67,10 @@ export class PodcastPagina implements OnInit {
     if (id) this.fetchPodcastById(id);
   }
 
-
-
   private fetchPodcastById(id: string) {
     this.loading.set(true);
     this.error.set('');
+
     this.api.getPodcastById(id).subscribe({
       next: (podcast: Podcast) => {
         this.selectedPodcast.set(podcast);
@@ -76,9 +85,9 @@ export class PodcastPagina implements OnInit {
       complete: () => this.loading.set(false)
     });
   }
+
   playEpisode(episode: Episode) {
     this.selectedEpisode.set(episode);
-    this.audioPlayerOpen.set(false);
 
     if (episode.progress && episode.duration) {
       this.resumeTime.set((episode.progress / 100) * episode.duration);
@@ -128,27 +137,28 @@ export class PodcastPagina implements OnInit {
     if (mode === 'video' && !this.canPlayVideo()) return;
 
     this.preferredMode.set(mode);
-    this.audioPlayerOpen.set(false);
     this.forceRemount();
   }
 
   openAudioPlayer() {
     if (this.currentMode() !== 'audio') return;
-    this.audioPlayerOpen.set(true);
-  }
+    if (!this.currentPlaybackId()) return;
 
-  closeAudioPlayer() {
-    this.audioPlayerOpen.set(false);
+    this.audioPlayer.open({
+      playbackId: this.currentPlaybackId(),
+      playbackToken: this.currentPlaybackToken(),
+      title: this.selectedEpisode()?.title || '',
+      podcastTitle: this.selectedPodcast()?.title || '',
+      image: this.selectedEpisode()?.image || null,
+      resumeTime: this.resumeTime()
+    });
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
-    if (event.key === 'Escape' && this.audioPlayerOpen()) {
-      this.closeAudioPlayer();
-      return;
+    if (event.key === 'Escape') {
+      this.goBack();
     }
-
-    if (event.key === 'Escape') this.goBack();
   }
 
   goBack() {
