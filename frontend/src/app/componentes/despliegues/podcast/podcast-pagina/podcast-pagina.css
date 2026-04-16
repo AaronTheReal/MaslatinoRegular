@@ -545,11 +545,19 @@
 
 .audio-floating-top {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.audio-header-copy {
+  flex: 1;
+  min-width: 0;
 }
 
+.audio-header-copy p {
+  margin: 0;
+}
 .audio-tag-row {
   display: flex;
   justify-content: space-between;
@@ -636,8 +644,8 @@
 }
 
 .audio-floating-player-shell {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.04);
+  width: 90%;
+  /*background: rgba(255, 255, 255, 0.04);*/
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
   padding: 10px 12px;

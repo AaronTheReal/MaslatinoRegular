@@ -179,22 +179,20 @@
   </div>
 
 
+
+
+  
 <div
   *ngIf="currentMode() === 'audio' && audioPlayerOpen()"
   class="audio-floating-player"
 >
-  <div class="audio-floating-top">
-    <div class="audio-tag-row">
-      <span></span>
-
-      <button class="audio-close-btn" (click)="closeAudioPlayer()">✕</button>
-    </div>
-
-    <div class="audio-header-copy">
-      <p>{{ selectedPodcast()?.title }}</p>
-    </div>
+<div class="audio-floating-top">
+  <div class="audio-header-copy">
+    <p>{{ selectedPodcast()?.title }}</p>
   </div>
 
+  <button class="audio-close-btn" (click)="closeAudioPlayer()">✕</button>
+</div>
   <div class="audio-floating-body">
     <div class="audio-floating-art">
       <img
