@@ -18,4 +18,5 @@ export interface Category {
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
+  tipo?: string;
 }

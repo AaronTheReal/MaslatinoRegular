@@ -14,10 +14,20 @@
       <h2>{{ editing ? 'Editar categoría' : 'Agregar categoría' }}</h2>
 
       <form [formGroup]="categoryForm" (ngSubmit)="onSubmit()" class="form-grid">
+        
         <!-- Nombre -->
         <div>
           <label>Nombre:</label>
-          <input formControlName="name" type="text" placeholder="Ej: Arte" />
+          <input formControlName="name" type="text" placeholder="Ej: Ciudad de México" />
+        </div>
+
+        <!-- Tipo (Nuevo campo) -->
+        <div>
+          <label>Tipo:</label>
+          <select formControlName="tipo" required>
+            <option value="life">Life (Vida / Estilo)</option>
+            <option value="cities">Cities (Ciudades)</option>
+          </select>
         </div>
 
         <!-- Orden -->
@@ -45,7 +55,7 @@
           </div>
 
           <div *ngIf="categoryForm.value.image" class="image-preview">
-            <img [src]="categoryForm.value.image" />
+            <img [src]="categoryForm.value.image" alt="Preview" />
           </div>
         </div>
 
@@ -106,7 +116,7 @@
 
         <div class="full-width text-center">
           <button type="submit" [disabled]="categoryForm.invalid">
-            {{ editing ? 'Actualizar' : 'Guardar' }}
+            {{ editing ? 'Actualizar Categoría' : 'Crear Categoría' }}
           </button>
         </div>
       </form>
@@ -120,6 +130,7 @@
         <thead>
           <tr>
             <th>Nombre</th>
+            <th>Tipo</th>           <!-- ← Nuevo -->
             <th>Slug</th>
             <th>Estado</th>
             <th>Indexable</th>
@@ -129,6 +140,11 @@
         <tbody>
           <tr *ngFor="let cat of categorias">
             <td>{{ cat.name }}</td>
+            <td>
+              <span class="tipo-badge" [class.life]="cat.tipo === 'life'" [class.cities]="cat.tipo === 'cities'">
+                {{ cat.tipo === 'life' ? 'Life' : 'Cities' }}
+              </span>
+            </td>
             <td>{{ cat.slug }}</td>
             <td>{{ cat.status }}</td>
             <td>{{ cat.seoIndexable ? 'Sí' : 'No' }}</td>
@@ -142,6 +158,25 @@
     </div>
   </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <!--
 

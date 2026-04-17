@@ -1,0 +1,123 @@
+:host {
+  display: block;
+}
+
+.proxima-parada {
+  background: #ffffff;
+  width: 100%;
+  padding: 28px 16px 24px;
+  box-sizing: border-box;
+}
+
+.wrapper {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0 0 22px;
+  text-align: center;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 0.95;
+  font-size: clamp(28px, 4vw, 42px);
+  color: #111;
+}
+
+.city-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+}
+
+.city-card {
+  position: relative;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  border-radius: 22px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  width: min(100%, calc((100% - 28px) / 3));
+  min-width: 160px;
+  aspect-ratio: 1.72 / 1;
+  display: flex;
+  align-items: flex-end;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.city-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.48) 0%,
+    rgba(0, 0, 0, 0.18) 45%,
+    rgba(0, 0, 0, 0) 70%
+  );
+}
+
+.city-card span {
+  position: relative;
+  z-index: 1;
+  padding: 0 14px 12px;
+  color: #fff;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: left;
+  line-height: 0.95;
+  font-size: clamp(15px, 1.55vw, 24px);
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+  max-width: calc(100% - 28px);
+  width: min-content;
+  word-break: break-word;
+}
+
+.city-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.16);
+}
+
+.city-card:focus-visible {
+  outline: 3px solid rgba(0, 120, 255, 0.35);
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .city-card {
+    width: min(100%, calc((100% - 14px) / 2));
+  }
+}
+
+@media (max-width: 620px) {
+  .proxima-parada {
+    padding: 18px 12px 18px;
+  }
+
+  .title {
+    font-size: clamp(24px, 7vw, 34px);
+    margin-bottom: 18px;
+  }
+
+  .city-grid {
+    gap: 12px;
+  }
+
+  .city-card {
+    width: 100%;
+    min-width: 0;
+    aspect-ratio: 1.85 / 1;
+  }
+
+  .city-card span {
+    font-size: 16px;
+    padding: 0 12px 10px;
+  }
+}

@@ -106,6 +106,9 @@ const CategorySchema = new Schema(
     order: {
       type: Number,
       default: 0
+    },
+    tipo:{
+      type:String
     }
   },
   {

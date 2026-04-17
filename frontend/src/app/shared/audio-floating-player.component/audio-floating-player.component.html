@@ -3,9 +3,30 @@
     <div class="audio-floating-top">
       <div class="audio-header-copy">
         <p>{{ audioPlayer.podcastTitle() }}</p>
+        <span class="audio-subtitle">{{ audioPlayer.title() }}</span>
       </div>
 
-      <button class="audio-close-btn" (click)="closePlayer()">✕</button>
+      <div class="audio-actions">
+        <button
+          class="audio-nav-btn"
+          (click)="previousEpisode()"
+          [disabled]="!audioPlayer.hasPrevious()"
+          aria-label="Episodio anterior"
+        >
+          ←
+        </button>
+
+        <button
+          class="audio-nav-btn"
+          (click)="nextEpisode()"
+          [disabled]="!audioPlayer.hasNext()"
+          aria-label="Siguiente episodio"
+        >
+          →
+        </button>
+
+        <button class="audio-close-btn" (click)="closePlayer()" aria-label="Cerrar player">✕</button>
+      </div>
     </div>
 
     <div class="audio-floating-body">
@@ -25,15 +46,23 @@
             [attr.playback-token]="audioPlayer.playbackToken() || null"
             stream-type="on-demand"
             theme="minimal"
-            primary-color="#a855f7"
-            secondary-color="#1f1f1f"
+            accent-color="#a855f7"
+            primary-color="#ffffff"
+            secondary-color="rgba(20, 20, 20, 0.96)"
             [title]="audioPlayer.title() || ''"
             [start-time]="audioPlayer.resumeTime() || 0"
+            forward-seek-offset="15"
+            backward-seek-offset="10"
             controls
             audio
             autoplay
+            (ended)="nextEpisode()"
           ></mux-player>
         </div>
+
+        <p class="audio-next-hint" *ngIf="audioPlayer.nextTrack()">
+          Siguiente: {{ audioPlayer.nextTrack()?.title }}
+        </p>
       </div>
     </div>
   </div>
