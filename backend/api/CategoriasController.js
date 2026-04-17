@@ -93,6 +93,7 @@ class CategoriasController {
   async obtenerCategorias(req, res) {
     try {
       const categorias = await Category.find().sort({ order: 1, createdAt: -1 });
+      console.log("categorias",categorias);
       return res.status(200).json(categorias);
     } catch (error) {
       console.error('Error al obtener categorías:', error);
@@ -110,6 +111,7 @@ class CategoriasController {
         seoIndexable: true
       }).sort({ order: 1 });
 
+      console.log()
       return res.status(200).json(categorias);
     } catch (error) {
       console.error('Error al obtener categorías públicas:', error);
