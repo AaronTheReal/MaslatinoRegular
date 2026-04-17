@@ -407,6 +407,7 @@ router.post('/google-login', async (req, res) => {
     router.delete('/categorias/:id', CategoriasController.eliminarCategoria);
     router.get('/categoriasUsuario/:id',CategoriasController.obtenerCategoriasUsuario);
     //router.delete('/categoriasUsuarioDelete/:userId/:id', CategoriasController.categoriasUsuarioDelete);
+    router.get('/categorias-publicas',CategoriasController.obtenerCategoriasPublicas);
 
 
 

@@ -22,10 +22,9 @@ export class ProximaParada implements OnInit {
   }
 
   cargarCiudades(): void {
-    this.categoriaService.obtenerCategorias().subscribe({
+    this.categoriaService.obtenerCategoriasPublicas().subscribe({
       next: (categorias: CategoriaPayload[]) => {
         // Filtrar solo tipo "cities" y ordenar alfabéticamente por nombre
-        console.log(categorias);
         this.cities = categorias
           .filter(cat => cat.tipo === 'cities')
           .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
