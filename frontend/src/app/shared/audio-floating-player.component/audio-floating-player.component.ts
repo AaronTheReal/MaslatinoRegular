@@ -15,9 +15,7 @@ export class AudioFloatingPlayerComponent {
   readonly audioPlayer = inject(AudioPlayerService);
   readonly fallbackImage = 'https://via.placeholder.com/220x220';
 
-  closePlayer(): void {
-    this.audioPlayer.close();
-  }
+
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
@@ -25,4 +23,15 @@ export class AudioFloatingPlayerComponent {
       this.closePlayer();
     }
   }
+  closePlayer(): void {
+  this.audioPlayer.close();
+}
+
+nextEpisode(): void {
+  this.audioPlayer.next();
+}
+
+previousEpisode(): void {
+  this.audioPlayer.previous();
+}
 }

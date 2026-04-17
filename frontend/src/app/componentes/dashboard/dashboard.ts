@@ -4,6 +4,7 @@ import {Contactanos} from './contactanos/contactanos'
 import {Eventos} from './eventos/eventos'
 import {ExperienciaTodo} from './experiencia-todo/experiencia-todo'
 import {NoticiasDestacadas} from './noticias-destacadas/noticias-destacadas'
+import {ProximaParada} from './proxima-parada/proxima-parada'
 import {Podcasts} from './podcasts/podcasts'
 import {Recomendadas} from './recomendadas/recomendadas'
 import {Unete} from './unete/unete'
@@ -27,7 +28,8 @@ import {AdsComponent} from '../ads/ads'
     CarruselEventos,
     Publicidad,
     CommonModule,
-    AdsComponent
+    AdsComponent,
+    ProximaParada
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',

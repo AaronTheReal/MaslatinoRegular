@@ -7,7 +7,7 @@ dotenv.config();
 class CategoriasController {
   // ─────────────────────────────
   // 1. Crear categoría
-  // ─────────────────────────────
+
   async crearCategoria(req, res) {
     try {
       const {
@@ -24,11 +24,20 @@ class CategoriasController {
         ogImage,
         status,
         schemaType,
-        order
+        order,
+        tipo  
       } = req.body;
 
       if (!name) {
         return res.status(400).json({ error: 'El nombre es obligatorio.' });
+      }
+
+      // Validación básica del tipo (opcional pero recomendada)
+      const tiposValidos = ['life', 'cities'];
+      if (tipo && !tiposValidos.includes(tipo)) {
+        return res.status(400).json({ 
+          error: 'El campo tipo solo puede ser "life" o "cities"' 
+        });
       }
 
       // Fallbacks SEO inteligentes
@@ -44,6 +53,7 @@ class CategoriasController {
         image,
         color,
         order,
+        tipo,                    // ← Añadido aquí
 
         // SEO
         metaTitle: metaTitleFinal,
@@ -77,7 +87,6 @@ class CategoriasController {
       return res.status(500).json({ error: 'Error interno del servidor' });
     }
   }
-
   // ─────────────────────────────
   // 2. Obtener todas las categorías (admin)
   // ─────────────────────────────

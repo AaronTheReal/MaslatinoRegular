@@ -93,7 +93,7 @@
 .player-shell {
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;         /* reserva exacta desde el inicio */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 18px;
   background: radial-gradient(120% 120% at 50% 0%, #1a1a1a 0%, #0d0d0d 55%, #090909 100%);
@@ -153,10 +153,10 @@
    LISTA DE EPISODIOS - ANCHO FIJO (NO CAMBIA NUNCA)
    ============================================= */
 .detail-right {
-  flex: 0 0 400px;      /* ← ANCHO FIJO */
-  min-width: 400px;     /* ← ANCHO FIJO */
-  flex-shrink: 0;       /* ← IMPIDE QUE SE ENCOJA */
-  max-width: 400px;     /* ← IMPIDE QUE SE ENSANCHE */
+  flex: 0 0 400px;
+  min-width: 400px;
+  flex-shrink: 0;
+  max-width: 400px;
 }
 
 .sidebar-title {
@@ -192,7 +192,7 @@
   background: transparent;
 }
 
-/* Resto de estilos (sin cambios) */
+/* Resto de estilos */
 .mux-player {
   display: block;
   width: 100%;
@@ -428,26 +428,6 @@
   z-index: -1;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* ===== AUDIO HERO ===== */
 .audio-hero {
   display: grid;
@@ -527,141 +507,6 @@
   font-size: 0.9rem;
 }
 
-/* ===== FLOATING AUDIO PLAYER ===== */
-.audio-floating-player {
-  position: fixed;
-  left: 50%;
-  bottom: max(16px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  width: min(94vw, 980px);
-  z-index: 2500;
-  background: linear-gradient(180deg, rgba(24, 24, 24, 0.96), rgba(14, 14, 14, 0.94));
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
-  padding: 18px;
-}
-
-.audio-floating-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 6px;
-}
-.audio-header-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.audio-header-copy p {
-  margin: 0;
-}
-.audio-tag-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-}
-
-.audio-floating-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  background: rgba(168, 85, 247, 0.16);
-  color: #d8b4fe;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.audio-header-copy h4 {
-  margin: 0;
-  color: #fff;
-  font-size: 1.15rem;
-  line-height: 1.2;
-}
-
-.audio-header-copy p {
-  margin: 6px 0 0 0;
-  color: #a1a1aa;
-  font-size: 0.92rem;
-}
-
-.audio-close-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.audio-close-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  transform: scale(1.05);
-}
-
-.audio-floating-body {
-  display: grid;
-  grid-template-columns: 148px minmax(0, 1fr);
-  gap: 16px;
-  align-items: center;
-}
-
-.audio-floating-art {
-  width: 148px;
-  aspect-ratio: 1 / 1;
-  border-radius: 22px;
-  overflow: hidden;
-  background: #111;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
-  flex-shrink: 0;
-}
-
-.audio-floating-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  display: block;
-}
-
-.audio-floating-content {
-  min-width: 0;
-}
-
-.audio-floating-player-shell {
-  width: 90%;
-  /*background: rgba(255, 255, 255, 0.04);*/
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 10px 12px;
-}
-
-.audio-mux {
-  width: 100%;
-  height: 132px;
-  min-height: 132px;
-  display: block;
-  --media-control-bar-height: 46px;
-  --media-icon-size: 24px;
-  --media-font-size: 14px;
-  --controls-backdrop-color: rgb(0 0 0 / 45%);
-}
-
 /* ===== MUX PLAYER ===== */
 .player-shell {
   position: relative;
@@ -694,103 +539,6 @@
 }
 
 /* ===== RESPONSIVE AUDIO PLAYER ===== */
-@media (max-width: 768px) {
-  .audio-hero {
-    grid-template-columns: 1fr;
-  }
-
-  .audio-hero-cover {
-    max-width: 260px;
-  }
-
-  .audio-floating-player {
-    width: calc(100vw - 16px);
-    padding: 14px;
-    border-radius: 22px;
-  }
-
-  .audio-floating-body {
-    grid-template-columns: 1fr;
-  }
-
-  .audio-floating-art {
-    width: 100%;
-    max-width: 260px;
-    margin: 0 auto;
-  }
-
-  .audio-mux {
-    height: 156px;
-    min-height: 156px;
-  }
-}
-
-@media (max-width: 480px) {
-  .audio-hero-content h3 {
-    font-size: 1.2rem;
-  }
-
-  .audio-play-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .audio-floating-player {
-    padding: 12px;
-  }
-
-  .audio-header-copy h4 {
-    font-size: 1.02rem;
-  }
-
-  .audio-floating-art {
-    max-width: 220px;
-  }
-
-  .audio-floating-player-shell {
-    padding: 8px 10px;
-  }
-
-  .audio-mux {
-    height: 164px;
-    min-height: 164px;
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* =============================================
-   RESPONSIVE
-   ============================================= */
-/* Responsive: no cambies la altura del player, solo el layout general */
 @media (max-width: 1100px) {
   .detail-body {
     flex-direction: column;
@@ -809,21 +557,83 @@
 }
 
 @media (max-width: 768px) {
-  .modal-content { min-height: 100dvh; }
-  .detail-header { padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 20px 18px; }
-  .detail-body { padding: 20px; }
-  .card-box { padding: 18px; border-radius: 20px; }
-  .episode-title { font-size: 1.35rem; }
-  .back-btn { width: 52px; height: 52px; font-size: 1.85rem; }
-  .thumbnail { width: 110px; height: 62px; }
-  .episodes-list { max-height: 380px; }
+  .modal-content {
+    min-height: 100dvh;
+  }
+
+  .detail-header {
+    padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 20px 18px;
+  }
+
+  .detail-body {
+    padding: 20px;
+  }
+
+  .card-box {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .episode-title {
+    font-size: 1.35rem;
+  }
+
+  .back-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 1.85rem;
+  }
+
+  .thumbnail {
+    width: 110px;
+    height: 62px;
+  }
+
+  .episodes-list {
+    max-height: 380px;
+  }
+
+  .audio-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .audio-hero-cover {
+    max-width: 260px;
+  }
 }
 
 @media (max-width: 480px) {
-  .detail-header { padding: max(28px, calc(env(safe-area-inset-top) + 20px)) 16px 16px; }
-  .detail-body { padding: 16px; }
-  .card-box { padding: 16px; border-radius: 18px; }
-  .episode-title { font-size: 1.22rem; }
-  .podcast-name { font-size: 0.85rem; }
-  .episodes-list { max-height: 320px; }
+  .detail-header {
+    padding: max(28px, calc(env(safe-area-inset-top) + 20px)) 16px 16px;
+  }
+
+  .detail-body {
+    padding: 16px;
+  }
+
+  .card-box {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .episode-title {
+    font-size: 1.22rem;
+  }
+
+  .podcast-name {
+    font-size: 0.85rem;
+  }
+
+  .episodes-list {
+    max-height: 320px;
+  }
+
+  .audio-hero-content h3 {
+    font-size: 1.2rem;
+  }
+
+  .audio-play-btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

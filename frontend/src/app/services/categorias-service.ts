@@ -39,6 +39,7 @@ export interface CategoriaPayload {
   // Fechas (solo lectura)
   createdAt?: string;
   updatedAt?: string;
+  tipo?: string;
 }
 
 @Injectable({ providedIn: 'root' })

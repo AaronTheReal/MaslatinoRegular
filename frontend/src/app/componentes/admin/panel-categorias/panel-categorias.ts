@@ -25,6 +25,9 @@ export class PanelCategorias {
   categoriaIdEditando: string | null = null;
   categorias: CategoriaPayload[] = [];
 
+  // Opciones para el campo tipo
+  tiposDisponibles: string[] = ['life', 'cities'];
+
   constructor(
     private fb: FormBuilder,
     private categoriasService: CategoriaService
@@ -38,6 +41,7 @@ export class PanelCategorias {
       image: ['', Validators.required],
       color: ['#007bff', Validators.required],
       order: [0],
+      tipo: ['life', Validators.required],        // ← Nuevo campo añadido
 
       // ─────────────────────────────
       // SEO
@@ -126,6 +130,7 @@ export class PanelCategorias {
       image: categoria.image,
       color: categoria.color || '#007bff',
       order: categoria.order ?? 0,
+      tipo: categoria.tipo || 'life',        // ← Añadido
 
       // SEO
       metaTitle: categoria.metaTitle || '',
@@ -165,7 +170,8 @@ export class PanelCategorias {
       seoIndexable: true,
       status: 'published',
       schemaType: 'CollectionPage',
-      order: 0
+      order: 0,
+      tipo: 'life'                    // ← Valor por defecto
     });
 
     this.editing = false;

@@ -1,0 +1,22 @@
+<section class="proxima-parada">
+  <div class="wrapper">
+    <h2 class="title">¿CUÁL ES TU PRÓXIMA<br>PARADA?</h2>
+
+    <div *ngIf="loading" class="loading">Cargando ciudades...</div>
+    
+    <div *ngIf="error" class="error">
+      No se pudieron cargar las ciudades. Inténtalo más tarde.
+    </div>
+
+    <div class="city-grid" *ngIf="!loading && !error">
+      <button
+        class="city-card"
+        *ngFor="let city of cities"
+        type="button"
+        [style.background-image]="'url(' + (city.image || 'assets/cities/default.jpg') + ')'"
+      >
+        <span>{{ city.name }}</span>
+      </button>
+    </div>
+  </div>
+</section>

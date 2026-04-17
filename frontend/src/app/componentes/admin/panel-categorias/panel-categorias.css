@@ -168,3 +168,19 @@ input[type="color"] {
   border-radius: 8px;
   cursor: pointer;
 }
+.tipo-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
+.tipo-badge.life {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.tipo-badge.cities {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}

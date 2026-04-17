@@ -12,7 +12,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PodcastService, Podcast, Episode } from '../../../../services/podcastDespliegue-service';
-import { AudioPlayerService } from '../../../../services/audio-player.service';
+import { AudioPlayerService, AudioPlayerTrack } from '../../../../services/audio-player.service';
 import '@mux/mux-player';
 import { PodcastPaginaEpisodios } from '../podcast-pagina-episodios/podcast-pagina-episodios';
 import { PodcastPaginaEscucharaqui } from '../podcast-pagina-escucharaqui/podcast-pagina-escucharaqui';
@@ -67,13 +67,14 @@ export class PodcastPagina implements OnInit {
     if (id) this.fetchPodcastById(id);
   }
 
-  private fetchPodcastById(id: string) {
+  private fetchPodcastById(id: string): void {
     this.loading.set(true);
     this.error.set('');
 
     this.api.getPodcastById(id).subscribe({
       next: (podcast: Podcast) => {
         this.selectedPodcast.set(podcast);
+
         if (podcast.episodes?.length > 0) {
           this.playEpisode(podcast.episodes[0]);
         }
@@ -86,7 +87,28 @@ export class PodcastPagina implements OnInit {
     });
   }
 
-  playEpisode(episode: Episode) {
+  private buildQueue(podcast: Podcast): AudioPlayerTrack[] {
+    return (podcast.episodes ?? [])
+      .map((ep) => {
+        const playbackIds = ep.mux?.playbackIds || [];
+        const publicPlayback = playbackIds.find(p => p.policy === 'public') || playbackIds[0];
+
+        if (!publicPlayback?.id) return null;
+
+        return {
+          episodeId: ep._id,
+          playbackId: publicPlayback.id,
+          playbackToken: null,
+          title: ep.title,
+          podcastTitle: podcast.title,
+          image: ep.image ?? podcast.coverImage2 ?? podcast.coverImage ?? null,
+          resumeTime: ep.progress && ep.duration ? (ep.progress / 100) * ep.duration : 0
+        } as AudioPlayerTrack;
+      })
+      .filter(Boolean) as AudioPlayerTrack[];
+  }
+
+  playEpisode(episode: Episode): void {
     this.selectedEpisode.set(episode);
 
     if (episode.progress && episode.duration) {
@@ -124,7 +146,7 @@ export class PodcastPagina implements OnInit {
     }
   }
 
-  private forceRemount() {
+  private forceRemount(): void {
     this.showMuxPlayer.set(false);
     setTimeout(() => {
       this.showMuxPlayer.set(true);
@@ -132,7 +154,7 @@ export class PodcastPagina implements OnInit {
     }, 50);
   }
 
-  selectMode(mode: 'video' | 'audio') {
+  selectMode(mode: 'video' | 'audio'): void {
     this.showModeMenu.set(false);
     if (mode === 'video' && !this.canPlayVideo()) return;
 
@@ -140,38 +162,56 @@ export class PodcastPagina implements OnInit {
     this.forceRemount();
   }
 
-  openAudioPlayer() {
+  openAudioPlayer(): void {
     if (this.currentMode() !== 'audio') return;
+
+    const podcast = this.selectedPodcast();
+    const currentEpisode = this.selectedEpisode();
+
+    if (!podcast || !currentEpisode) return;
+
+    const queue = this.buildQueue(podcast);
+
+    if (queue.length > 0) {
+      const startIndex = Math.max(
+        0,
+        queue.findIndex(track => track.episodeId === currentEpisode._id)
+      );
+
+      this.audioPlayer.openQueue(queue, startIndex >= 0 ? startIndex : 0);
+      return;
+    }
+
     if (!this.currentPlaybackId()) return;
 
     this.audioPlayer.open({
       playbackId: this.currentPlaybackId(),
       playbackToken: this.currentPlaybackToken(),
-      title: this.selectedEpisode()?.title || '',
-      podcastTitle: this.selectedPodcast()?.title || '',
-      image: this.selectedEpisode()?.image || null,
+      title: currentEpisode.title || '',
+      podcastTitle: podcast.title || '',
+      image: currentEpisode.image || podcast.coverImage2 || podcast.coverImage || null,
       resumeTime: this.resumeTime()
     });
   }
 
   @HostListener('window:keydown', ['$event'])
-  handleKeyDown(event: KeyboardEvent) {
+  handleKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       this.goBack();
     }
   }
 
-  goBack() {
+  goBack(): void {
     this.router.navigate(['/podcast-show']);
   }
 
-  toggleModeMenu(event: Event) {
+  toggleModeMenu(event: Event): void {
     event.stopPropagation();
     this.showModeMenu.update(v => !v);
   }
 
   @HostListener('document:click', ['$event'])
-  onDocumentClick(event: Event) {
+  onDocumentClick(event: Event): void {
     this.showModeMenu.set(false);
   }
 }
