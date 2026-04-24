@@ -1,0 +1,192 @@
+:host {
+  display: block;
+
+  /* Espaciado estándar profesional entre secciones */
+  padding-block: clamp(2.5rem, 5vw, 5rem);
+}
+
+.boston-hero {
+  position: relative;
+  width: 100%;
+  min-height: clamp(620px, 88vh, 820px);
+  overflow: hidden;
+  background: #ffffff;
+  isolation: isolate;
+  border-radius: 2rem;
+}
+
+/* Fondo */
+.boston-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.boston-hero__bg-image {
+  position: absolute;
+  inset: 0;
+
+  background-image: url('/assets/quePasa/boston.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+
+  /* Mejor framing de skyline */
+  background-position: center 18%;
+
+  /* Mejor percepción de calidad */
+  transform: scale(1.045);
+
+  filter:
+    saturate(1.12)
+    contrast(1.08)
+    brightness(1.02);
+}
+
+/* Fade refinado */
+.boston-hero__bg-overlay {
+  position: absolute;
+  inset: 0;
+
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.00) 0%,
+      rgba(255,255,255,0.05) 32%,
+      rgba(255,255,255,0.18) 46%,
+      rgba(255,255,255,0.55) 60%,
+      rgba(255,255,255,0.88) 74%,
+      rgba(255,255,255,1.00) 88%
+    );
+}
+
+.boston-hero__bg-fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 52%;
+
+  background:
+    linear-gradient(
+      to top,
+      #ffffff 0%,
+      rgba(255,255,255,0.97) 55%,
+      rgba(255,255,255,0) 100%
+    );
+}
+
+/* Contenido */
+.boston-hero__content {
+  position: relative;
+  z-index: 1;
+
+  height: 100%;
+  min-height: inherit;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  padding:
+    clamp(1.5rem, 3vw, 2.5rem)
+    clamp(1rem, 3vw, 2rem)
+    clamp(2rem, 4vw, 3rem);
+}
+
+/* BAJAMOS MUCHO MÁS EL TÍTULO */
+.boston-hero__header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+/* Título */
+.boston-hero__title {
+  margin: 0;
+
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+
+  font-size: clamp(2.3rem, 5vw, 4.75rem);
+
+  color: #0a0a0a;
+
+  text-shadow:
+    0 2px 10px rgba(255,255,255,0.25);
+}
+
+.boston-hero__title span {
+  background: linear-gradient(
+    180deg,
+    #bc5dff 0%,
+    #8f2cff 45%,
+    #7419f5 100%
+  );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Stats */
+.boston-hero__stats {
+  width: min(100%, 980px);
+  margin: 0 auto;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  padding-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  :host {
+    padding-block: 2rem;
+  }
+
+  .boston-hero {
+    min-height: 680px;
+    border-radius: 1.5rem;
+  }
+
+  .boston-hero__bg-image {
+    background-position: center 12%;
+    transform: scale(1.06);
+  }
+
+  .boston-hero__header {
+    margin-bottom: 2rem;
+  }
+
+  .boston-hero__title {
+    font-size: clamp(2rem, 7vw, 3.2rem);
+  }
+
+  .boston-hero__stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  :host {
+    padding-block: 1.5rem;
+  }
+
+  .boston-hero {
+    min-height: 620px;
+    border-radius: 1.1rem;
+  }
+
+  .boston-hero__title {
+    font-size: 1.8rem;
+  }
+
+  .boston-hero__header {
+    margin-bottom: 1.5rem;
+  }
+}

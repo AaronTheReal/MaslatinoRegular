@@ -12,6 +12,7 @@ import {Publicidad} from './publicidad/publicidad'
 import {CarruselEventos} from './carrusel-eventos/carrusel-eventos'
 import { CommonModule } from '@angular/common';
 import {AdsComponent} from '../ads/ads'
+import {QueEstaPasando} from './que-esta-pasando/que-esta-pasando'
 
 
 @Component({
@@ -29,7 +30,8 @@ import {AdsComponent} from '../ads/ads'
     Publicidad,
     CommonModule,
     AdsComponent,
-    ProximaParada
+    ProximaParada,
+    QueEstaPasando
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css',

@@ -2,81 +2,84 @@
   display: block;
   min-height: 100dvh;
   background: #0f0f0f;
-  font-family: 'Noir Pro', 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
+  font-family: 'Inter', -apple-system, Roboto, Helvetica, sans-serif;
 }
 
 /* =============================================
-   HEADER SUPERIOR (sticky)
+   PODCAST DETAIL PAGE – Página completa
    ============================================= */
+
+/* Header Superior (sticky) */
 .detail-header {
   padding: 20px 28px;
   background: #111;
-  border-bottom: 1px solid #1e1e1e;
+  border-bottom: 1px solid #222;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
 }
 
-.header-text {
-  min-width: 0;
+.back-btn {
+  background: #1f1f1f;
+  color: #aaa;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 1.6rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  background: #ff3b5c;
+  color: white;
+  transform: rotate(90deg);
 }
 
 .podcast-name {
-  color: #9ca3af;
-  font-size: 0.82rem;
-  font-weight: 500;
-  margin: 0 0 5px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: #d3d3d3;
+  font-size: 0.95rem;
+  margin: 0 0 4px 0;
 }
 
 .episode-title {
   color: #fff;
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.55rem;
+  font-weight: 600;
   line-height: 1.25;
   min-height: 1.25em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 70vw;
 }
 
-/* =============================================
-   LAYOUT PRINCIPAL
-   ============================================= */
+/* Contenido principal del detalle */
 .detail-body {
   display: flex;
   justify-content: center;
-  gap: 28px;
-  padding: 28px 24px;
+  gap: 32px;
+  padding: 32px 28px;
   max-width: 1400px;
   margin: 0 auto;
   align-items: flex-start;
 }
 
-/* =============================================
-   TARJETA BASE
-   ============================================= */
+/* Tarjeta blanca común */
 .card-box {
   background: #ffffff;
-  border-radius: 22px;
-  padding: 22px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.08),
-    0 12px 40px rgba(0, 0, 0, 0.18);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
-/* =============================================
-   COLUMNA IZQUIERDA – Player
-   ============================================= */
+/* Card del reproductor */
 .detail-left {
   flex: 7;
   display: flex;
@@ -85,17 +88,7 @@
 }
 
 /* =============================================
-   PLAYER AREA – wrapper con overflow safe
-   ============================================= */
-.player-area {
-  position: relative;
-  border-radius: 18px;
-  overflow: visible;
-  margin-bottom: 8px;
-}
-
-/* =============================================
-   PLAYER SHELL – mismo aspecto en ambos modos
+   MODO VIDEO + AUDIO - Player Shell
    ============================================= */
 .player-shell {
   position: relative;
@@ -103,10 +96,449 @@
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border-radius: 18px;
-  background: radial-gradient(120% 120% at 50% 0%, #1c1c1c 0%, #0d0d0d 55%, #090909 100%);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+  background: radial-gradient(120% 120% at 50% 0%, #1a1a1a 0%, #0d0d0d 55%, #090909 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
   isolation: isolate;
   contain: layout paint;
+  margin-bottom: 12px;
+}
+
+/* MISMO TAMAÑO EN AMBOS MODOS */
+.player-shell.video-mode,
+.player-shell.audio-mode {
+  aspect-ratio: 16 / 9;
+}
+
+.player-shell.audio-mode {
+  background: transparent;     /* 🔥 clave */
+  box-shadow: none;            /* 🔥 elimina efecto 3D */
+  border: none;
+}
+/* El player siempre llena el shell */
+.player-shell > mux-player,
+.player-shell .mux-player {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Variables visuales de Mux */
+.player-shell mux-player {
+  --media-object-fit: cover;
+  --media-object-position: center;
+  --media-control-bar-height: 56px;
+  --media-icon-size: 30px;
+  --media-font-size: 15px;
+}
+
+/* Audio: misma caja, UI de audio */
+.player-shell.audio-mode mux-player {
+  --media-control-bar-height: 60px;
+  --media-icon-size: 32px;
+}
+
+/* Skeleton que ocupa exactamente el mismo espacio */
+.player-shell .player-skeleton {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: inherit;
+}
+
+/* =============================================
+   LISTA DE EPISODIOS - ANCHO FIJO (NO CAMBIA NUNCA)
+   ============================================= */
+.detail-right {
+  flex: 0 0 400px;
+  min-width: 400px;
+  flex-shrink: 0;
+  max-width: 400px;
+}
+
+.sidebar-title {
+  color: #111827;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  min-height: 1em;
+}
+
+.episodes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 610px;
+  overflow-y: auto;
+  padding-right: 6px;
+  scrollbar-gutter: stable;
+}
+
+.episodes-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.episodes-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 999px;
+}
+
+.episodes-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Resto de estilos */
+.mux-player {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.episode-info {
+  margin-top: 28px;
+}
+
+.episode-meta {
+  display: flex;
+  gap: 24px;
+  font-size: 0.97rem;
+  color: #6b7280;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.episode-description {
+  font-size: 1.02rem;
+  line-height: 1.6;
+  color: #374151;
+  min-height: 3.2em;
+}
+
+/* Tarjetas de episodios */
+.episode-card {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #f6f7f9;
+}
+
+.episode-card:hover {
+  background: #eceff3;
+  transform: translateX(6px);
+}
+
+.episode-card.active {
+  background: #eef2ff;
+  border-left: 5px solid #a855f7;
+}
+
+.thumbnail {
+  position: relative;
+  width: 124px;
+  height: 70px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #e5e7eb;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #c084fc;
+}
+
+.episode-card:hover .play-overlay {
+  opacity: 1;
+}
+
+.card-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.card-content h4 {
+  color: #111827;
+  font-size: 1.02rem;
+  margin: 0 0 8px 0;
+  line-height: 1.35;
+}
+
+.card-meta {
+  font-size: 0.85rem;
+  color: #6b7280;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* =============================================
+   SKELETON LOADERS
+   ============================================= */
+
+.skeleton {
+  background-color: #e5e7eb;
+  background-image: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.detail-header .skeleton,
+.detail-body .skeleton {
+  background-color: #e5e7eb;
+  background-image: linear-gradient(90deg, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+}
+
+.skeleton-rect {
+  border-radius: 12px;
+}
+
+.skeleton-text {
+  height: 1em;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.player-skeleton {
+  width: 100%;
+  height: 100%;
+  min-height: 240px;
+}
+
+.block-line {
+  display: block;
+  height: 16px;
+  margin-bottom: 8px;
+}
+
+/* Botón de 3 puntitos */
+.mode-switch-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+  padding-right: 8px;
+  z-index: 100;
+}
+
+.mode-switch-btn {
+  width: 64px;
+  height: 64px;
+  background: rgba(0, 0, 0, 0.85);
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+}
+
+.mode-switch-btn:hover {
+  background: rgba(0, 0, 0, 0.95);
+  transform: scale(1.1);
+}
+
+.mode-switch-btn .dots {
+  letter-spacing: 5px;
+  margin-bottom: 3px;
+}
+
+.mode-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1f1f1f;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  z-index: 200;
+  min-width: 190px;
+  border: 1px solid #333;
+}
+
+.dropdown-item {
+  padding: 14px 20px;
+  color: #ddd;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dropdown-item:hover {
+  background: #2a2a2a;
+  color: white;
+}
+
+.dropdown-item.active {
+  background: #3a3a3a;
+  color: #a855f7;
+  font-weight: 500;
+}
+
+.mode-dropdown::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 18px;
+  width: 12px;
+  height: 12px;
+  background: #1f1f1f;
+  border-left: 1px solid #333;
+  border-top: 1px solid #333;
+  transform: rotate(45deg);
+  z-index: -1;
+}
+
+
+/* ===== AUDIO HERO - VERTICAL CENTRADO (según instrucciones) ===== */
+.audio-hero {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  gap: 16px;
+}
+
+.audio-hero-cover {
+  width: min(260px, 70%);
+  aspect-ratio: 1 / 1;
+
+  border-radius: 20px;
+  overflow: hidden;
+
+  margin: 0 auto;
+}
+
+.audio-hero-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.audio-hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  gap: 8px;
+  max-width: 600px;
+}
+
+.audio-kicker {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7c3aed;
+}
+
+.audio-hero-content h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: #111827;
+  text-align: center;
+}
+
+.audio-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.98rem;
+  text-align: center;
+}
+
+.audio-play-btn {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  border: none;
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: #fff;
+
+  padding: 14px 20px;
+  border-radius: 999px;
+
+  font-weight: 700;
+  font-size: 0.98rem;
+
+  cursor: pointer;
+
+  box-shadow: 0 14px 30px rgba(168, 85, 247, 0.28);
+
+  transition: all 0.25s ease;
+
+  margin-top: 10px;
+}
+.audio-play-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(168, 85, 247, 0.34);
+}
+
+
+
+
+/* ===== MUX PLAYER ===== */
+.player-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 18px;
+  background: radial-gradient(120% 120% at 50% 0%, #1a1a1a 0%, #0d0d0d 55%, #090909 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
+  isolation: isolate;
+  contain: layout paint;
+  margin-bottom: 12px;
 }
 
 .player-shell > mux-player,
@@ -126,490 +558,77 @@
   --media-font-size: 15px;
 }
 
-/* =============================================
-   AUDIO SHELL – idéntico aspecto al video
-   ============================================= */
-.audio-shell {
-  background: radial-gradient(ellipse at 30% 0%, #1e1040 0%, #0f0f0f 55%, #090909 100%);
-  display: flex;
-  align-items: stretch;
-}
-
-.audio-hero {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: clamp(90px, 22%, 200px) 1fr;
-  gap: clamp(14px, 3%, 28px);
-  align-items: center;
-  padding: clamp(16px, 5%, 32px);
-}
-
-.audio-hero-cover {
-  aspect-ratio: 1 / 1;
-  border-radius: 16px;
-  overflow: hidden;
-  background: linear-gradient(180deg, #2a2a2a, #151515);
-  box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255,255,255,0.06);
-}
-
-.audio-hero-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.audio-hero-content {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.audio-kicker {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #c084fc;
-}
-
-.audio-hero-content h3 {
-  margin: 0;
-  font-size: clamp(0.95rem, 2vw, 1.35rem);
-  line-height: 1.25;
-  color: #f9fafb;
-  font-weight: 700;
-}
-
-.audio-subtitle {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.9rem;
-}
-
-.audio-play-btn {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: none;
-  background: linear-gradient(135deg, #8b5cf6, #a855f7);
-  color: #fff;
-  padding: 11px 20px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  box-shadow: 0 8px 24px rgba(168, 85, 247, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  margin-top: 4px;
-}
-
-.audio-play-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 32px rgba(168, 85, 247, 0.45);
-}
-
-/* =============================================
-   MODE SWITCH – overlay flotante sobre el player
-   ============================================= */
-.mode-switch-wrapper {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 50;
-}
-
-.mode-switch-btn {
-  width: 38px;
-  height: 38px;
-  background: rgba(10, 10, 10, 0.72);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 50%;
-  color: #e5e7eb;
-  font-size: 18px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.mode-switch-btn:hover {
-  background: rgba(30, 30, 30, 0.9);
-  transform: scale(1.08);
-}
-
-.mode-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: #1a1a1a;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
-  z-index: 200;
-  min-width: 180px;
-  border: 1px solid #2a2a2a;
-}
-
-.dropdown-item {
-  padding: 13px 18px;
-  color: #d1d5db;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.dropdown-item:hover {
-  background: #252525;
-  color: #fff;
-}
-
-.dropdown-item.active {
-  background: #2d1f45;
-  color: #c084fc;
-  font-weight: 600;
-}
-
-.dropdown-item.disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.mode-dropdown::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  right: 12px;
-  width: 10px;
-  height: 10px;
-  background: #1a1a1a;
-  border-left: 1px solid #2a2a2a;
-  border-top: 1px solid #2a2a2a;
-  transform: rotate(45deg);
-}
-
-/* =============================================
-   SKELETON del player (fondo oscuro)
-   ============================================= */
-.player-shell.is-loading {
-  background: #141414;
-}
-
-.player-shell .player-skeleton {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #1a1a1a 25%, #242424 37%, #1a1a1a 63%);
-  background-size: 400% 100%;
-  animation: shimmer-dark 1.5s ease infinite;
-}
-
-@keyframes shimmer-dark {
-  0%   { background-position: 100% 0; }
-  100% { background-position: 0 0; }
-}
-
-/* =============================================
-   EPISODE INFO
-   ============================================= */
-.episode-info {
-  margin-top: 20px;
-}
-
-.episode-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.meta-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: #f3f4f6;
-  color: #6b7280;
-  font-size: 0.82rem;
-  font-weight: 500;
-  padding: 5px 13px;
-  border-radius: 999px;
-  border: 1px solid #e9ecef;
-  white-space: nowrap;
-}
-
-.episode-description {
-  font-size: 0.97rem;
-  line-height: 1.7;
-  color: #4b5563;
-  min-height: 3em;
-}
-
-/* =============================================
-   COLUMNA DERECHA – Sidebar episodios
-   ============================================= */
-.detail-right {
-  flex: 0 0 clamp(300px, 28%, 420px);
-  min-width: clamp(300px, 28%, 420px);
-  max-width: 420px;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.sidebar-title {
-  color: #111827;
-  font-size: 0.82rem;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 700;
-}
-
-.ep-count {
-  background: #f3f4f6;
-  color: #9ca3af;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid #e9ecef;
-}
-
-/* =============================================
-   LISTA DE EPISODIOS
-   ============================================= */
-.episodes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: clamp(380px, 56vh, 620px);
-  overflow-y: auto;
-  padding-right: 4px;
-  scrollbar-gutter: stable;
-}
-
-.episodes-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.episodes-list::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 999px;
-}
-
-.episodes-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* =============================================
-   TARJETAS DE EPISODIO
-   ============================================= */
-.episode-card {
-  display: flex;
-  gap: 12px;
-  padding: 10px;
-  border-radius: 13px;
-  cursor: pointer;
-  transition: background 0.18s ease, transform 0.18s ease;
-  background: #f7f8fa;
-  border: 1px solid transparent;
-}
-
-.episode-card:hover {
-  background: #edf0f5;
-  transform: translateX(4px);
-  border-color: #e5e7eb;
-}
-
-.episode-card.active {
-  background: #f0ebff;
-  border-left: 4px solid #a855f7;
-  padding-left: 8px;
-}
-
-/* =============================================
-   THUMBNAIL
-   ============================================= */
-.thumbnail {
-  position: relative;
-  width: 118px;
-  height: 67px;
-  border-radius: 9px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: #e5e7eb;
-}
-
-.thumbnail img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.play-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.42);
-  opacity: 0;
-  transition: opacity 0.18s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.episode-card:hover .play-overlay {
-  opacity: 1;
-}
-
-.ep-badge {
-  position: absolute;
-  bottom: 5px;
-  left: 5px;
-  background: rgba(0, 0, 0, 0.68);
-  color: #fff;
-  font-size: 0.67rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
-  line-height: 1.6;
-  backdrop-filter: blur(4px);
-}
-
-/* =============================================
-   CARD CONTENT
-   ============================================= */
-.card-content {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.card-content h4 {
-  color: #111827;
-  font-size: 0.88rem;
-  font-weight: 600;
-  margin: 0 0 5px;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.card-meta {
-  font-size: 0.78rem;
-  color: #9ca3af;
-  display: flex;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.progress-pct {
-  color: #a855f7;
-  font-weight: 600;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 3px;
-  background: #e9ecef;
-  border-radius: 99px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #a855f7, #7c3aed);
-  border-radius: 99px;
-  transition: width 0.4s ease;
-}
-
-/* =============================================
-   SKELETON LOADERS (fondo blanco – sección principal)
-   ============================================= */
-.skeleton {
-  background: #ebebeb;
-  background-image: linear-gradient(90deg, #ebebeb 25%, #f5f5f5 50%, #ebebeb 75%);
-  background-size: 300% 100%;
-  animation: shimmer-light 1.4s ease infinite;
-  border-radius: 6px;
-}
-
-@keyframes shimmer-light {
-  0%   { background-position: 100% 0; }
-  100% { background-position: 0 0; }
-}
-
-.skeleton-rect {
-  border-radius: 10px;
-}
-
-.skeleton-text {
-  height: 1em;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-.skeleton-circle {
-  border-radius: 50%;
-}
-
-.block-line {
-  display: block;
-  height: 14px;
-  margin-bottom: 8px;
-}
-
-/* =============================================
-   RESPONSIVE
-   ============================================= */
+/* ===== RESPONSIVE AUDIO PLAYER ===== */
 @media (max-width: 1100px) {
   .detail-body {
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
   }
 
   .detail-left,
   .detail-right {
     width: 100%;
     flex: none;
-    min-width: unset;
-    max-width: unset;
   }
 
   .episodes-list {
-    max-height: clamp(300px, 45vh, 440px);
+    max-height: 420px;
   }
 }
 
 @media (max-width: 768px) {
+  .modal-content {
+    min-height: 100dvh;
+  }
+
   .detail-header {
-    padding: max(20px, calc(env(safe-area-inset-top) + 14px)) 18px 16px;
+    padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 20px 18px;
   }
 
   .detail-body {
-    padding: 16px 14px;
-    gap: 16px;
+    padding: 20px;
+  }
+
+  .card-box {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .episode-title {
+    font-size: 1.35rem;
+  }
+
+  .back-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 1.85rem;
+  }
+
+  .thumbnail {
+    width: 110px;
+    height: 62px;
+  }
+
+  .episodes-list {
+    max-height: 380px;
+  }
+
+  .audio-hero-cover {
+      width: min(200px, 75%);
+    }
+
+  .audio-hero-cover {
+    max-width: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .detail-header {
+    padding: max(28px, calc(env(safe-area-inset-top) + 20px)) 16px 16px;
+  }
+
+  .detail-body {
+    padding: 16px;
   }
 
   .card-box {
@@ -618,60 +637,23 @@
   }
 
   .episode-title {
-    font-size: 1.2rem;
-    max-width: 85vw;
+    font-size: 1.22rem;
   }
 
-  .thumbnail {
-    width: 100px;
-    height: 57px;
+  .podcast-name {
+    font-size: 0.85rem;
   }
 
   .episodes-list {
-    max-height: clamp(260px, 40vh, 380px);
+    max-height: 320px;
   }
 
-  .audio-hero {
-    grid-template-columns: clamp(70px, 28%, 130px) 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .detail-header {
-    padding: max(24px, calc(env(safe-area-inset-top) + 16px)) 14px 14px;
-  }
-
-  .detail-body {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .card-box {
-    padding: 14px;
-    border-radius: 16px;
-  }
-
-  .episode-title {
-    font-size: 1.08rem;
+  .audio-hero-content h3 {
+    font-size: 1.2rem;
   }
 
   .audio-play-btn {
     width: 100%;
     justify-content: center;
-  }
-
-  .audio-hero {
-    grid-template-columns: clamp(60px, 30%, 110px) 1fr;
-    gap: 12px;
-    padding: 14px;
-  }
-
-  .thumbnail {
-    width: 90px;
-    height: 51px;
-  }
-
-  .episodes-list {
-    max-height: clamp(240px, 38vh, 320px);
   }
 }
