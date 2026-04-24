@@ -1,52 +1,47 @@
 <app-podcast-pagina-episodios [podcast]="selectedPodcast()"></app-podcast-pagina-episodios>
-<!--app-podcast-pagina-escucharaqui></app-podcast-pagina-escucharaqui>-->
 
 <!-- Skeleton -->
 <ng-container *ngIf="loading(); else loadedContent">
   <div class="detail-header">
-    <div>
-      <p class="podcast-name skeleton skeleton-text" style="width: 150px;"></p>
-      <h2 class="episode-title skeleton skeleton-text" style="width: 80%;"></h2>
-    </div>
-
-    <div>
-      <button class="back-btn skeleton skeleton-circle" style="width: 48px; height: 48px;"></button>
+    <div class="header-text">
+      <p class="podcast-name skeleton skeleton-text" style="width: 130px; height: 13px;"></p>
+      <h2 class="episode-title skeleton skeleton-text" style="width: 68%; height: 26px; margin-top: 8px;"></h2>
     </div>
   </div>
 
   <div class="detail-body">
     <div class="detail-left card-box">
-      <div class="player-shell is-loading">
-        <div class="skeleton skeleton-rect player-skeleton"></div>
+      <div class="player-area">
+        <div class="player-shell is-loading">
+          <div class="skeleton skeleton-rect player-skeleton"></div>
+        </div>
       </div>
 
       <div class="episode-info">
         <div class="episode-meta">
-          <span class="skeleton skeleton-text" style="width: 60px; height: 14px;"></span>
-          <span class="skeleton skeleton-text" style="width: 100px; height: 14px;"></span>
+          <span class="skeleton skeleton-text" style="width: 72px; height: 30px; border-radius: 99px;"></span>
+          <span class="skeleton skeleton-text" style="width: 110px; height: 30px; border-radius: 99px;"></span>
         </div>
-
-        <br />
-
         <p class="episode-description">
           <span class="skeleton skeleton-text block-line" style="width: 100%;"></span>
-          <span class="skeleton skeleton-text block-line" style="width: 90%;"></span>
-          <span class="skeleton skeleton-text block-line" style="width: 70%;"></span>
+          <span class="skeleton skeleton-text block-line" style="width: 88%;"></span>
+          <span class="skeleton skeleton-text block-line" style="width: 62%;"></span>
         </p>
       </div>
     </div>
 
     <div class="detail-right card-box">
-      <h3 class="sidebar-title skeleton skeleton-text" style="width: 120px; height: 16px; margin-bottom: 18px;"></h3>
+      <div class="sidebar-header">
+        <h3 class="sidebar-title skeleton skeleton-text" style="width: 100px; height: 14px;"></h3>
+        <span class="skeleton skeleton-text" style="width: 32px; height: 22px; border-radius: 99px;"></span>
+      </div>
       <div class="episodes-list">
         <div class="episode-card skeleton-item" *ngFor="let i of [1,2,3,4,5,6]">
           <div class="thumbnail skeleton skeleton-rect"></div>
           <div class="card-content">
-            <h4 class="skeleton skeleton-text" style="width: 80%; height: 16px; margin-bottom: 6px;"></h4>
-            <div class="card-meta">
-              <span class="skeleton skeleton-text" style="width: 50px; height: 12px;"></span>
-              <span class="skeleton skeleton-text" style="width: 40px; height: 12px;"></span>
-            </div>
+            <div class="skeleton skeleton-text" style="width: 78%; height: 14px; margin-bottom: 6px;"></div>
+            <div class="skeleton skeleton-text" style="width: 50%; height: 12px; margin-bottom: 10px;"></div>
+            <div class="skeleton skeleton-rect" style="width: 100%; height: 3px; border-radius: 99px;"></div>
           </div>
         </div>
       </div>
@@ -56,7 +51,7 @@
 
 <ng-template #loadedContent>
   <div class="detail-header">
-    <div>
+    <div class="header-text">
       <p class="podcast-name">{{ selectedPodcast()?.title }}</p>
       <h2 class="episode-title">{{ selectedEpisode()?.title }}</h2>
     </div>
@@ -64,85 +59,86 @@
 
   <div class="detail-body">
     <div class="detail-left card-box">
-      <ng-container [ngSwitch]="currentMode()">
-        <!-- VIDEO -->
-        <div *ngSwitchCase="'video'" class="player-shell video-mode">
-          <mux-player
-            *ngIf="showMuxPlayer() && currentPlaybackId()"
-            class="mux-player"
-            [playbackId]="currentPlaybackId()"
-            [attr.playback-token]="currentPlaybackToken() || null"
-            stream-type="on-demand"
-            theme="minimal"
-            primary-color="#a855f7"
-            secondary-color="#1f1f1f"
-            [title]="selectedEpisode()?.title || ''"
-            [videoTitle]="selectedEpisode()?.title || ''"
-            [start-time]="resumeTime() || 0"
-            controls
-          ></mux-player>
-        </div>
-
-        <!-- AUDIO -->
-        <div *ngSwitchCase="'audio'" class="audio-hero">
-          <div class="audio-hero-cover">
-            <img
-              [src]="selectedEpisode()?.image || 'https://via.placeholder.com/640x360'"
-              [alt]="selectedEpisode()?.title || 'Audio'"
-            />
+      <div class="player-area">
+        <ng-container [ngSwitch]="currentMode()">
+          <!-- VIDEO -->
+          <div *ngSwitchCase="'video'" class="player-shell video-mode">
+            <mux-player
+              *ngIf="showMuxPlayer() && currentPlaybackId()"
+              class="mux-player"
+              [playbackId]="currentPlaybackId()"
+              [attr.playback-token]="currentPlaybackToken() || null"
+              stream-type="on-demand"
+              theme="minimal"
+              primary-color="#a855f7"
+              secondary-color="#1f1f1f"
+              [title]="selectedEpisode()?.title || ''"
+              [videoTitle]="selectedEpisode()?.title || ''"
+              [start-time]="resumeTime() || 0"
+              controls
+            ></mux-player>
           </div>
 
-          <div class="audio-hero-content">
-            <p class="audio-kicker">Modo audio</p>
-            <h3>{{ selectedEpisode()?.title }}</h3>
-            <p class="audio-subtitle">
-              {{ selectedPodcast()?.title }}
-            </p>
+          <!-- AUDIO -->
+          <div *ngSwitchCase="'audio'" class="player-shell audio-shell">
+            <div class="audio-hero">
+              <div class="audio-hero-cover">
+                <img
+                  [src]="selectedEpisode()?.image || 'https://via.placeholder.com/640x360'"
+                  [alt]="selectedEpisode()?.title || 'Audio'"
+                />
+              </div>
 
-            <button class="audio-play-btn" (click)="openAudioPlayer()">
-              <span class="audio-play-icon">▶</span>
-              Reproducir audio
-            </button>
+              <div class="audio-hero-content">
+                <p class="audio-kicker">Modo audio</p>
+                <h3>{{ selectedEpisode()?.title }}</h3>
+                <p class="audio-subtitle">{{ selectedPodcast()?.title }}</p>
+                <button class="audio-play-btn" (click)="openAudioPlayer()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                  Reproducir audio
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </ng-container>
+        </ng-container>
 
-      <div class="mode-switch-wrapper">
-        <button
-          class="mode-switch-btn"
-          (click)="toggleModeMenu($event)"
-          title="Cambiar entre Video y Audio"
-        >
-          <span class="dots">•••</span>
-        </button>
-
-        <div *ngIf="showModeMenu()" class="mode-dropdown">
-          <div
-            class="dropdown-item"
-            [class.active]="currentMode() === 'video'"
-            [class.disabled]="!canPlayVideo()"
-            (click)="canPlayVideo() && selectMode('video')"
+        <!-- Mode switch – overlay sobre el player -->
+        <div class="mode-switch-wrapper">
+          <button
+            class="mode-switch-btn"
+            (click)="toggleModeMenu($event)"
+            title="Cambiar entre Video y Audio"
           >
-            🎥 Ver en Video
-          </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+            </svg>
+          </button>
 
-          <div
-            class="dropdown-item"
-            [class.active]="currentMode() === 'audio'"
-            (click)="selectMode('audio')"
-          >
-            🎧 Escuchar Audio
+          <div *ngIf="showModeMenu()" class="mode-dropdown">
+            <div
+              class="dropdown-item"
+              [class.active]="currentMode() === 'video'"
+              [class.disabled]="!canPlayVideo()"
+              (click)="canPlayVideo() && selectMode('video')"
+            >
+              🎥 Ver en Video
+            </div>
+            <div
+              class="dropdown-item"
+              [class.active]="currentMode() === 'audio'"
+              (click)="selectMode('audio')"
+            >
+              🎧 Escuchar Audio
+            </div>
           </div>
         </div>
       </div>
 
       <div class="episode-info">
         <div class="episode-meta">
-          <span>{{ selectedEpisode()?.duration | date:'mm:ss' }}</span>
-          <span>{{ selectedEpisode()?.publishedAt | date:'mediumDate' }}</span>
+          <span class="meta-chip">⏱ {{ selectedEpisode()?.duration | date:'mm:ss' }}</span>
+          <span class="meta-chip">📅 {{ selectedEpisode()?.publishedAt | date:'mediumDate' }}</span>
         </div>
-
-        <br />
 
         <p class="episode-description">
           {{ selectedEpisode()?.description || 'Sin descripción disponible.' }}
@@ -151,24 +147,33 @@
     </div>
 
     <div class="detail-right card-box">
-      <h3 class="sidebar-title">Episodios ({{ selectedPodcast()?.episodes?.length }})</h3>
+      <div class="sidebar-header">
+        <h3 class="sidebar-title">Episodios</h3>
+        <span class="ep-count">{{ selectedPodcast()?.episodes?.length }}</span>
+      </div>
       <div class="episodes-list">
         <div
-          *ngFor="let episode of selectedPodcast()?.episodes || []"
+          *ngFor="let episode of selectedPodcast()?.episodes || []; let i = index"
           class="episode-card"
           (click)="playEpisode(episode)"
           [class.active]="episode._id === selectedEpisode()?._id"
         >
           <div class="thumbnail">
             <img [src]="episode.image || 'https://via.placeholder.com/120x68'" alt="thumbnail" />
-            <div class="play-overlay">▶</div>
+            <div class="play-overlay">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+            <span class="ep-badge">{{ i + 1 }}</span>
           </div>
 
           <div class="card-content">
             <h4>{{ episode.title }}</h4>
             <div class="card-meta">
               <span>{{ episode.duration | date:'mm:ss' }}</span>
-              <span *ngIf="episode.progress" class="progress">{{ episode.progress }}%</span>
+              <span *ngIf="episode.progress" class="progress-pct">{{ episode.progress }}%</span>
+            </div>
+            <div class="progress-bar" *ngIf="episode.progress">
+              <div class="progress-fill" [style.width.%]="episode.progress"></div>
             </div>
           </div>
         </div>
