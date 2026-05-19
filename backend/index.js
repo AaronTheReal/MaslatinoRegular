@@ -46,6 +46,7 @@ const allowedOrigins = [
   'https://realmediagroups.com',
   'https://www.realmediagroups.com',
   'http://localhost',
+  'https://melodic-alfajores-aa5cb7.netlify.app/'
 
 
 ];
