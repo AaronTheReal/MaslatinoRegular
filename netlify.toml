@@ -1,0 +1,11 @@
+[build]
+  base    = "frontend"
+  command = "npm run build"
+  publish = "dist/nombre-proyecto/browser"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# NO agregar [[redirects]] con "/* /index.html 200".
+# @netlify/angular-runtime crea Edge Functions automaticamente
+# que manejan el SSR routing. El fallback SPA romperia SSR.
