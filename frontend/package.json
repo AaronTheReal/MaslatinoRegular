@@ -53,7 +53,7 @@
     "@angular/build": "^20.1.2",
     "@angular/cli": "^20.1.2",
     "@angular/compiler-cli": "^20.1.0",
-    "@netlify/angular-runtime": "^3.0.0",
+    "@netlify/angular-runtime": "^3.0.1",
     "@types/apicache": "^1.6.8",
     "@types/express": "^5.0.1",
     "@types/jasmine": "~5.1.0",
