@@ -4,7 +4,10 @@
   publish = "dist/nombre-proyecto/browser"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/angular-runtime"
 
 # NO agregar [[redirects]] con "/* /index.html 200".
 # @netlify/angular-runtime crea Edge Functions automaticamente
