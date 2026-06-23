@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, inject, Renderer2, PLATFORM_ID, Inj
 import { CommonModule, isPlatformServer, DatePipe, DOCUMENT } from '@angular/common';
 import { NoticiasService } from '../../../services/noticias-service';
 import { Noticia } from '../../../../models/noticia.model';
-import { Observable, tap } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
 import { RouterModule } from '@angular/router';
 
 
@@ -20,7 +20,8 @@ export class NoticiasDestacadas {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly document = inject(DOCUMENT);
 
-  readonly noticias$: Observable<Noticia[]> = this.noticiasService.getNoticiasRecientes(5).pipe(
+  readonly noticias$: Observable<Noticia[]> = this.noticiasService.getNoticiasRecientes(10).pipe(
+    map(list => list.filter(n => !n.press).slice(0, 5)),
     tap(noticias => {
       // Inserta JSON-LD ItemList SOLO en SSR (se serializa en HTML y Google lo ve)
       if (isPlatformServer(this.platformId) && noticias?.length) {

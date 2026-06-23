@@ -16,15 +16,19 @@
             "outputPath": "dist/nombre-proyecto",
             "browser": "src/main.ts",
             "server": "src/main.server.ts",
-            "ssr": false,
+            "ssr": {
+              "entry": "src/server.ts"
+            },
             "prerender": false,
-            "allowedCommonJsDependencies": ["@ckeditor/ckeditor5-build-classic"],
+            "allowedCommonJsDependencies": [
+              "@ckeditor/ckeditor5-build-classic"
+            ],
             "polyfills": [
               "zone.js"
             ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
-             "src/favicon.ico",
+              "src/favicon.ico",
               {
                 "glob": "**/*",
                 "input": "public"
@@ -33,7 +37,6 @@
             "styles": [
               "src/styles.css"
             ]
-         
           },
           "configurations": {
             "production": {

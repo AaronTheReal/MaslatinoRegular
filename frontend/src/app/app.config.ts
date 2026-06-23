@@ -1,18 +1,22 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';   // ← modificado
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideClientHydration } from '@angular/platform-browser';
 import { routes } from './app.routes';
+import { ssrStripCookiesInterceptor } from './interceptors/ssr-strip-cookies.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes, 
+    provideRouter(routes,
       withInMemoryScrolling({
-        scrollPositionRestoration: 'top',   // ← siempre arriba al cambiar de página
-        anchorScrolling: 'enabled'          // opcional pero recomendado
+        scrollPositionRestoration: 'top',
+        anchorScrolling: 'enabled'
       })
     ),
-    provideHttpClient(withFetch()),
+    provideHttpClient(
+      withFetch(),
+      withInterceptors([ssrStripCookiesInterceptor])
+    ),
     provideClientHydration()
   ]
 };

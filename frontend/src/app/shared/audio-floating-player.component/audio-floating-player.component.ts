@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, CUSTOM_ELEMENTS_SCHEMA, HostListener, inject } from '@angular/core';
-import { AudioPlayerService } from './../../services/audio-player.service'; // ajusta la ruta si hace falta
-import '@mux/mux-player';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, HostListener, inject, afterNextRender } from '@angular/core';
+import { AudioPlayerService } from './../../services/audio-player.service';
 
 @Component({
   selector: 'app-audio-floating-player',
@@ -14,6 +13,13 @@ import '@mux/mux-player';
 export class AudioFloatingPlayerComponent {
   readonly audioPlayer = inject(AudioPlayerService);
   readonly fallbackImage = 'https://via.placeholder.com/220x220';
+
+  constructor() {
+    // @mux/mux-player es browser-only — importar de forma dinámica para no crashear SSR
+    afterNextRender(() => {
+      import('@mux/mux-player');
+    });
+  }
 
 
 

@@ -102,7 +102,10 @@ export class NoticiasService {
 
     const observable = this.http
       .get<{ items: Noticia[]; total: number; page: number; limit: number }>(url)
-      .pipe(shareReplay(1));
+      .pipe(
+        map(res => ({ ...res, items: res.items.filter(n => !n.press) })),
+        shareReplay(1)
+      );
 
     if (isPlatformServer(this.platformId)) {
       return observable.pipe(tap(data => this.ts.set(key, data)));
@@ -147,11 +150,11 @@ export class NoticiasService {
     if (this.ts.hasKey(key)) {
       const data = this.ts.get<Noticia[]>(key, []);
       this.ts.remove(key);
-      return of(data);
+      return of(data).pipe(map(list => list.filter(n => !n.press)));
     }
     const observable = this.http
       .get<Noticia[]>(`${this.baseUrl}/noticias/recientes?limit=${limit}`)
-      .pipe(shareReplay(1));
+      .pipe(map(list => list.filter(n => !n.press)), shareReplay(1));
     if (isPlatformServer(this.platformId)) {
       return observable.pipe(tap(data => this.ts.set(key, data)));
     }

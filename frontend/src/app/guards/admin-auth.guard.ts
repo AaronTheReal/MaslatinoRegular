@@ -1,4 +1,5 @@
-import { inject } from '@angular/core';
+import { inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CanActivateFn, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 
 export const adminAuthGuard: CanActivateFn = (
@@ -6,6 +7,12 @@ export const adminAuthGuard: CanActivateFn = (
   state: RouterStateSnapshot
 ) => {
   const router = inject(Router);
+  const platformId = inject(PLATFORM_ID);
+
+  // En SSR no existe localStorage — nunca renderizar rutas admin en servidor
+  if (!isPlatformBrowser(platformId)) {
+    return router.createUrlTree(['/admin-login']);
+  }
 
   const token = localStorage.getItem('admin_token');
   const userStr = localStorage.getItem('admin_user');

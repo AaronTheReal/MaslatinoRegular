@@ -75,11 +75,14 @@ export class NoticiasIndividuales {
         tap(noticia => {
           if (noticia) {
             const title = noticia.title || 'Noticia';
-            const description = noticia.meta?.description || noticia.summary || 'Descripción no disponible';
-            const image = noticia.meta?.image || '/assets/og.jpg';
-            const url = noticia.originalUrl || `https://maslatino.com/noticia/${encodeURIComponent(noticia.slug ?? '')}`;
+            const description = (noticia.meta?.description || noticia.summary || 'Descripción no disponible')
+              .replace(/<[^>]*>/g, '')    // strip HTML
+              .slice(0, 300);             // truncar a 300 chars
+            const rawImage = noticia.meta?.image || '';
+            const image = this.ensureAbsoluteHttpsUrl(rawImage);
+            const url = `https://maslatino.com/noticia/${encodeURIComponent(noticia.slug ?? '')}`;
 
-            // Basic meta tags
+            // ── Meta tags ─────────────────────────────────────────────────
             this.title.setTitle(`${title} | Mas Latino`);
             this.meta.updateTag({ name: 'description', content: description });
             this.meta.updateTag({ name: 'keywords', content: noticia.tags?.join(', ') || 'noticias, Mas Latino' });
@@ -88,20 +91,27 @@ export class NoticiasIndividuales {
             this.meta.updateTag({ property: 'og:description', content: description });
             this.meta.updateTag({ property: 'og:url', content: url });
             this.meta.updateTag({ property: 'og:image', content: image });
+            this.meta.updateTag({ property: 'og:image:secure_url', content: image });
             this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
             this.meta.updateTag({ name: 'twitter:title', content: title });
             this.meta.updateTag({ name: 'twitter:description', content: description });
             this.meta.updateTag({ name: 'twitter:image', content: image });
 
-            // canonical link — keep browser-only to avoid duplicate link handling issues
-            if (isPlatformBrowser(this.platformId)) {
+            // ── Canonical — en SSR Y en browser, sin duplicar ─────────────
+            // (bots de redes sociales ven el HTML de SSR, necesitan el canonical)
+            const existingCanonical = this.document.querySelector('link[rel="canonical"]');
+            if (existingCanonical) {
+              this.renderer.setAttribute(existingCanonical, 'href', url);
+            } else {
               const link = this.renderer.createElement('link');
               this.renderer.setAttribute(link, 'rel', 'canonical');
               this.renderer.setAttribute(link, 'href', url);
               this.renderer.appendChild(this.document.head, link);
             }
 
-            // Build JSON-LD schema (INJECT ON SERVER & BROWSER)
+            // ── JSON-LD NewsArticle — en SSR Y en browser, sin duplicar ──
+            // SSR: se serializa en el HTML → los bots lo ven.
+            // Browser (navegación client-side): actualiza el script existente.
             const publishedDate = (noticia as any).publishAt ?? noticia.createdAt ?? new Date().toISOString();
             const modifiedDate = noticia.updatedAt ?? (noticia as any).publishAt ?? noticia.createdAt ?? new Date().toISOString();
 
@@ -129,15 +139,18 @@ export class NoticiasIndividuales {
             };
 
             try {
-              if (isPlatformServer(this.platformId)) {
+              const existingJsonLd = this.document.querySelector('script[type="application/ld+json"][data-noticia]');
+              if (existingJsonLd) {
+                this.renderer.setProperty(existingJsonLd, 'textContent', JSON.stringify(schema));
+              } else {
                 const script = this.renderer.createElement('script');
                 this.renderer.setAttribute(script, 'type', 'application/ld+json');
+                this.renderer.setAttribute(script, 'data-noticia', 'true');
                 this.renderer.setProperty(script, 'textContent', JSON.stringify(schema));
                 this.renderer.appendChild(this.document.head, script);
               }
             } catch (e) {
-              // Fallback: log but don't break rendering
-              console.warn('Could not append JSON-LD schema to head:', e);
+              console.warn('Could not set JSON-LD schema:', e);
             }
 
             // Load Twitter widgets only in browser
@@ -229,6 +242,14 @@ export class NoticiasIndividuales {
 
   private isCategory(x: unknown): x is Category {
     return !!x && typeof x === 'object' && 'name' in (x as any);
+  }
+
+  private ensureAbsoluteHttpsUrl(url: string): string {
+    if (!url || url.trim() === '') return 'https://maslatino.com/assets/og.jpg';
+    if (url.startsWith('https://')) return url;
+    if (url.startsWith('http://')) return url.replace('http://', 'https://');
+    // URL relativa — prepend dominio
+    return `https://maslatino.com${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
   // ====== EMBEDS ======

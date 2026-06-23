@@ -6,14 +6,16 @@ import {
   ElementRef,
   OnInit,
   HostListener,
-  computed
+  computed,
+  PLATFORM_ID,
+  inject
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PodcastService, Podcast, Episode } from '../../../../services/podcastDespliegue-service';
 import { AudioPlayerService, AudioPlayerTrack } from '../../../../services/audio-player.service';
-import '@mux/mux-player';
 import { PodcastPaginaEpisodios } from '../podcast-pagina-episodios/podcast-pagina-episodios';
 import { PodcastPaginaEscucharaqui } from '../podcast-pagina-escucharaqui/podcast-pagina-escucharaqui';
 import { PodcastPaginaSuscribete } from '../podcast-pagina-suscribete/podcast-pagina-suscribete';
@@ -55,12 +57,19 @@ export class PodcastPagina implements OnInit {
 
   canPlayVideo = computed(() => this.selectedEpisode()?.kind === 'video');
 
+  private readonly platformId = inject(PLATFORM_ID);
+
   constructor(
     private api: PodcastService,
     private audioPlayer: AudioPlayerService,
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) {
+    // @mux/mux-player es browser-only; importar dinámicamente para no crashear SSR
+    if (isPlatformBrowser(this.platformId)) {
+      import('@mux/mux-player');
+    }
+  }
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');

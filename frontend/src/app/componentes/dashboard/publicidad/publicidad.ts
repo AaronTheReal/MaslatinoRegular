@@ -1,5 +1,5 @@
-import { CommonModule } from '@angular/common';
-import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Component, ElementRef, HostListener, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-publicidad',
@@ -14,6 +14,8 @@ export class Publicidad implements OnInit, OnDestroy {
   currentIndex = 0;
   ads: any[] = [];
   private intervalId: any;
+
+  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
   // Estados del drag (movimiento en vivo)
   private isDragging = false;
@@ -33,6 +35,7 @@ export class Publicidad implements OnInit, OnDestroy {
   ];
 
   ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     this.loadAds();
     this.startAutoPlay();
   }
@@ -42,11 +45,12 @@ export class Publicidad implements OnInit, OnDestroy {
   }
 
   private loadAds(): void {
-    this.ads = window.innerWidth < 768 ? this.mobileAds : this.desktopAds;
+    this.ads = (typeof window !== 'undefined' && window.innerWidth < 768) ? this.mobileAds : this.desktopAds;
   }
 
   @HostListener('window:resize')
   onResize(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
     const isMobileNow = window.innerWidth < 768;
     const currentIsMobile = this.ads === this.mobileAds;
 
