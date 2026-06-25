@@ -23,15 +23,15 @@ export class Publicidad implements OnInit, OnDestroy {
   dragOffsetPercent = 0;
   transitionStyle = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-  // === TUS IMÁGENES (sin tocar) ===
+  // === TUS IMÁGENES (sin tocar rutas; w/h = dimensiones reales para evitar layout shift) ===
   private desktopAds = [
-    { image: 'assets/publicidad.jpg', alt: 'Publicidad 1', link: 'https://saravialaw.com/' },
-    { image: 'assets/publicidad2.png', alt: 'Publicidad 2', link: 'https://temporada.boricorridor.com/' }
+    { image: 'assets/publicidad.jpg', alt: 'Publicidad 1', link: 'https://saravialaw.com/', w: 3033, h: 375 },
+    { image: 'assets/publicidad2.png', alt: 'Publicidad 2', link: 'https://temporada.boricorridor.com/', w: 3034, h: 375 }
   ];
 
   private mobileAds = [
-    { image: 'assets/publicidad/publicidad.jpg', alt: 'Publicidad Mobile 1', link: 'https://saravialaw.com/' },
-    { image: 'assets/publicidad/publicidad2.png', alt: 'Publicidad Mobile 2', link: 'https://temporada.boricorridor.com/' }
+    { image: 'assets/publicidad/publicidad.jpg', alt: 'Publicidad Mobile 1', link: 'https://saravialaw.com/', w: 8000, h: 4500 },
+    { image: 'assets/publicidad/publicidad2.png', alt: 'Publicidad Mobile 2', link: 'https://temporada.boricorridor.com/', w: 8000, h: 4500 }
   ];
 
   ngOnInit(): void {

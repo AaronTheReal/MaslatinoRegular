@@ -1,19 +1,25 @@
 <section class="feature-visual">
   <div class="svg-wrap" aria-hidden="true">
     <div class="svg-container">
-      <!-- Imagen DESKTOP -->
-      <img
-        src="assets/vivlatino/cecy2grande.png"
-        alt="Viva Latino Morning Show"
-        class="feature-bg-image feature-bg-image--desktop"
-      />
-
-      <!-- Imagen MOBILE -->
-      <img
-        src="assets/vivlatino/cecycelular.png"
-        alt="Viva Latino Morning Show"
-        class="feature-bg-image feature-bg-image--mobile"
-      />
+      <!-- Una sola <picture>: el navegador descarga SOLO la imagen que aplica
+           (mobile ≤767px ó desktop), no ambas. Mismo diseño. -->
+      <picture>
+        <source
+          media="(max-width: 767px)"
+          srcset="assets/vivlatino/cecycelular.png"
+          width="4500"
+          height="4500"
+        />
+        <img
+          src="assets/vivlatino/cecy2grande.png"
+          alt="Viva Latino Morning Show"
+          class="feature-bg-image"
+          width="8000"
+          height="3750"
+          loading="lazy"
+          decoding="async"
+        />
+      </picture>
     </div>
   </div>
 

@@ -26,6 +26,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- Performance: adelantar conexión a orígenes externos usados above-the-fold -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin>
+  <link rel="preconnect" href="https://www.googletagmanager.com">
+  <link rel="preconnect" href="https://api.builder.io" crossorigin>
+  <!-- Preload de la fuente principal (texto visible al cargar) -->
+  <link rel="preload" href="/fonts/NoirPro-Regular.otf" as="font" type="font/otf" crossorigin>
+  <link rel="dns-prefetch" href="https://imasdk.googleapis.com">
+
   <meta name="description"
         content="Mas Latino es tu espacio de noticias con sabor: economía, política, deportes, familia, entretenimiento y más, en español.">
   <meta name="robots"

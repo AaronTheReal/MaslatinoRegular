@@ -20,6 +20,9 @@ export class NoticiasDestacadas {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly document = inject(DOCUMENT);
 
+  // trackBy para evitar recrear el DOM de las tarjetas en cada render
+  readonly trackBySlug = (_: number, n: Noticia) => n?.slug ?? _;
+
   readonly noticias$: Observable<Noticia[]> = this.noticiasService.getNoticiasRecientes(10).pipe(
     map(list => list.filter(n => !n.press).slice(0, 5)),
     tap(noticias => {

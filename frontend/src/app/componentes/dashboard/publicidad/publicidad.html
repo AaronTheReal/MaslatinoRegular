@@ -15,7 +15,15 @@
 
       <div class="slide" *ngFor="let ad of ads; let i = index">
         <a [href]="ad.link" target="_blank" rel="noopener noreferrer">
-          <img [src]="ad.image" [alt]="ad.alt" loading="lazy">
+          <img
+            [src]="ad.image"
+            [alt]="ad.alt"
+            [width]="ad.w"
+            [height]="ad.h"
+            [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+            [attr.fetchpriority]="i === 0 ? 'high' : null"
+            decoding="async"
+          >
         </a>
       </div>
     </div>
