@@ -90,6 +90,7 @@
             <img
               [src]="selectedEpisode()?.image || 'https://via.placeholder.com/640x360'"
               [alt]="selectedEpisode()?.title || 'Audio'"
+              decoding="async"
             />
           </div>
 
@@ -162,7 +163,7 @@
           [class.active]="episode._id === selectedEpisode()?._id"
         >
           <div class="thumbnail">
-            <img [src]="episode.image || 'https://via.placeholder.com/120x68'" alt="thumbnail" />
+            <img [src]="episode.image || 'https://via.placeholder.com/120x68'" alt="thumbnail" loading="lazy" decoding="async" />
             <div class="play-overlay">▶</div>
           </div>
 

@@ -50,7 +50,9 @@
               <img
                 [src]="event.imageUrl"
                 [alt]="event.title"
-                class="event-image" />
+                class="event-image"
+                loading="lazy"
+                decoding="async" />
               <div class="wca-badge" *ngIf="true">WCA</div>
             </div>
 
@@ -91,7 +93,9 @@
           <img
             [src]="selectedEvent()!.imageUrl"
             [alt]="selectedEvent()!.title"
-            class="modal-image-el" />
+            class="modal-image-el"
+            loading="lazy"
+            decoding="async" />
         </div>
 
         <div class="modal-info">

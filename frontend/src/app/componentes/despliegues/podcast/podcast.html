@@ -8,22 +8,29 @@
     <div class="badge-group">
       <div class="badge-wrapper">
         <a (click)="openAndroid($event)">
-          <img src="assets/podcasts/imagen2.png" alt="Google Play" class="badge-image">
+          <img src="assets/podcasts/imagen2.png" alt="Google Play" class="badge-image"
+               width="448" height="149" decoding="async">
         </a>
       </div>
       <div class="badge-wrapper">
         <a (click)="openIOS($event)">
-          <img src="assets/podcasts/imagen3.png" alt="App Store" class="badge-image">
+          <img src="assets/podcasts/imagen3.png" alt="App Store" class="badge-image"
+               width="471" height="167" decoding="async">
         </a>
       </div>
     </div>
   </div>
 
-  <!-- Imagen pegada abajo-derecha (sin espacio) -->
-  <img 
-    src="assets/podcasts/imagen1.png" 
-    alt="Podcast Cover" 
-    class="imagen-derecha">
+  <!-- Imagen pegada abajo-derecha (sin espacio) — es el LCP del hero -->
+  <img
+    src="assets/podcasts/imagen1.png"
+    alt="Podcast Cover"
+    class="imagen-derecha"
+    width="463"
+    height="536"
+    loading="eager"
+    fetchpriority="high"
+    decoding="async">
 </section>
 
 
@@ -46,7 +53,8 @@
          *ngFor="let podcast of podcasts(); trackBy: trackById" 
          (click)="navigateToPodcast(podcast)">
       <div class="podcast-thumbnail">
-        <img [src]="podcast.coverImage" [alt]="podcast.title" class="thumbnail-image">
+        <img [src]="podcast.coverImage" [alt]="podcast.title" class="thumbnail-image"
+             loading="lazy" decoding="async">
       </div>
       <h3 class="podcast-item-title">{{ podcast.title }}</h3>
     </div>
