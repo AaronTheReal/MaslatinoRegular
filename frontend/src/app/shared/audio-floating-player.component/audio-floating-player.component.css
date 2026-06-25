@@ -1,136 +1,227 @@
+/* ==========================================================================
+   REPRODUCTOR FLOTANTE DE AUDIO — diseño "barra de controles" (referencia)
+   Variables centralizadas para reestilizar fácil. Escalado para un panel
+   flotante (no pantalla completa). El <mux-player> va oculto (motor).
+   ========================================================================== */
 :host {
   display: block;
+
+  /* ---- COLORES (referencia) ---- */
+  --color-progreso:        #b57bea;   /* Morado de lo ya reproducido */
+  --color-progreso-pista:  #e2e2e2;   /* Gris de lo no reproducido */
+  --color-barra-fondo:     #e0e0e0;   /* Gris del rectángulo de controles */
+  --color-iconos:          #000000;   /* Negro de iconos y textos */
+  --color-volumen-relleno: #000000;   /* Negro del relleno del volumen */
+  --color-volumen-pista:   #b3b3b3;   /* Gris del resto del volumen */
+  --color-boton-negro:     #000000;   /* Negro del botón grande */
+  --color-boton-triangulo: #2b2b2b;   /* Gris oscuro del triángulo */
+
+  /* ---- GEOMETRÍA (escalada para panel flotante) ---- */
+  --altura-barra-progreso: 8px;
+  --altura-barra-control:  84px;
+  --radio-barra-control:   22px;
+  --padding-lateral:       26px;
+  --tam-icono:             30px;
+  --gap-grupo:             22px;
 }
 
-.audio-floating-player {
+* {
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   CONTENEDOR FLOTANTE (apila: barra de progreso + barra de controles)
+   ========================================================================== */
+.reproductor {
   position: fixed;
   left: 50%;
   bottom: max(14px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  width: min(94vw, 980px);
+  width: min(94vw, 1100px);
   z-index: 2500;
 
-  background:
-    radial-gradient(circle at top left, rgba(168, 85, 247, 0.14), transparent 34%),
-    linear-gradient(180deg, rgba(20, 20, 20, 0.98), rgba(11, 11, 11, 0.96));
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
-  padding: 18px;
+  padding: 14px 16px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 26px;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
+
+  font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-.audio-floating-top {
+/* ==========================================================================
+   1) BARRA DE PROGRESO
+   ========================================================================== */
+.barra-progreso {
+  position: relative;
+  width: 100%;
+  height: var(--altura-barra-progreso);
+  background: var(--color-progreso-pista);
+  border-radius: 999px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.barra-progreso__relleno {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0%;
+  background: var(--color-progreso);
+  border-radius: 999px;
+  transition: width 0.12s linear;
+}
+
+/* ==========================================================================
+   2) BARRA DE CONTROLES (rectángulo gris)
+   ========================================================================== */
+.barra-control {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  height: var(--altura-barra-control);
+  padding: 0 var(--padding-lateral);
+  background: var(--color-barra-fondo);
+  border-radius: var(--radio-barra-control);
 }
 
-.audio-header-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.audio-header-copy p {
-  margin: 0;
-  color: #fff;
-  font-size: clamp(0.98rem, 0.9rem + 0.3vw, 1.08rem);
-  line-height: 1.2;
-  font-weight: 750;
-  letter-spacing: 0.2px;
-}
-
-.audio-subtitle {
-  display: block;
-  margin-top: 5px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: clamp(0.84rem, 0.8rem + 0.2vw, 0.92rem);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.audio-actions {
+.grupo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
+  gap: var(--gap-grupo);
 }
 
-.audio-nav-btn,
-.audio-close-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 999px;
+/* Botón genérico de icono (sin fondo, solo SVG negro) */
+.boton-icono {
+  background: none;
   border: none;
+  padding: 0;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition:
-    transform 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease,
-    opacity 0.18s ease;
-  touch-action: manipulation;
+  color: var(--color-iconos);
+  transition: transform 0.15s ease, opacity 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.audio-nav-btn {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
-  font-size: 1rem;
+.boton-icono:hover {
+  transform: scale(1.06);
 }
 
-.audio-close-btn {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-  font-size: 1rem;
+.boton-icono:active {
+  transform: scale(0.96);
 }
 
-.audio-nav-btn:hover,
-.audio-close-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  transform: translateY(-1px) scale(1.03);
-}
-
-.audio-nav-btn:active,
-.audio-close-btn:active {
-  transform: scale(0.98);
-}
-
-.audio-nav-btn:disabled {
-  opacity: 0.45;
+.boton-icono:disabled {
+  opacity: 0.35;
   cursor: not-allowed;
   transform: none;
 }
 
-.audio-floating-body {
-  display: grid;
-  grid-template-columns: 148px minmax(0, 1fr);
-  gap: 16px;
+.play-circulo svg {
+  width: var(--tam-icono);
+  height: var(--tam-icono);
+}
+
+.siguiente-pista svg {
+  width: calc(var(--tam-icono) * 0.82);
+  height: calc(var(--tam-icono) * 0.82);
+}
+
+.icono-volumen svg {
+  width: calc(var(--tam-icono) * 0.86);
+  height: calc(var(--tam-icono) * 0.86);
+}
+
+.icono-pip svg {
+  width: calc(var(--tam-icono) * 0.95);
+  height: calc(var(--tam-icono) * 0.82);
+}
+
+.icono-fullscreen svg {
+  width: calc(var(--tam-icono) * 1.1);
+  height: calc(var(--tam-icono) * 0.9);
+}
+
+/* TIEMPO TRANSCURRIDO */
+.tiempo {
+  font-size: clamp(1.1rem, 0.9rem + 0.8vw, 1.55rem);
+  font-weight: 500;
+  color: var(--color-iconos);
+  letter-spacing: 0.5px;
+  font-variant-numeric: tabular-nums;
+  min-width: 64px;
+}
+
+/* SLIDER DE VOLUMEN */
+.slider-volumen {
+  position: relative;
+  width: clamp(120px, 16vw, 260px);
+  height: 7px;
+  background: var(--color-volumen-pista);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.slider-volumen__relleno {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  background: var(--color-volumen-relleno);
+  border-radius: 999px;
+}
+
+.slider-volumen__mango {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  background: var(--color-volumen-relleno);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* TEXTO "Siguiente episodio" (dos líneas) */
+.siguiente-episodio {
+  font-size: clamp(0.95rem, 0.8rem + 0.5vw, 1.3rem);
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--color-iconos);
+  text-align: right;
+  white-space: pre-line;
+}
+
+/* BOTÓN GRANDE: imagen del podcast de fondo + play encima */
+.boton-siguiente {
+  position: relative;
+  overflow: hidden;            /* recorta la imagen a las esquinas redondeadas */
+  background: var(--color-boton-negro);  /* respaldo mientras carga la imagen */
+  border: none;
+  cursor: pointer;
+  width: 104px;
+  height: 64px;
+  border-radius: 16px;
+  display: inline-flex;
   align-items: center;
-}
-
-.audio-floating-art {
-  width: 148px;
-  aspect-ratio: 1 / 1;
-  border-radius: 22px;
-  overflow: hidden;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
-    #111;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+  justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.audio-floating-art img {
+/* Imagen del podcast como fondo del botón */
+.boton-siguiente__art {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -138,206 +229,138 @@
   display: block;
 }
 
-.audio-floating-content {
-  min-width: 0;
+/* Capa oscura para que el play blanco contraste sobre cualquier imagen */
+.boton-siguiente__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.34);
 }
 
-.audio-floating-player-shell {
-  width: 100%;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 20px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.03);
+/* Triángulo de play por encima de la imagen */
+.boton-siguiente__icon {
+  position: relative;
+  z-index: 1;
+  width: 42px;
+  height: 42px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+}
+
+.boton-siguiente:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.boton-siguiente:active {
+  transform: scale(0.98);
+}
+
+.boton-siguiente:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* MOTOR DE AUDIO OCULTO (mux-player) — visualmente fuera, pero activo */
+.audio-mux-engine {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
   overflow: hidden;
+  left: -9999px;
 }
 
-.audio-mux {
-  width: 100%;
-  height: 132px;
-  min-height: 132px;
-  display: block;
-
-  --media-control-bar-height: 46px;
-  --media-icon-size: 24px;
-  --media-font-size: 14px;
-  --controls-backdrop-color: rgb(0 0 0 / 45%);
-}
-
-.audio-next-hint {
-  margin: 10px 2px 0;
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 0.88rem;
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
 /* Tablet */
-@media (max-width: 900px) {
-  .audio-floating-player {
-    width: calc(100vw - 20px);
-    padding: 16px;
-    border-radius: 24px;
+@media (max-width: 960px) {
+  :host {
+    --altura-barra-control: 76px;
+    --padding-lateral: 20px;
+    --gap-grupo: 18px;
+    --tam-icono: 28px;
   }
 
-  .audio-floating-body {
-    grid-template-columns: 120px minmax(0, 1fr);
-    gap: 14px;
+  .siguiente-episodio {
+    display: none;   /* se oculta el texto; queda el botón negro */
   }
 
-  .audio-floating-art {
-    width: 120px;
-    border-radius: 18px;
-  }
-
-  .audio-mux {
-    height: 140px;
-    min-height: 140px;
+  .boton-siguiente {
+    width: 88px;
+    height: 58px;
   }
 }
 
-/* Mobile: compacto, no apilado */
-@media (max-width: 768px) {
-  .audio-floating-player {
-    width: calc(100vw - 12px);
+/* Mobile */
+@media (max-width: 720px) {
+  .reproductor {
+    width: calc(100vw - 14px);
     bottom: max(8px, env(safe-area-inset-bottom));
     padding: 12px;
     border-radius: 22px;
-  }
-
-  .audio-floating-top {
-    align-items: flex-start;
     gap: 10px;
-    margin-bottom: 10px;
   }
 
-  .audio-actions {
-    gap: 6px;
+  :host {
+    --altura-barra-control: 68px;
+    --padding-lateral: 16px;
+    --gap-grupo: 16px;
+    --tam-icono: 26px;
   }
 
-  .audio-nav-btn,
-  .audio-close-btn {
-    width: 38px;
-    height: 38px;
+  .icono-pip,
+  .icono-fullscreen {
+    display: none;   /* PiP y pantalla completa no aplican a audio en móvil */
   }
 
-  .audio-floating-body {
-    grid-template-columns: 88px minmax(0, 1fr);
-    gap: 10px;
-    align-items: start;
+  .slider-volumen {
+    display: none;   /* el volumen se controla con el botón del dispositivo */
   }
 
-  .audio-floating-art {
-    width: 88px;
-    border-radius: 16px;
+  .boton-siguiente {
+    width: 72px;
+    height: 54px;
+    border-radius: 14px;
   }
 
-  .audio-floating-player-shell {
-    padding: 8px 9px;
-    border-radius: 16px;
-  }
-
-  .audio-mux {
-    height: 118px;
-    min-height: 118px;
-    --media-control-bar-height: 40px;
-    --media-icon-size: 20px;
-    --media-font-size: 12px;
-  }
-
-  .audio-next-hint {
-    margin-top: 6px;
-    font-size: 0.8rem;
-    white-space: nowrap;
+  .boton-siguiente svg {
+    width: 34px;
+    height: 34px;
   }
 }
 
 /* Small phones */
-@media (max-width: 480px) {
-  .audio-floating-player {
+@media (max-width: 460px) {
+  .reproductor {
     width: calc(100vw - 8px);
     padding: 10px;
     border-radius: 20px;
   }
 
-  .audio-header-copy p {
-    font-size: 0.92rem;
+  :host {
+    --altura-barra-control: 62px;
+    --padding-lateral: 14px;
+    --gap-grupo: 14px;
+    --tam-icono: 24px;
   }
 
-  .audio-subtitle {
-    font-size: 0.78rem;
-    margin-top: 3px;
+  .icono-volumen {
+    display: none;   /* deja play + siguiente + tiempo + botón negro */
   }
 
-  .audio-actions {
-    gap: 5px;
+  .tiempo {
+    font-size: 1.05rem;
+    min-width: 54px;
   }
 
-  .audio-nav-btn,
-  .audio-close-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 0.9rem;
+  .boton-siguiente {
+    width: 62px;
+    height: 50px;
   }
 
-  .audio-floating-body {
-    grid-template-columns: 76px minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  .audio-floating-art {
-    width: 76px;
-    border-radius: 14px;
-  }
-
-  .audio-floating-player-shell {
-    padding: 7px;
-    border-radius: 14px;
-  }
-
-  .audio-mux {
-    height: 108px;
-    min-height: 108px;
-    --media-control-bar-height: 38px;
-    --media-icon-size: 19px;
-    --media-font-size: 11.5px;
-  }
-
-  .audio-next-hint {
-    display: none;
-  }
-}
-
-/* Very small phones */
-@media (max-width: 380px) {
-  .audio-floating-player {
-    padding: 9px;
-    border-radius: 18px;
-  }
-
-  .audio-floating-top {
-    margin-bottom: 8px;
-  }
-
-  .audio-nav-btn,
-  .audio-close-btn {
-    width: 34px;
-    height: 34px;
-  }
-
-  .audio-floating-body {
-    grid-template-columns: 68px minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  .audio-floating-art {
-    width: 68px;
-    border-radius: 12px;
-  }
-
-  .audio-mux {
-    height: 102px;
-    min-height: 102px;
+  .boton-siguiente svg {
+    width: 30px;
+    height: 30px;
   }
 }

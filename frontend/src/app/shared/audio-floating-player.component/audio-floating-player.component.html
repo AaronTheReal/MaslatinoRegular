@@ -1,69 +1,166 @@
+<!--
+  ============================================================================
+  REPRODUCTOR FLOTANTE DE AUDIO — diseño "barra de controles" (referencia)
+  ============================================================================
+  Estructura (de arriba hacia abajo):
+    1) BARRA DE PROGRESO  -> línea morada (reproducido) + gris (restante)
+    2) BARRA DE CONTROLES -> rectángulo gris redondeado:
+         IZQUIERDA: [play/pausa círculo] [siguiente pista] [tiempo]
+                    [icono volumen] [slider volumen]
+         DERECHA:   [picture-in-picture] [pantalla completa]
+                    ["Siguiente episodio"] [botón negro]
+  El <mux-player> queda oculto y actúa solo como motor de audio; estos
+  controles lo manejan vía su API. La lógica de cola vive en el servicio.
+  ============================================================================
+-->
 <ng-container *ngIf="audioPlayer.isOpen()">
-  <div class="audio-floating-player">
-    <div class="audio-floating-top">
-      <div class="audio-header-copy">
-        <p>{{ audioPlayer.podcastTitle() }}</p>
-        <span class="audio-subtitle">{{ audioPlayer.title() }}</span>
-      </div>
+  <div class="reproductor">
 
-      <div class="audio-actions">
-        <button
-          class="audio-nav-btn"
-          (click)="previousEpisode()"
-          [disabled]="!audioPlayer.hasPrevious()"
-          aria-label="Episodio anterior"
-        >
-          ←
+    <!-- 1) BARRA DE PROGRESO (arriba) -->
+    <div
+      class="barra-progreso"
+      (click)="seek($event, mux)"
+      role="slider"
+      aria-label="Progreso del audio"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      [attr.aria-valuenow]="progressPercent()"
+    >
+      <div class="barra-progreso__relleno" [style.width.%]="progressPercent()"></div>
+    </div>
+
+    <!-- 2) BARRA DE CONTROLES (rectángulo gris) -->
+    <div class="barra-control">
+
+      <!-- ================= GRUPO IZQUIERDO ================= -->
+      <div class="grupo">
+
+        <!-- PLAY / PAUSA en círculo -->
+        <button class="boton-icono play-circulo" (click)="togglePlay(mux)" aria-label="Reproducir o pausar">
+          <!-- Play (cuando está en pausa) -->
+          <svg *ngIf="!isPlaying()" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2.5" fill="none" />
+            <path d="M19 15 L35 24 L19 33 Z" fill="currentColor" />
+          </svg>
+          <!-- Pausa (cuando está reproduciendo) -->
+          <svg *ngIf="isPlaying()" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2.5" fill="none" />
+            <rect x="18" y="15" width="4.5" height="18" rx="1" fill="currentColor" />
+            <rect x="25.5" y="15" width="4.5" height="18" rx="1" fill="currentColor" />
+          </svg>
         </button>
 
+        <!-- SIGUIENTE PISTA -->
         <button
-          class="audio-nav-btn"
+          class="boton-icono siguiente-pista"
           (click)="nextEpisode()"
           [disabled]="!audioPlayer.hasNext()"
-          aria-label="Siguiente episodio"
+          aria-label="Siguiente"
         >
-          →
+          <svg viewBox="0 0 48 48" fill="currentColor">
+            <path d="M8 10 L30 24 L8 38 Z" />
+            <rect x="34" y="9" width="6" height="30" rx="1" />
+          </svg>
         </button>
 
-        <button class="audio-close-btn" (click)="closePlayer()" aria-label="Cerrar player">✕</button>
-      </div>
-    </div>
+        <!-- TIEMPO TRANSCURRIDO -->
+        <span class="tiempo">{{ formatTime(currentTime()) }}</span>
 
-    <div class="audio-floating-body">
-      <div class="audio-floating-art">
-        <img
-          [src]="audioPlayer.image() || fallbackImage"
-          [alt]="audioPlayer.title() || 'Audio'"
-        />
-      </div>
+        <!-- ICONO DE VOLUMEN (click = silenciar) -->
+        <button class="boton-icono icono-volumen" (click)="toggleMute(mux)" aria-label="Volumen">
+          <svg viewBox="0 0 40 40" fill="currentColor">
+            <path d="M4 14 H12 L22 6 V34 L12 26 H4 Z" />
+            <!-- Aspa cuando está silenciado -->
+            <path *ngIf="muted()" d="M28 14 L38 26 M38 14 L28 26" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+          </svg>
+        </button>
 
-      <div class="audio-floating-content">
-        <div class="audio-floating-player-shell">
-          <mux-player
-            *ngIf="audioPlayer.playbackId()"
-            class="mux-player audio-mux"
-            [playbackId]="audioPlayer.playbackId()"
-            [attr.playback-token]="audioPlayer.playbackToken() || null"
-            stream-type="on-demand"
-            theme="minimal"
-            accent-color="#a855f7"
-            primary-color="#ffffff"
-            secondary-color="rgba(20, 20, 20, 0.96)"
-            [title]="audioPlayer.title() || ''"
-            [start-time]="audioPlayer.resumeTime() || 0"
-            forward-seek-offset="15"
-            backward-seek-offset="10"
-            controls
-            audio
-            autoplay
-            (ended)="nextEpisode()"
-          ></mux-player>
+        <!-- SLIDER DE VOLUMEN -->
+        <div
+          class="slider-volumen"
+          (click)="setVolume($event, mux)"
+          role="slider"
+          aria-label="Nivel de volumen"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-valuenow]="volumePercent()"
+        >
+          <div class="slider-volumen__relleno" [style.width.%]="volumePercent()"></div>
+          <div class="slider-volumen__mango" [style.left.%]="volumePercent()"></div>
         </div>
 
-        <p class="audio-next-hint" *ngIf="audioPlayer.nextTrack()">
-          Siguiente: {{ audioPlayer.nextTrack()?.title }}
-        </p>
-      </div>
-    </div>
-  </div>
+      </div><!-- /grupo izquierdo -->
+
+
+      <!-- ================= GRUPO DERECHO ================= -->
+      <div class="grupo">
+
+        <!-- PICTURE-IN-PICTURE -->
+        <button class="boton-icono icono-pip" (click)="togglePip(mux)" aria-label="Pantalla en pantalla">
+          <svg viewBox="0 0 46 40" fill="none">
+            <rect x="2" y="3" width="42" height="34" rx="5" stroke="currentColor" stroke-width="3" />
+            <rect x="24" y="20" width="16" height="12" rx="2.5" fill="currentColor" />
+          </svg>
+        </button>
+
+        <!-- PANTALLA COMPLETA -->
+        <button class="boton-icono icono-fullscreen" (click)="toggleFullscreen(mux)" aria-label="Pantalla completa">
+          <svg viewBox="0 0 56 44" fill="none" stroke="currentColor" stroke-width="3"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 8 H8 V36 H16" />
+            <path d="M40 8 H48 V36 H40" />
+          </svg>
+        </button>
+
+        <!-- TEXTO "Siguiente episodio" -->
+        <span class="siguiente-episodio">Siguiente
+episodio</span>
+
+        <!-- BOTÓN GRANDE: imagen del podcast de fondo + play encima -->
+        <button
+          class="boton-siguiente"
+          (click)="nextEpisode()"
+          [disabled]="!audioPlayer.hasNext()"
+          aria-label="Reproducir siguiente episodio"
+        >
+          <img class="boton-siguiente__art" [src]="audioPlayer.image() || fallbackImage" alt="" />
+          <span class="boton-siguiente__overlay"></span>
+          <svg class="boton-siguiente__icon" viewBox="0 0 60 60" fill="none">
+            <path
+              d="M20 14 L46 30 L20 46 Z"
+              fill="#ffffff"
+              stroke="#ffffff"
+              stroke-width="2"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+
+      </div><!-- /grupo derecho -->
+
+    </div><!-- /barra de controles -->
+
+    <!-- MOTOR DE AUDIO OCULTO: el <mux-player> reproduce; los controles de
+         arriba lo manejan. #mux es la referencia al elemento. -->
+    <mux-player
+      #mux
+      class="audio-mux-engine"
+      [playbackId]="audioPlayer.playbackId()"
+      [attr.playback-token]="audioPlayer.playbackToken() || null"
+      stream-type="on-demand"
+      [title]="audioPlayer.title() || ''"
+      [start-time]="audioPlayer.resumeTime() || 0"
+      forward-seek-offset="15"
+      backward-seek-offset="10"
+      audio
+      autoplay
+      (timeupdate)="onTimeUpdate($event)"
+      (loadedmetadata)="onLoaded($event)"
+      (play)="onPlay()"
+      (pause)="onPause()"
+      (volumechange)="onVolumeChange($event)"
+      (ended)="nextEpisode()"
+    ></mux-player>
+
+  </div><!-- /reproductor -->
 </ng-container>
