@@ -29,6 +29,13 @@ export class AudioFloatingPlayerComponent {
   readonly volume = signal(1);
   readonly muted = signal(false);
 
+  // Ventana: minimizado / expandido (solo afecta el layout, no la reproducción)
+  readonly minimized = signal(false);
+
+  toggleMinimize(): void {
+    this.minimized.update(v => !v);
+  }
+
   readonly progressPercent = computed(() => {
     const d = this.duration();
     return d > 0 ? Math.min(100, (this.currentTime() / d) * 100) : 0;

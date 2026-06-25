@@ -259,6 +259,109 @@
   transform: none;
 }
 
+/* ==========================================================================
+   0) ACCIONES DE VENTANA (minimizar / cerrar) — pill flotante arriba-derecha
+   ========================================================================== */
+.ventana-acciones {
+  position: absolute;
+  top: -16px;
+  right: 18px;
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.ventana-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  color: #111111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ventana-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.ventana-btn:hover {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.ventana-btn:active {
+  transform: scale(0.96);
+}
+
+.ventana-btn--cerrar:hover {
+  background: #ffe5e5;
+  color: #d22020;
+  border-color: rgba(210, 32, 32, 0.25);
+}
+
+/* ==========================================================================
+   ANTERIOR pista (mismo tamaño que "siguiente pista")
+   ========================================================================== */
+.anterior-pista svg {
+  width: calc(var(--tam-icono) * 0.82);
+  height: calc(var(--tam-icono) * 0.82);
+}
+
+/* CTA grande cuando apunta a "anterior" (idéntico al de siguiente) */
+.boton-anterior {
+  /* hereda todo de .boton-siguiente; clase aparte por si se quiere matizar */
+}
+
+/* ==========================================================================
+   ESTADO MINIMIZADO
+   ========================================================================== */
+.reproductor--min {
+  width: min(92vw, 460px);
+  gap: 10px;
+}
+
+.barra-control--mini {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 60px;
+  padding: 0 18px;
+  background: var(--color-barra-fondo);
+  border-radius: var(--radio-barra-control);
+}
+
+.mini-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+  line-height: 1.15;
+}
+
+.mini-titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tiempo--mini {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #555555;
+  letter-spacing: 0.3px;
+}
+
 /* MOTOR DE AUDIO OCULTO (mux-player) — visualmente fuera, pero activo */
 .audio-mux-engine {
   position: absolute;

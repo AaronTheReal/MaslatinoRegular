@@ -3,20 +3,54 @@
   REPRODUCTOR FLOTANTE DE AUDIO — diseño "barra de controles" (referencia)
   ============================================================================
   Estructura (de arriba hacia abajo):
-    1) BARRA DE PROGRESO  -> línea morada (reproducido) + gris (restante)
-    2) BARRA DE CONTROLES -> rectángulo gris redondeado:
-         IZQUIERDA: [play/pausa círculo] [siguiente pista] [tiempo]
+    0) ACCIONES DE VENTANA -> [minimizar/expandir] [cerrar]  (pill flotante)
+    1) BARRA DE PROGRESO   -> línea morada (reproducido) + gris (restante)
+    2) BARRA DE CONTROLES  -> rectángulo gris redondeado:
+         IZQUIERDA: [anterior] [play/pausa] [siguiente] [tiempo]
                     [icono volumen] [slider volumen]
-         DERECHA:   [picture-in-picture] [pantalla completa]
-                    ["Siguiente episodio"] [botón negro]
+         DERECHA:   [picture-in-picture] [CTA contextual: siguiente/anterior]
+    2-mini) BARRA MINI     -> play/pausa + título + tiempo + siguiente
   El <mux-player> queda oculto y actúa solo como motor de audio; estos
   controles lo manejan vía su API. La lógica de cola vive en el servicio.
   ============================================================================
 -->
 <ng-container *ngIf="audioPlayer.isOpen()">
-  <div class="reproductor">
+  <div class="reproductor" [class.reproductor--min]="minimized()">
 
-    <!-- 1) BARRA DE PROGRESO (arriba) -->
+    <!-- 0) ACCIONES DE VENTANA: minimizar / expandir + cerrar -->
+    <div class="ventana-acciones">
+      <button
+        class="ventana-btn"
+        (click)="toggleMinimize()"
+        [attr.aria-label]="minimized() ? 'Expandir reproductor' : 'Minimizar reproductor'"
+        [attr.title]="minimized() ? 'Expandir' : 'Minimizar'"
+      >
+        <!-- Minimizar (guion) cuando está expandido -->
+        <svg *ngIf="!minimized()" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round">
+          <path d="M6 12 H18" />
+        </svg>
+        <!-- Expandir (chevron arriba) cuando está minimizado -->
+        <svg *ngIf="minimized()" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M7 14 L12 9 L17 14" />
+        </svg>
+      </button>
+
+      <button
+        class="ventana-btn ventana-btn--cerrar"
+        (click)="closePlayer()"
+        aria-label="Cerrar reproductor"
+        title="Cerrar"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.4" stroke-linecap="round">
+          <path d="M7 7 L17 17 M17 7 L7 17" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- 1) BARRA DE PROGRESO (siempre visible) -->
     <div
       class="barra-progreso"
       (click)="seek($event, mux)"
@@ -29,11 +63,24 @@
       <div class="barra-progreso__relleno" [style.width.%]="progressPercent()"></div>
     </div>
 
-    <!-- 2) BARRA DE CONTROLES (rectángulo gris) -->
-    <div class="barra-control">
+    <!-- 2) BARRA DE CONTROLES COMPLETA (expandido) -->
+    <div class="barra-control" *ngIf="!minimized()">
 
       <!-- ================= GRUPO IZQUIERDO ================= -->
       <div class="grupo">
+
+        <!-- ANTERIOR episodio -->
+        <button
+          class="boton-icono anterior-pista"
+          (click)="previousEpisode()"
+          [disabled]="!audioPlayer.hasPrevious()"
+          aria-label="Episodio anterior"
+        >
+          <svg viewBox="0 0 48 48" fill="currentColor">
+            <rect x="8" y="9" width="6" height="30" rx="1" />
+            <path d="M40 10 L18 24 L40 38 Z" />
+          </svg>
+        </button>
 
         <!-- PLAY / PAUSA en círculo -->
         <button class="boton-icono play-circulo" (click)="togglePlay(mux)" aria-label="Reproducir o pausar">
@@ -50,12 +97,12 @@
           </svg>
         </button>
 
-        <!-- SIGUIENTE PISTA -->
+        <!-- SIGUIENTE episodio (deshabilitado en el último) -->
         <button
           class="boton-icono siguiente-pista"
           (click)="nextEpisode()"
           [disabled]="!audioPlayer.hasNext()"
-          aria-label="Siguiente"
+          aria-label="Siguiente episodio"
         >
           <svg viewBox="0 0 48 48" fill="currentColor">
             <path d="M8 10 L30 24 L8 38 Z" />
@@ -103,42 +150,82 @@
           </svg>
         </button>
 
-        <!-- PANTALLA COMPLETA -->
-        <button class="boton-icono icono-fullscreen" (click)="toggleFullscreen(mux)" aria-label="Pantalla completa">
-          <svg viewBox="0 0 56 44" fill="none" stroke="currentColor" stroke-width="3"
-               stroke-linecap="round" stroke-linejoin="round">
-            <path d="M16 8 H8 V36 H16" />
-            <path d="M40 8 H48 V36 H40" />
-          </svg>
-        </button>
+        <!-- CTA CONTEXTUAL: si hay siguiente → "Siguiente episodio";
+             si es el último pero hay anterior → "Episodio anterior" -->
+        <ng-container *ngIf="audioPlayer.hasNext() || audioPlayer.hasPrevious()">
 
-        <!-- TEXTO "Siguiente episodio" -->
-        <span class="siguiente-episodio">Siguiente
+          <!-- TEXTO contextual -->
+          <span class="siguiente-episodio" *ngIf="audioPlayer.hasNext()">Siguiente
 episodio</span>
+          <span class="siguiente-episodio" *ngIf="!audioPlayer.hasNext() && audioPlayer.hasPrevious()">Episodio
+anterior</span>
 
-        <!-- BOTÓN GRANDE: imagen del podcast de fondo + play encima -->
-        <button
-          class="boton-siguiente"
-          (click)="nextEpisode()"
-          [disabled]="!audioPlayer.hasNext()"
-          aria-label="Reproducir siguiente episodio"
-        >
-          <img class="boton-siguiente__art" [src]="audioPlayer.image() || fallbackImage" alt="" />
-          <span class="boton-siguiente__overlay"></span>
-          <svg class="boton-siguiente__icon" viewBox="0 0 60 60" fill="none">
-            <path
-              d="M20 14 L46 30 L20 46 Z"
-              fill="#ffffff"
-              stroke="#ffffff"
-              stroke-width="2"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </button>
+          <!-- BOTÓN GRANDE: imagen del podcast de fondo + flecha encima.
+               Apunta a SIGUIENTE si existe, si no a ANTERIOR. -->
+          <button
+            *ngIf="audioPlayer.hasNext()"
+            class="boton-siguiente"
+            (click)="nextEpisode()"
+            aria-label="Reproducir siguiente episodio"
+          >
+            <img class="boton-siguiente__art" [src]="audioPlayer.nextTrack()?.image || audioPlayer.image() || fallbackImage" alt="" />
+            <span class="boton-siguiente__overlay"></span>
+            <svg class="boton-siguiente__icon" viewBox="0 0 60 60" fill="none">
+              <path d="M20 14 L46 30 L20 46 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <button
+            *ngIf="!audioPlayer.hasNext() && audioPlayer.hasPrevious()"
+            class="boton-siguiente boton-anterior"
+            (click)="previousEpisode()"
+            aria-label="Reproducir episodio anterior"
+          >
+            <img class="boton-siguiente__art" [src]="audioPlayer.previousTrack()?.image || audioPlayer.image() || fallbackImage" alt="" />
+            <span class="boton-siguiente__overlay"></span>
+            <svg class="boton-siguiente__icon" viewBox="0 0 60 60" fill="none">
+              <path d="M40 14 L14 30 L40 46 Z" fill="#ffffff" stroke="#ffffff" stroke-width="2" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+        </ng-container>
 
       </div><!-- /grupo derecho -->
 
     </div><!-- /barra de controles -->
+
+
+    <!-- 2-mini) BARRA MINI (minimizado): play/pausa + título + tiempo + siguiente -->
+    <div class="barra-control barra-control--mini" *ngIf="minimized()">
+      <button class="boton-icono play-circulo" (click)="togglePlay(mux)" aria-label="Reproducir o pausar">
+        <svg *ngIf="!isPlaying()" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2.5" fill="none" />
+          <path d="M19 15 L35 24 L19 33 Z" fill="currentColor" />
+        </svg>
+        <svg *ngIf="isPlaying()" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2.5" fill="none" />
+          <rect x="18" y="15" width="4.5" height="18" rx="1" fill="currentColor" />
+          <rect x="25.5" y="15" width="4.5" height="18" rx="1" fill="currentColor" />
+        </svg>
+      </button>
+
+      <div class="mini-info">
+        <span class="mini-titulo">{{ audioPlayer.title() || audioPlayer.podcastTitle() || 'Reproduciendo' }}</span>
+        <span class="tiempo tiempo--mini">{{ formatTime(currentTime()) }}</span>
+      </div>
+
+      <button
+        class="boton-icono siguiente-pista"
+        (click)="nextEpisode()"
+        [disabled]="!audioPlayer.hasNext()"
+        aria-label="Siguiente episodio"
+      >
+        <svg viewBox="0 0 48 48" fill="currentColor">
+          <path d="M8 10 L30 24 L8 38 Z" />
+          <rect x="34" y="9" width="6" height="30" rx="1" />
+        </svg>
+      </button>
+    </div>
 
     <!-- MOTOR DE AUDIO OCULTO: el <mux-player> reproduce; los controles de
          arriba lo manejan. #mux es la referencia al elemento. -->
