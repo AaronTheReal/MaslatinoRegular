@@ -260,50 +260,71 @@
 }
 
 /* ==========================================================================
-   0) ACCIONES DE VENTANA (minimizar / cerrar) — pill flotante arriba-derecha
+   0) ACCIONES DE VENTANA (minimizar / cerrar)
+   Cápsula de vidrio flotante estilo "controles de ventana", anclada al borde
+   superior derecho. Visible sobre cualquier fondo y con hovers distintos.
    ========================================================================== */
 .ventana-acciones {
   position: absolute;
-  top: -16px;
-  right: 18px;
+  top: -15px;
+  right: 16px;
   display: flex;
-  gap: 6px;
-  z-index: 3;
+  gap: 4px;
+  z-index: 5;
+  padding: 5px;
+  border-radius: 999px;
+  background: rgba(20, 20, 22, 0.72);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.30),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  animation: ventana-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes ventana-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .ventana-btn {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #ffffff;
-  color: #111111;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
   transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .ventana-btn svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .ventana-btn:hover {
-  transform: translateY(-1px) scale(1.06);
+  transform: scale(1.1);
 }
 
 .ventana-btn:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 
+/* Minimizar → ámbar */
+.ventana-btn:not(.ventana-btn--cerrar):hover {
+  background: #ffb020;
+  color: #1a1a1a;
+}
+
+/* Cerrar → rojo */
 .ventana-btn--cerrar:hover {
-  background: #ffe5e5;
-  color: #d22020;
-  border-color: rgba(210, 32, 32, 0.25);
+  background: #ff4d4d;
+  color: #ffffff;
 }
 
 /* ==========================================================================
