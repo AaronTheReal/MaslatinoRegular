@@ -58,7 +58,8 @@
    ========================================================================== */
 .barra-progreso {
   position: relative;
-  width: 100%;
+  /* deja 42px a la derecha para las bolitas de minimizar/cerrar */
+  width: calc(100% - 42px);
   height: var(--altura-barra-progreso);
   background: var(--color-progreso-pista);
   border-radius: 999px;
@@ -261,70 +262,56 @@
 
 /* ==========================================================================
    0) ACCIONES DE VENTANA (minimizar / cerrar)
-   Cápsula de vidrio flotante estilo "controles de ventana", anclada al borde
-   superior derecho. Visible sobre cualquier fondo y con hovers distintos.
+   Bolitas dentro del contenedor, pegadas a la esquina superior derecha
+   (estilo "semáforo": ámbar = minimizar, rojo = cerrar). El icono aparece
+   al pasar el cursor. La barra de progreso se acorta para no quedar debajo.
    ========================================================================== */
 .ventana-acciones {
   position: absolute;
-  top: -15px;
-  right: 16px;
+  top: 11px;
+  right: 14px;
   display: flex;
-  gap: 4px;
+  gap: 7px;
   z-index: 5;
-  padding: 5px;
-  border-radius: 999px;
-  background: rgba(20, 20, 22, 0.72);
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  box-shadow:
-    0 10px 26px rgba(0, 0, 0, 0.30),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  animation: ventana-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes ventana-in {
-  from { opacity: 0; transform: translateY(-6px) scale(0.9); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .ventana-btn {
-  width: 30px;
-  height: 30px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  padding: 0;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+  color: transparent;   /* icono oculto hasta hover */
+  transition: transform 0.15s ease, filter 0.15s ease, color 0.15s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
 .ventana-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 9px;
+  height: 9px;
+}
+
+/* Minimizar → ámbar · Cerrar → rojo (colores tipo semáforo) */
+.ventana-btn:not(.ventana-btn--cerrar) {
+  background: #ffbd2e;
+}
+
+.ventana-btn--cerrar {
+  background: #ff5f57;
 }
 
 .ventana-btn:hover {
-  transform: scale(1.1);
+  transform: scale(1.18);
+  filter: brightness(0.95);
+  color: rgba(0, 0, 0, 0.55);   /* revela el icono */
 }
 
 .ventana-btn:active {
-  transform: scale(0.94);
-}
-
-/* Minimizar → ámbar */
-.ventana-btn:not(.ventana-btn--cerrar):hover {
-  background: #ffb020;
-  color: #1a1a1a;
-}
-
-/* Cerrar → rojo */
-.ventana-btn--cerrar:hover {
-  background: #ff4d4d;
-  color: #ffffff;
+  transform: scale(0.92);
 }
 
 /* ==========================================================================
