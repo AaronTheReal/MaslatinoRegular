@@ -43,6 +43,9 @@ export const serverRoutes: ServerRoute[] = [
   // Link corto / vanity URL → Client (redirige a podcast-pagina en el cliente)
   { path: 'podcasts/mass250',     renderMode: RenderMode.Client },
 
+  // URL bonita de podcasts → SSR (los bots ven los meta tags al compartir)
+  { path: 'podcasts/:slug',       renderMode: RenderMode.Server },
+
   // ── Páginas estáticas sin SEO crítico ────────────────────────────────────
   { path: 'descarga-la-app',      renderMode: RenderMode.Client },
   { path: 'nosotros-pagina',      renderMode: RenderMode.Client },

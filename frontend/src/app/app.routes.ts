@@ -77,6 +77,10 @@ export const routes: Routes = [
   // redirectTo ABSOLUTO (con '/') para que no se pegue a /podcasts/
   { path: 'podcasts/mass250', redirectTo: '/podcast-pagina/6a46f699acbdb02df89ed4ef', pathMatch: 'full' },
 
+  // URL bonita para TODOS los podcasts: /podcasts/<slug-del-titulo>
+  // (el componente resuelve el slug; también acepta un id de Mongo)
+  { path: 'podcasts/:slug', component: PodcastPagina },
+
   {path: 'descarga-la-app', component:DescargaLaApp},
   {path: 'nosotros-pagina', component:Nosotros},
   {path: 'noticias-todas', component:NoticiasTodas},

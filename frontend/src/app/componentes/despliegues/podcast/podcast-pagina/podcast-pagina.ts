@@ -79,7 +79,52 @@ export class PodcastPagina implements OnInit {
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
-    if (id) this.fetchPodcastById(id);
+    const slug = this.route.snapshot.paramMap.get('slug');
+    if (id) {
+      this.fetchPodcastById(id);
+    } else if (slug) {
+      this.fetchPodcastBySlug(slug);
+    }
+  }
+
+  // URL bonita: /podcasts/<slug-del-titulo>. Resuelve el slug contra la lista
+  // de podcasts (slugify(title) === slug) y carga por id. Si el "slug" es un
+  // ObjectId de Mongo, se trata como id directo.
+  private fetchPodcastBySlug(slug: string): void {
+    if (/^[0-9a-f]{24}$/i.test(slug)) {
+      this.fetchPodcastById(slug);
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set('');
+
+    this.api.getPodcasts().subscribe({
+      next: (items: Podcast[]) => {
+        const match = (items || []).find(p => this.slugify(p.title || '') === slug);
+        if (match?._id) {
+          this.fetchPodcastById(match._id);
+        } else {
+          this.error.set('Podcast no encontrado.');
+          this.selectedPodcast.set(null);
+          this.applySeoNotFound();
+          this.loading.set(false);
+        }
+      },
+      error: () => {
+        this.error.set('Error al cargar el podcast.');
+        this.applySeoNotFound();
+        this.loading.set(false);
+      }
+    });
+  }
+
+  private slugify(text: string): string {
+    return (text || '')
+      .toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')  // quita acentos
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
   private fetchPodcastById(id: string): void {
@@ -119,7 +164,11 @@ export class PodcastPagina implements OnInit {
       .replace(/<[^>]*>/g, '')    // strip HTML
       .slice(0, 300);
     const image = this.ensureAbsoluteHttpsUrl(podcast.coverImage2 || podcast.coverImage || '');
-    const url = `https://maslatino.com/podcast-pagina/${encodeURIComponent(id)}`;
+    // URL bonita como canónica (compartible); fallback al id si el slug queda vacío
+    const slug = this.slugify(title);
+    const url = slug
+      ? `https://maslatino.com/podcasts/${slug}`
+      : `https://maslatino.com/podcast-pagina/${encodeURIComponent(id)}`;
 
     this.title.setTitle(`${title} | Mas Latino Podcast`);
     this.meta.updateTag({ name: 'description', content: description });
