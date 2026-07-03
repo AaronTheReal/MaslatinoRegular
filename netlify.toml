@@ -16,6 +16,7 @@
 [images]
   remote_images = [
     "https://d1w8u1yfnsws5m\\.cloudfront\\.net/.*",
+    "https://maslatino-contenido\\.s3\\.us-east-2\\.amazonaws\\.com/.*",
     "https://maslatino\\.com/.*"
   ]
 
