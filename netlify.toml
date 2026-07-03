@@ -10,6 +10,15 @@
 [[plugins]]
   package = "@netlify/angular-runtime"
 
+# Netlify Image CDN: redimensiona imagenes al vuelo via
+# /.netlify/images?url=...&w=1200 — usado en og:image porque LinkedIn
+# rechaza imagenes gigantes (las portadas vienen de 8000px de ancho).
+[images]
+  remote_images = [
+    "https://d1w8u1yfnsws5m\\.cloudfront\\.net/.*",
+    "https://maslatino\\.com/.*"
+  ]
+
 # NO agregar [[redirects]] con "/* /index.html 200".
 # @netlify/angular-runtime crea Edge Functions automaticamente
 # que manejan el SSR routing. El fallback SPA romperia SSR.
