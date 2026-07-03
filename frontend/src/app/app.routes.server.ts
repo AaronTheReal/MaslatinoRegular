@@ -35,8 +35,10 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'podcast-show',         renderMode: RenderMode.Server },
   { path: 'podcast-show/:id',     renderMode: RenderMode.Server },
 
-  // podcast-pagina usa @mux/mux-player (browser-only) → Client hasta que se migre
-  { path: 'podcast-pagina/:id',   renderMode: RenderMode.Client },
+  // podcast-pagina: SSR para SEO/previews al compartir (og:image, etc.).
+  // @mux/mux-player se importa solo en browser y el preload de imágenes
+  // está guardado con isPlatformBrowser — seguro en servidor.
+  { path: 'podcast-pagina/:id',   renderMode: RenderMode.Server },
 
   // Link corto / vanity URL → Client (redirige a podcast-pagina en el cliente)
   { path: 'podcasts/mass250',     renderMode: RenderMode.Client },

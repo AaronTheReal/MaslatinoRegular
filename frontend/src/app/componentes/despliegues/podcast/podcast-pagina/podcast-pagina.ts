@@ -8,11 +8,13 @@ import {
   HostListener,
   computed,
   PLATFORM_ID,
-  inject
+  inject,
+  Renderer2
 } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, DOCUMENT } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { Meta, Title } from '@angular/platform-browser';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PodcastService, Podcast, Episode } from '../../../../services/podcastDespliegue-service';
 import { AudioPlayerService, AudioPlayerTrack } from '../../../../services/audio-player.service';
@@ -58,6 +60,10 @@ export class PodcastPagina implements OnInit {
   canPlayVideo = computed(() => this.selectedEpisode()?.kind === 'video');
 
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
+  private readonly renderer = inject(Renderer2);
+  private readonly document = inject(DOCUMENT);
 
   constructor(
     private api: PodcastService,
@@ -84,6 +90,12 @@ export class PodcastPagina implements OnInit {
       next: (podcast: Podcast) => {
         this.selectedPodcast.set(podcast);
 
+        if (podcast?._id) {
+          this.applySeo(podcast, id);
+        } else {
+          this.applySeoNotFound();
+        }
+
         if (podcast.episodes?.length > 0) {
           this.playEpisode(podcast.episodes[0]);
         }
@@ -91,9 +103,106 @@ export class PodcastPagina implements OnInit {
       error: (e) => {
         this.error.set(e?.message ?? 'Error al cargar el podcast.');
         this.selectedPodcast.set(null);
+        this.applySeoNotFound();
       },
       complete: () => this.loading.set(false)
     });
+  }
+
+  // ── SEO: meta tags (OG/Twitter), canonical y JSON-LD ─────────────────────
+  // Corre en SSR y en browser (Meta/Title funcionan en ambos). Los bots de
+  // LinkedIn/WhatsApp/Facebook leen el HTML del SSR, por eso la ruta
+  // podcast-pagina/:id debe estar en RenderMode.Server.
+  private applySeo(podcast: Podcast, id: string): void {
+    const title = podcast.title || 'Podcast';
+    const description = (podcast.description || 'Escucha este podcast en Mas Latino.')
+      .replace(/<[^>]*>/g, '')    // strip HTML
+      .slice(0, 300);
+    const image = this.ensureAbsoluteHttpsUrl(podcast.coverImage2 || podcast.coverImage || '');
+    const url = `https://maslatino.com/podcast-pagina/${encodeURIComponent(id)}`;
+
+    this.title.setTitle(`${title} | Mas Latino Podcast`);
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ name: 'keywords', content: (podcast.tags?.length ? podcast.tags : podcast.categories)?.join(', ') || 'podcast, Mas Latino' });
+    this.meta.updateTag({ property: 'og:type', content: 'website' });
+    this.meta.updateTag({ property: 'og:title', content: title });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:url', content: url });
+    this.meta.updateTag({ property: 'og:image', content: image });
+    this.meta.updateTag({ property: 'og:image:secure_url', content: image });
+    this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
+    this.meta.updateTag({ name: 'twitter:title', content: title });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+    this.meta.updateTag({ name: 'twitter:image', content: image });
+
+    // Canonical — en SSR y browser, sin duplicar
+    const existingCanonical = this.document.querySelector('link[rel="canonical"]');
+    if (existingCanonical) {
+      this.renderer.setAttribute(existingCanonical, 'href', url);
+    } else {
+      const link = this.renderer.createElement('link');
+      this.renderer.setAttribute(link, 'rel', 'canonical');
+      this.renderer.setAttribute(link, 'href', url);
+      this.renderer.appendChild(this.document.head, link);
+    }
+
+    // JSON-LD PodcastSeries — attr data-podcast para dedup en navegación cliente
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'PodcastSeries',
+      name: title,
+      description: description,
+      image: [image],
+      url: url,
+      author: {
+        '@type': podcast.authorName ? 'Person' : 'Organization',
+        name: podcast.authorName || 'Mas Latino'
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Mas Latino',
+        logo: { '@type': 'ImageObject', url: 'https://maslatino.com/logo.png' }
+      },
+      keywords: podcast.tags?.join(', ') || '',
+      hasPart: (podcast.episodes ?? []).slice(0, 10).map(ep => ({
+        '@type': 'PodcastEpisode',
+        name: ep.title || 'Episodio',
+        url: url,
+        datePublished: ep.releaseDate || ep.createdAt || undefined,
+        description: (ep.description || '').replace(/<[^>]*>/g, '').slice(0, 200) || undefined
+      }))
+    };
+
+    try {
+      const existingJsonLd = this.document.querySelector('script[type="application/ld+json"][data-podcast]');
+      if (existingJsonLd) {
+        this.renderer.setProperty(existingJsonLd, 'textContent', JSON.stringify(schema));
+      } else {
+        const script = this.renderer.createElement('script');
+        this.renderer.setAttribute(script, 'type', 'application/ld+json');
+        this.renderer.setAttribute(script, 'data-podcast', 'true');
+        this.renderer.setProperty(script, 'textContent', JSON.stringify(schema));
+        this.renderer.appendChild(this.document.head, script);
+      }
+    } catch (e) {
+      console.warn('Could not set JSON-LD schema:', e);
+    }
+  }
+
+  private applySeoNotFound(): void {
+    this.title.setTitle('Podcast no encontrado | Mas Latino');
+    this.meta.updateTag({ name: 'description', content: 'El podcast solicitado no está disponible.' });
+    this.meta.updateTag({ property: 'og:title', content: 'Podcast no encontrado' });
+    this.meta.updateTag({ property: 'og:description', content: 'El podcast solicitado no está disponible.' });
+    this.meta.updateTag({ property: 'og:image', content: 'https://maslatino.com/assets/og.jpg' });
+  }
+
+  private ensureAbsoluteHttpsUrl(url: string): string {
+    if (!url || url.trim() === '') return 'https://maslatino.com/assets/og.jpg';
+    if (url.startsWith('https://')) return url;
+    if (url.startsWith('http://')) return url.replace('http://', 'https://');
+    // URL relativa — prepend dominio
+    return `https://maslatino.com${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
   private buildQueue(podcast: Podcast): AudioPlayerTrack[] {

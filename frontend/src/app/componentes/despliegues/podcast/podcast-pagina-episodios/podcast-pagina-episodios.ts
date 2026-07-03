@@ -1,5 +1,5 @@
-import { Component, Input, CUSTOM_ELEMENTS_SCHEMA, OnChanges, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, CUSTOM_ELEMENTS_SCHEMA, OnChanges, SimpleChanges, inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Podcast } from '../../../../services/podcastDespliegue-service';
 
 @Component({
@@ -13,12 +13,22 @@ import { Podcast } from '../../../../services/podcastDespliegue-service';
 export class PodcastPaginaEpisodios implements OnChanges {
   @Input() podcast: Podcast | null = null;
 
+  private readonly platformId = inject(PLATFORM_ID);
+
   heroBgLoaded = false;
   coverLoaded = false;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['podcast']) {
       this.resetLoadingState();
+
+      // En SSR no existe Image(): marcar cargado para que el HTML
+      // (título/descripción) se serialice y los bots lo vean.
+      if (!isPlatformBrowser(this.platformId)) {
+        this.heroBgLoaded = true;
+        this.coverLoaded = true;
+        return;
+      }
 
       if (this.podcast?.coverImage2) {
         this.preloadImage(this.podcast.coverImage2, 'background');
