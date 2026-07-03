@@ -1,0 +1,5 @@
+[[redirects]]
+  from = "/podcasts/mass250"
+  to = "/podcast-pagina/6a46f699acbdb02df89ed4ef"
+  status = 302
+  force = true
