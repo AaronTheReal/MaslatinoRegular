@@ -45,8 +45,10 @@
   bottom: calc(max(14px, env(safe-area-inset-bottom)) + 140px);
 }
 
+/* Podcast minimizado (bolita de 56px abajo-derecha): subir solo lo justo
+   para quedar encima de la bolita */
 .radio-player.is-raised.is-raised--mini {
-  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 114px);
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px);
 }
 
 .radio-player__section {
@@ -267,7 +269,7 @@
 }
 
 .radio-player__restore-btn.is-raised.is-raised--mini {
-  bottom: calc(max(14px, env(safe-area-inset-bottom)) + 114px);
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px);
 }
 
 .radio-player__restore-btn:hover {
@@ -303,9 +305,10 @@
     bottom: calc(max(8px, env(safe-area-inset-bottom)) + 116px);
   }
 
+  /* bolita: mismo offset en todos los tamaños (la bolita no cambia) */
   .radio-player.is-raised.is-raised--mini,
   .radio-player__restore-btn.is-raised.is-raised--mini {
-    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 108px);
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px);
   }
 }
 
@@ -321,6 +324,6 @@
 
   .radio-player.is-raised.is-raised--mini,
   .radio-player__restore-btn.is-raised.is-raised--mini {
-    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 104px);
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 64px);
   }
 }

@@ -195,37 +195,30 @@ anterior</span>
     </div><!-- /barra de controles -->
 
 
-    <!-- 2-mini) BARRA MINI (minimizado): play/pausa + título + tiempo + siguiente -->
-    <div class="barra-control barra-control--mini" *ngIf="minimized()">
-      <button class="boton-icono play-circulo" (click)="togglePlay(mux)" aria-label="Reproducir o pausar">
-        <svg *ngIf="!isPlaying()" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2.5" fill="none" />
-          <path d="M19 15 L35 24 L19 33 Z" fill="currentColor" />
-        </svg>
-        <svg *ngIf="isPlaying()" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="21" stroke="currentColor" stroke-width="2.5" fill="none" />
-          <rect x="18" y="15" width="4.5" height="18" rx="1" fill="currentColor" />
-          <rect x="25.5" y="15" width="4.5" height="18" rx="1" fill="currentColor" />
-        </svg>
-      </button>
+    <!-- 2-mini) BOLITA (minimizado): portada del podcast con anillo de
+         progreso morado + ecualizador animado cuando suena. Clic = expandir.
+         Se acomoda abajo-derecha, debajo del radio-player. -->
+    <button
+      class="bola-mini"
+      *ngIf="minimized()"
+      (click)="toggleMinimize()"
+      [style.background]="'conic-gradient(#b57bea ' + progressPercent() + '%, rgba(0,0,0,0.18) 0)'"
+      [attr.aria-label]="'Expandir reproductor: ' + (audioPlayer.title() || 'podcast')"
+      [attr.title]="audioPlayer.title() || 'Expandir reproductor'"
+    >
+      <img class="bola-mini__art" [src]="audioPlayer.image() || fallbackImage" alt="" />
+      <span class="bola-mini__overlay"></span>
 
-      <div class="mini-info">
-        <span class="mini-titulo">{{ audioPlayer.title() || audioPlayer.podcastTitle() || 'Reproduciendo' }}</span>
-        <span class="tiempo tiempo--mini">{{ formatTime(currentTime()) }}</span>
-      </div>
+      <!-- Sonando: ecualizador animado -->
+      <span class="bola-mini__eq" *ngIf="isPlaying()" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
 
-      <button
-        class="boton-icono siguiente-pista"
-        (click)="nextEpisode()"
-        [disabled]="!audioPlayer.hasNext()"
-        aria-label="Siguiente episodio"
-      >
-        <svg viewBox="0 0 48 48" fill="currentColor">
-          <path d="M8 10 L30 24 L8 38 Z" />
-          <rect x="34" y="9" width="6" height="30" rx="1" />
-        </svg>
-      </button>
-    </div>
+      <!-- Pausado: triángulo de play -->
+      <svg class="bola-mini__icon" *ngIf="!isPlaying()" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 6.5 L18 12 L9 17.5 Z" fill="#ffffff" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round" />
+      </svg>
+    </button>
 
     <!-- MOTOR DE AUDIO OCULTO: el <mux-player> reproduce; los controles de
          arriba lo manejan. #mux es la referencia al elemento. -->
