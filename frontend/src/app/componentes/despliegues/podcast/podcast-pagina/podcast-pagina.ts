@@ -163,7 +163,8 @@ export class PodcastPagina implements OnInit {
     const description = (podcast.description || 'Escucha este podcast en Mas Latino.')
       .replace(/<[^>]*>/g, '')    // strip HTML
       .slice(0, 300);
-    const rawImage = this.ensureAbsoluteHttpsUrl(podcast.coverImage2 || podcast.coverImage || '');
+    // Prioridad: meta.image (o coverImage) — la portada "principal" del admin
+    const rawImage = this.ensureAbsoluteHttpsUrl(podcast.meta?.image || podcast.coverImage || podcast.coverImage2 || '');
     // LinkedIn rechaza imágenes gigantes (las portadas vienen de ~8000px).
     // Netlify Image CDN la sirve redimensionada a 1200×630 (ideal para previews).
     const image = `https://maslatino.com/.netlify/images?url=${encodeURIComponent(rawImage)}&w=1200&h=630&fit=cover&fm=jpg&q=80`;

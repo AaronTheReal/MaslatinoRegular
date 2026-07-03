@@ -35,7 +35,9 @@
 .reproductor {
   position: fixed;
   left: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom));
+  /* Se acomoda ARRIBA del radio-player (fixed bottom:16px, ~68px de alto
+     en desktop) para que nunca se encimen */
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 78px);
   transform: translateX(-50%);
   width: min(94vw, 1100px);
   z-index: 2500;
@@ -407,7 +409,8 @@
 @media (max-width: 720px) {
   .reproductor {
     width: calc(100vw - 14px);
-    bottom: max(8px, env(safe-area-inset-bottom));
+    /* radio-player en móvil es más bajo (~42px) — subir solo lo necesario */
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
     padding: 12px;
     border-radius: 22px;
     gap: 10px;
@@ -445,6 +448,7 @@
 @media (max-width: 460px) {
   .reproductor {
     width: calc(100vw - 8px);
+    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 48px);
     padding: 10px;
     border-radius: 20px;
   }
