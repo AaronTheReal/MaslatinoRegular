@@ -15,6 +15,7 @@ export interface AudioPlayerTrack {
 })
 export class AudioPlayerService {
   private readonly _isOpen = signal(false);
+  private readonly _minimized = signal(false);
   private readonly _queue = signal<AudioPlayerTrack[]>([]);
   private readonly _currentIndex = signal(0);
 
@@ -26,6 +27,9 @@ export class AudioPlayerService {
   private readonly _resumeTime = signal(0);
 
   readonly isOpen = this._isOpen.asReadonly();
+  // Minimizado vive aquí (no en el componente) para que otros players
+  // (ej. radio) puedan reaccionar y acomodarse
+  readonly minimized = this._minimized.asReadonly();
   readonly queue = this._queue.asReadonly();
   readonly currentIndex = this._currentIndex.asReadonly();
 
@@ -84,6 +88,11 @@ export class AudioPlayerService {
 
   close(): void {
     this._isOpen.set(false);
+    this._minimized.set(false);
+  }
+
+  toggleMinimize(): void {
+    this._minimized.update(v => !v);
   }
 
   toggle(): void {
@@ -112,6 +121,7 @@ export class AudioPlayerService {
 
   clear(): void {
     this._isOpen.set(false);
+    this._minimized.set(false);
     this._queue.set([]);
     this._currentIndex.set(0);
     this._playbackId.set('');

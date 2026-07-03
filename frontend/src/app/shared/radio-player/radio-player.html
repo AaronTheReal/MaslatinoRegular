@@ -1,4 +1,9 @@
-<div class="radio-player" [class.is-hidden]="isHidden">
+<div
+  class="radio-player"
+  [class.is-hidden]="isHidden"
+  [class.is-raised]="audioPlayer.isOpen()"
+  [class.is-raised--mini]="audioPlayer.isOpen() && audioPlayer.minimized()"
+>
   <!-- IZQUIERDA: icono / logo de la radio -->
   <div class="radio-player__section radio-player__section--left">
     <img
@@ -80,6 +85,8 @@
 <button
   *ngIf="isHidden"
   class="radio-player__restore-btn"
+  [class.is-raised]="audioPlayer.isOpen()"
+  [class.is-raised--mini]="audioPlayer.isOpen() && audioPlayer.minimized()"
   (click)="toggleHide()"
   aria-label="Restaurar reproductor"
 >

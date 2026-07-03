@@ -35,9 +35,9 @@
 .reproductor {
   position: fixed;
   left: 50%;
-  /* Se acomoda ARRIBA del radio-player (fixed bottom:16px, ~68px de alto
-     en desktop) para que nunca se encimen */
-  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 78px);
+  /* Posición natural pegada abajo; el radio-player es quien se sube
+     (clase .is-raised) cuando este player está abierto */
+  bottom: max(14px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
   width: min(94vw, 1100px);
   z-index: 2500;
@@ -405,12 +405,11 @@
   }
 }
 
-/* Mobile */
-@media (max-width: 720px) {
+/* Mobile (768 = mismo breakpoint que el radio-player) */
+@media (max-width: 768px) {
   .reproductor {
     width: calc(100vw - 14px);
-    /* radio-player en móvil es más bajo (~42px) — subir solo lo necesario */
-    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 52px);
+    bottom: max(8px, env(safe-area-inset-bottom));
     padding: 12px;
     border-radius: 22px;
     gap: 10px;
@@ -444,11 +443,10 @@
   }
 }
 
-/* Small phones */
-@media (max-width: 460px) {
+/* Small phones (480 = mismo breakpoint que el radio-player) */
+@media (max-width: 480px) {
   .reproductor {
     width: calc(100vw - 8px);
-    bottom: calc(max(16px, env(safe-area-inset-bottom)) + 48px);
     padding: 10px;
     border-radius: 20px;
   }

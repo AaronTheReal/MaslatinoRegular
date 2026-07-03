@@ -29,11 +29,12 @@ export class AudioFloatingPlayerComponent {
   readonly volume = signal(1);
   readonly muted = signal(false);
 
-  // Ventana: minimizado / expandido (solo afecta el layout, no la reproducción)
-  readonly minimized = signal(false);
+  // Ventana: minimizado / expandido — vive en el servicio para que el
+  // radio-player pueda reaccionar y subirse cuando este player esté abierto
+  readonly minimized = this.audioPlayer.minimized;
 
   toggleMinimize(): void {
-    this.minimized.update(v => !v);
+    this.audioPlayer.toggleMinimize();
   }
 
   readonly progressPercent = computed(() => {

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RadioPlayerService } from '../../services/radio-player.service';
+import { AudioPlayerService } from '../../services/audio-player.service';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -11,6 +12,10 @@ import { Observable } from 'rxjs';
   styleUrls: ['./radio-player.css']
 })
 export class RadioPlayerComponent {
+  // Player de podcast (flotante): cuando está abierto, la radio se sube
+  // para cederle el espacio de abajo
+  readonly audioPlayer = inject(AudioPlayerService);
+
   isPlaying$: Observable<boolean>;
   volume$: Observable<number>;
 
