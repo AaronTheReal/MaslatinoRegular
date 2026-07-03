@@ -74,7 +74,8 @@ export const routes: Routes = [
   { path: 'podcast-pagina/:id', component: PodcastPagina },
 
   // Link corto / vanity URL: /podcasts/mass250 -> episodio fijo (compartible)
-  { path: 'podcasts/mass250', redirectTo: 'podcast-pagina/6a46f699acbdb02df89ed4ef', pathMatch: 'full' },
+  // redirectTo ABSOLUTO (con '/') para que no se pegue a /podcasts/
+  { path: 'podcasts/mass250', redirectTo: '/podcast-pagina/6a46f699acbdb02df89ed4ef', pathMatch: 'full' },
 
   {path: 'descarga-la-app', component:DescargaLaApp},
   {path: 'nosotros-pagina', component:Nosotros},
