@@ -38,6 +38,9 @@ export const serverRoutes: ServerRoute[] = [
   // podcast-pagina usa @mux/mux-player (browser-only) → Client hasta que se migre
   { path: 'podcast-pagina/:id',   renderMode: RenderMode.Client },
 
+  // Link corto / vanity URL → Client (redirige a podcast-pagina en el cliente)
+  { path: 'podcasts/mass250',     renderMode: RenderMode.Client },
+
   // ── Páginas estáticas sin SEO crítico ────────────────────────────────────
   { path: 'descarga-la-app',      renderMode: RenderMode.Client },
   { path: 'nosotros-pagina',      renderMode: RenderMode.Client },
