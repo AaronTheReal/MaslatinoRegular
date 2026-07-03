@@ -1,1 +1,5 @@
 /share/mas-latino-futbol-femenino-miami-grovefc /share/mas-latino-futbol-femenino-miami-grovefc/index.html 200
+
+# Link corto / vanity URL del podcast (comparte esta URL)
+/podcasts/mass250 /podcast-pagina/6a46f699acbdb02df89ed4ef 301
+/podcasts/mass250/ /podcast-pagina/6a46f699acbdb02df89ed4ef 301
