@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-experiencia-todo',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CdnImagePipe],
   templateUrl: './experiencia-todo.html',
   styleUrls: ['./experiencia-todo.css']
 })

@@ -5,7 +5,7 @@
     <div class="grid-news" *ngIf="noticias$ | async as noticias">
       <!-- TARJETA GRANDE (primera noticia) -->
       <a class="tarjeta tarjeta-grande" [routerLink]="['/noticia', (noticias[0]?.slug || '')]">
-        <img [src]="noticias[0]?.meta?.image" [alt]="noticias[0]?.title || ''" loading="lazy" decoding="async" />
+        <img [src]="noticias[0]?.meta?.image | cdnimg:1000" [alt]="noticias[0]?.title || ''" loading="lazy" decoding="async" />
         <div class="contenido-superpuesto">
           <div class="overlay-text">
             <h3>{{ noticias[0]?.title }}</h3>
@@ -21,7 +21,7 @@
         [routerLink]="['/noticia', (noticia?.slug || '')]"
       >
         <div class="media-curva">
-          <img [src]="noticia?.meta?.image" [alt]="noticia?.title || ''" loading="lazy" decoding="async" />
+          <img [src]="noticia?.meta?.image | cdnimg:500" [alt]="noticia?.title || ''" loading="lazy" decoding="async" />
         </div>
         <div class="bloque-blanco-texto">
           <h3>{{ noticia?.title }}</h3>
@@ -36,7 +36,7 @@
           *ngFor="let noticia of noticias.slice(3, 5); trackBy: trackBySlug"
           [routerLink]="['/noticia', (noticia?.slug || '')]"
         >
-          <img [src]="noticia?.meta?.image || 'assets/default-news.jpg'" [alt]="noticia?.title || ''" loading="lazy" decoding="async" />
+          <img [src]="(noticia?.meta?.image || 'assets/default-news.jpg') | cdnimg:500" [alt]="noticia?.title || ''" loading="lazy" decoding="async" />
           <div class="superpuesto-arriba">
             <h3>{{ noticia?.title }}</h3>
             <p>{{ noticia?.createdAt | date: 'longDate' }}</p>

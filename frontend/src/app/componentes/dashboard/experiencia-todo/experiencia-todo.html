@@ -6,12 +6,12 @@
       <picture>
         <source
           media="(max-width: 767px)"
-          srcset="assets/vivlatino/cecycelular.png"
+          [srcset]="'assets/vivlatino/cecycelular.png' | cdnimg:800"
           width="4500"
           height="4500"
         />
         <img
-          src="assets/vivlatino/cecy2grande.png"
+          [src]="'assets/vivlatino/cecy2grande.png' | cdnimg:1600"
           alt="Viva Latino Morning Show"
           class="feature-bg-image"
           width="8000"

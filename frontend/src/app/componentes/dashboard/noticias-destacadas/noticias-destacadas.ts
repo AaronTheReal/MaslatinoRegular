@@ -4,12 +4,13 @@ import { NoticiasService } from '../../../services/noticias-service';
 import { Noticia } from '../../../../models/noticia.model';
 import { Observable, map, tap } from 'rxjs';
 import { RouterModule } from '@angular/router';
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
 
 
 @Component({
   selector: 'app-noticias-destacadas',
   standalone: true,
-  imports: [CommonModule, DatePipe, RouterModule],
+  imports: [CommonModule, DatePipe, RouterModule, CdnImagePipe],
   templateUrl: './noticias-destacadas.html',
   styleUrl: './noticias-destacadas.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

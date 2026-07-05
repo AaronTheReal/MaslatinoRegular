@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { PodcastService, Podcast } from './../../../services/podcastDespliegue-service';
 import { MegaphonePlayerService } from './../../../shared/megaphone-player/megaphone.service';
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-podcasts',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CdnImagePipe],
   templateUrl: './podcasts.html',
   styleUrls: ['./podcasts.css'],
 })

@@ -1,10 +1,11 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, ElementRef, HostListener, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-publicidad',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CdnImagePipe],
   templateUrl: './publicidad.html',
   styleUrl: './publicidad.css'
 })

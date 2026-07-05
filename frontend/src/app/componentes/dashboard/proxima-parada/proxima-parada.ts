@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service'; // Ajusta la ruta según tu estructura
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-proxima-parada',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CdnImagePipe],
   templateUrl: './proxima-parada.html',
   styleUrl: './proxima-parada.css'
 })

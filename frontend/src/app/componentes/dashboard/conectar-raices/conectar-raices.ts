@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-conectar-raices',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CdnImagePipe],
   templateUrl: './conectar-raices.html',
   styleUrls: ['./conectar-raices.css']
 })

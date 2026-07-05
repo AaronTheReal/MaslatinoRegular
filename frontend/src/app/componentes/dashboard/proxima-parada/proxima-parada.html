@@ -13,7 +13,7 @@
         class="city-card"
         *ngFor="let city of cities"
         type="button"
-        [style.background-image]="'url(' + (city.image || 'assets/cities/default.jpg') + ')'"
+        [style.background-image]="'url(' + ((city.image || 'assets/cities/default.jpg') | cdnimg:600) + ')'"
       >
         <span>{{ city.name }}</span>
       </button>

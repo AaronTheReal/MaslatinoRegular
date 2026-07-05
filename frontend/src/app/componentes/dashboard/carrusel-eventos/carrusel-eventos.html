@@ -26,7 +26,7 @@
             <swiper-slide *ngFor="let item of displayItems">
               <div class="noticia-card">
                 <img
-                  [src]="item.image || 'https://via.placeholder.com/300x200'"
+                  [src]="(item.image || 'https://via.placeholder.com/300x200') | cdnimg:400"
                   [alt]="'Imagen de ' + item.title"
                   class="noticia-imagen"
                   loading="lazy"

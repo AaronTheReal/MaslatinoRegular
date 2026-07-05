@@ -49,7 +49,7 @@
               <div class="card-image-wrapper">
                 <img
                   class="card-image"
-                  [src]="getCover(p)"
+                  [src]="getCover(p) | cdnimg:500"
                   [alt]="getTitle(p)"
                   loading="lazy"
                 />

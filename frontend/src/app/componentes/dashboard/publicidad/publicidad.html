@@ -16,7 +16,7 @@
       <div class="slide" *ngFor="let ad of ads; let i = index">
         <a [href]="ad.link" target="_blank" rel="noopener noreferrer">
           <img
-            [src]="ad.image"
+            [src]="ad.image | cdnimg:1200"
             [alt]="ad.alt"
             [width]="ad.w"
             [height]="ad.h"
