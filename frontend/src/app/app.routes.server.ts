@@ -46,14 +46,20 @@ export const serverRoutes: ServerRoute[] = [
   // URL bonita de podcasts → SSR (los bots ven los meta tags al compartir)
   { path: 'podcasts/:slug',       renderMode: RenderMode.Server },
 
-  // ── Páginas estáticas sin SEO crítico ────────────────────────────────────
-  { path: 'descarga-la-app',      renderMode: RenderMode.Client },
-  { path: 'nosotros-pagina',      renderMode: RenderMode.Client },
+  // ── Páginas estáticas: Prerender (HTML generado en build) ────────────────
+  // Se sirven como archivos estáticos desde el CDN SIN pasar por la Edge
+  // Function (quedan en su excludedPath) → primera visita instantánea.
+  // Con Client, cada visita invocaba la función (cold start ~3s medido).
+  { path: 'descarga-la-app',      renderMode: RenderMode.Prerender },
+  { path: 'nosotros-pagina',      renderMode: RenderMode.Prerender },
+  { path: 'contactanos',          renderMode: RenderMode.Prerender },
+  { path: 'privacy-policy',       renderMode: RenderMode.Prerender },
+  { path: 'terminos-condiciones', renderMode: RenderMode.Prerender },
+
+  // noticias-todas carga sus datos en el cliente; su shell se cachea en CDN
+  // (ver server.ts). prueba-component es interno, sin tráfico real.
   { path: 'noticias-todas',       renderMode: RenderMode.Client },
   { path: 'prueba-component',     renderMode: RenderMode.Client },
-  { path: 'contactanos',          renderMode: RenderMode.Client },
-  { path: 'privacy-policy',       renderMode: RenderMode.Client },
-  { path: 'terminos-condiciones', renderMode: RenderMode.Client },
 
   // ── Fallback: Client para evitar SSR inesperado en rutas no listadas ─────
   { path: '**', renderMode: RenderMode.Client },
