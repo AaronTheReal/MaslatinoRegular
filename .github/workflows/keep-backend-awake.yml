@@ -1,0 +1,24 @@
+# Mantiene despierto el backend de Render (plan gratis se duerme tras ~15 min
+# de inactividad y tarda 30-60s en despertar, lo que colgaba el SSR del home).
+# Ping cada 10 minutos a un endpoint barato (/calendar/upcoming devuelve ~70B).
+name: Keep backend awake
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend en Render
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 \
+            "https://maslatinoregular.onrender.com/aaron/maslatino/calendar/upcoming")
+          echo "Backend respondio HTTP $code"
+          # 2xx/3xx/4xx = el servicio esta despierto; solo fallar en 5xx/timeout
+          if [ "$code" -ge 500 ] || [ "$code" = "000" ]; then
+            echo "Backend no respondio correctamente"
+            exit 1
+          fi

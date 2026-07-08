@@ -4,6 +4,7 @@ import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/
 import { provideClientHydration } from '@angular/platform-browser';
 import { routes } from './app.routes';
 import { ssrStripCookiesInterceptor } from './interceptors/ssr-strip-cookies.interceptor';
+import { ssrTimeoutInterceptor } from './interceptors/ssr-timeout.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,7 +16,7 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(
       withFetch(),
-      withInterceptors([ssrStripCookiesInterceptor])
+      withInterceptors([ssrStripCookiesInterceptor, ssrTimeoutInterceptor])
     ),
     provideClientHydration()
   ]
