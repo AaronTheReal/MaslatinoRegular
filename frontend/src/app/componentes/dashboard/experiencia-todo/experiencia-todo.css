@@ -14,9 +14,10 @@
 .feature-visual {
   position: relative;
   background-color: #FD9D04;
-  width: 100vw;                 /* ocupa todo el ancho */
-  margin-left: 50%;             /* rompe contenedor centrado */
-  transform: translateX(-50%);  /* centra el bloque de 100vw */
+  /* El padre (app-dashboard) ya es full-width; 100% no depende del ancho
+     del scrollbar ni del padre como el truco 100vw + margin-left:50% +
+     translateX(-50%), que dejaba sobrante horizontal. */
+  width: 100%;
   isolation: isolate;
   overflow: hidden;
 }

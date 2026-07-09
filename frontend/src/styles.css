@@ -43,3 +43,11 @@ body { font-family: var(--font-sans); }
 .sidebar-title  { font-family: var(--font-sans); font-weight: 600; }
 .content        { font-family: var(--font-sans); font-weight: 400; }
 */
+/* La pagina nunca debe hacer scroll horizontal (los carruseles clipean por
+   su cuenta). Evita el "hueco" blanco desplazable en movil cuando algun
+   elemento sobresale del viewport. clip no crea scroll container (no rompe
+   position: sticky); en navegadores muy viejos se ignora sin efecto. */
+html,
+body {
+  overflow-x: clip;
+}

@@ -34,7 +34,9 @@
 
 .radio-player.is-hidden {
   opacity: 0;
-  transform: translateY(100%); /* Desliza hacia abajo al esconder */
+  /* Mantener el translateX(-50%) del centrado base: sin el, al esconderse
+     el player pierde el centrado y cuelga fuera del borde derecho. */
+  transform: translateX(-50%) translateY(100%); /* Desliza hacia abajo al esconder */
   pointer-events: none; /* Evita clicks cuando escondido */
 }
 
