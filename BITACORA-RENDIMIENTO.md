@@ -109,6 +109,35 @@ siguen sin cambiar, AAAA sigue tardando 5.2s.
 - **Fix requerido (panel de Hostinger + Netlify, NO es código)**: ver abajo.
 - **Verificación 2026-07-09**: NS sin cambiar; AAAA frío 5.2s. El fix no se ha aplicado.
 
+### Capítulo 7 — Contraprueba A/B: DNS vs todo-lo-demás (2026-07-10)
+
+El usuario dudó del diagnóstico DNS ("tal vez es el SSR"). Experimento controlado:
+misma carga completa en Chrome real, perfil limpio, con una sola variable —
+resolver DNS o recibir la IP ya resuelta (`--host-resolver-rules`):
+
+| Métrica                    | B: sin DNS (IP dada) | A: con DNS real |
+|----------------------------|----------------------|-----------------|
+| DNS                        | 0 ms                 | **21,171 ms**   |
+| TLS                        | 99 ms                | 102 ms          |
+| TTFB                       | 166 ms               | 21,351 ms       |
+| First Contentful Paint     | **436 ms**           | 21,664 ms       |
+| Load completo              | **1,286 ms**         | 22,337 ms       |
+| Recursos / transferido     | 42 / 1.8MB           | 42 / 1.8MB      |
+| Errores JS (hidratación)   | 0                    | 0               |
+
+**Conclusión definitiva**: con DNS resuelto, el sitio completo (SSR incluido)
+carga en 1.3s. El SSR pinta en 436ms sin errores. TODO el problema restante es
+la resolución DNS de los nameservers dns-parking.
+
+Hallazgo secundario de la corrida A1: un deploy purga el caché del CDN y el
+primer visitante después paga el render SSR completo (~4.6s extra observados).
+Con stale-while-revalidate solo afecta a UN visitante por deploy. Los deploys
+de documentación también purgan — minimizarlos o aceptar el costo.
+
+Auto-verificación posible para el usuario en su PC (reversible): agregar
+`75.2.60.5 maslatino.com` a `C:\Windows\System32\drivers\etc\hosts` (como
+administrador), abrir maslatino.com → carga en ~1s; quitar la línea después.
+
 ---
 
 ## Fix pendiente: migrar DNS (acción del usuario, ~10 min)
