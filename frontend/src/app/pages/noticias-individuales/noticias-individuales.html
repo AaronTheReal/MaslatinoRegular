@@ -39,20 +39,21 @@
         </h1>
 
         <div class="noticia-meta mb-3">
-      <span itemprop="author" itemscope itemtype="https://schema.org/Organization">
-        <span itemprop="name">Redacción Mas Latino</span>
+      <span itemprop="author" itemscope
+            [attr.itemtype]="noticia?.authorName ? 'https://schema.org/Person' : 'https://schema.org/Organization'">
+        <span itemprop="name">{{ noticia?.authorName || 'Redacción Mas Latino' }}</span>
       </span>
           <time
-            *ngIf="noticia?.createdAt"
+            *ngIf="noticia?.publishAt || noticia?.createdAt"
             class="ms-2"
-            [attr.datetime]="noticia?.createdAt || null"
+            [attr.datetime]="noticia?.publishAt || noticia?.createdAt || null"
             itemprop="datePublished">
-            {{ noticia?.createdAt | date: 'mediumDate' }}
+            {{ (noticia?.publishAt || noticia?.createdAt) | date: 'mediumDate' }}
           </time>
           <span
-            *ngIf="noticia?.updatedAt"
+            *ngIf="noticia?.contentUpdatedAt || noticia?.updatedAt"
             class="ms-2"
-            [attr.datetime]="noticia?.updatedAt || null"
+            [attr.datetime]="noticia?.contentUpdatedAt || noticia?.updatedAt || null"
             itemprop="dateModified">
             <!--(Actualizado: {{ noticia?.updatedAt | date: 'mediumDate' }})-->
           </span>

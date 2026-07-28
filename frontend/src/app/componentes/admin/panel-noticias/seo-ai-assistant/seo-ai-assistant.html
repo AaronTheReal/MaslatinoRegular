@@ -1,0 +1,255 @@
+<section
+  class="card border-0 shadow-sm seo-ai mb-4"
+  aria-labelledby="seo-ai-heading"
+  [attr.aria-busy]="loadingStatus() || analyzing()"
+>
+  <div class="card-body">
+    <div
+      class="d-flex flex-column flex-lg-row align-items-lg-start justify-content-between gap-3"
+    >
+      <div>
+        <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+          <h2 id="seo-ai-heading" class="h5 mb-0">Asistente SEO con IA</h2>
+          <span
+            *ngIf="status() as currentStatus"
+            class="badge"
+            [ngClass]="modeClass(currentStatus.mode)"
+          >
+            {{ modeLabel(currentStatus.mode) }}
+          </span>
+        </div>
+        <p class="text-body-secondary mb-0">
+          Analiza el borrador y propone mejoras. Tú decides qué aplicar.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-primary flex-shrink-0"
+        (click)="analyze()"
+        [disabled]="!canAnalyze()"
+      >
+        <span
+          *ngIf="analyzing()"
+          class="spinner-border spinner-border-sm me-2"
+          aria-hidden="true"
+        ></span>
+        {{ analyzing() ? 'Analizando…' : 'Analizar SEO' }}
+      </button>
+    </div>
+
+    <div
+      *ngIf="loadingStatus()"
+      class="d-flex align-items-center gap-2 text-body-secondary mt-3"
+      role="status"
+    >
+      <span
+        class="spinner-border spinner-border-sm"
+        aria-hidden="true"
+      ></span>
+      Consultando disponibilidad…
+    </div>
+
+    <div *ngIf="status() as currentStatus" class="status-panel mt-3">
+      <dl class="row g-2 mb-0 small">
+        <div class="col-sm-4">
+          <dt>Proveedor</dt>
+          <dd class="mb-0">{{ currentStatus.provider }}</dd>
+        </div>
+        <div class="col-sm-4">
+          <dt>Modelo</dt>
+          <dd class="mb-0">{{ currentStatus.model }}</dd>
+        </div>
+        <div class="col-sm-4">
+          <dt>Modo</dt>
+          <dd class="mb-0">{{ modeLabel(currentStatus.mode) }}</dd>
+        </div>
+      </dl>
+
+      <p
+        *ngIf="currentStatus.mode === 'mock'"
+        class="mock-notice mb-0 mt-2"
+      >
+        Modo de simulación: estas sugerencias no provienen de un modelo de IA
+        real.
+      </p>
+      <p
+        *ngIf="currentStatus.message"
+        class="text-body-secondary small mb-0 mt-2"
+      >
+        {{ currentStatus.message }}
+      </p>
+    </div>
+
+    <div *ngIf="statusError()" class="alert alert-warning mt-3 mb-0" role="alert">
+      <p class="mb-2">{{ statusError() }}</p>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-dark"
+        (click)="refreshStatus()"
+        [disabled]="loadingStatus()"
+      >
+        Volver a consultar
+      </button>
+    </div>
+
+    <div
+      *ngIf="status() && !status()?.configured"
+      class="alert alert-secondary mt-3 mb-0"
+      role="status"
+    >
+      El asistente todavía no está configurado. El análisis permanecerá
+      deshabilitado hasta que el backend habilite un proveedor o el modo mock.
+    </div>
+
+    <div *ngIf="analysisError()" class="alert alert-danger mt-3 mb-0" role="alert">
+      {{ analysisError() }}
+    </div>
+
+    <ng-container *ngIf="result() as analysis">
+      <hr class="my-4" />
+
+      <div class="analysis-header mb-4">
+        <div>
+          <h3 class="h6 mb-1">Resultado del análisis</h3>
+          <p class="small text-body-secondary mb-0">
+            {{ analysis.provider }} · {{ analysis.model }} ·
+            {{ modeLabel(analysis.mode) }}
+          </p>
+        </div>
+        <span
+          class="badge rounded-pill"
+          [class.text-bg-success]="scoreDelta(analysis) >= 0"
+          [class.text-bg-danger]="scoreDelta(analysis) < 0"
+        >
+          {{ scoreDelta(analysis) >= 0 ? '+' : '' }}{{ scoreDelta(analysis) }}
+          puntos potenciales
+        </span>
+      </div>
+
+      <div class="row g-3 mb-4" aria-label="Puntuación SEO">
+        <div class="col-md-6">
+          <div class="score-card">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Puntuación actual</span>
+              <strong>{{ scorePercent(analysis.scores.before) }}/100</strong>
+            </div>
+            <div
+              class="progress"
+              role="progressbar"
+              aria-label="Puntuación SEO actual"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="scorePercent(analysis.scores.before)"
+            >
+              <div
+                class="progress-bar bg-secondary"
+                [style.width.%]="scorePercent(analysis.scores.before)"
+              ></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="score-card">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Con las sugerencias</span>
+              <strong>{{ scorePercent(analysis.scores.after) }}/100</strong>
+            </div>
+            <div
+              class="progress"
+              role="progressbar"
+              aria-label="Puntuación SEO potencial"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="scorePercent(analysis.scores.after)"
+            >
+              <div
+                class="progress-bar bg-success"
+                [style.width.%]="scorePercent(analysis.scores.after)"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        *ngIf="analysis.warnings.length"
+        class="alert alert-warning"
+        role="alert"
+      >
+        <h3 class="h6 alert-heading">Advertencias</h3>
+        <ul class="mb-0 ps-3">
+          <li *ngFor="let warning of analysis.warnings">{{ warning }}</li>
+        </ul>
+      </div>
+
+      <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
+        <h3 class="h6 mb-0">Sugerencias por campo</h3>
+        <span class="small text-body-secondary">
+          {{ analysis.suggestions.length }} disponibles
+        </span>
+      </div>
+
+      <p
+        *ngIf="!analysis.suggestions.length"
+        class="text-body-secondary mb-0"
+        role="status"
+      >
+        El análisis no devolvió cambios para aplicar.
+      </p>
+
+      <div class="suggestion-list">
+        <article
+          *ngFor="
+            let suggestion of analysis.suggestions;
+            trackBy: trackSuggestion
+          "
+          class="suggestion-card"
+        >
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between gap-3"
+          >
+            <div class="flex-grow-1 min-width-0">
+              <h4 class="h6 mb-3">{{ fieldLabel(suggestion.field) }}</h4>
+
+              <div class="comparison-grid">
+                <div>
+                  <span class="value-label">Valor actual</span>
+                  <p class="field-value current-value mb-0">
+                    {{ displayValue(suggestion.currentValue) || 'Sin contenido' }}
+                  </p>
+                </div>
+                <div>
+                  <span class="value-label">Sugerencia</span>
+                  <p class="field-value suggested-value mb-0">
+                    {{ displayValue(suggestion.suggestedValue) }}
+                  </p>
+                </div>
+              </div>
+
+              <p class="reason mb-0 mt-3">{{ suggestion.reason }}</p>
+            </div>
+
+            <div class="align-self-md-end">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                (click)="emitSuggestion(suggestion)"
+                [attr.aria-label]="
+                  'Aplicar sugerencia para ' + fieldLabel(suggestion.field)
+                "
+              >
+                Aplicar este campo
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <p class="safety-note small text-body-secondary mt-3 mb-0">
+        Ningún cambio se aplica automáticamente y esta herramienta nunca
+        publica la noticia.
+      </p>
+    </ng-container>
+  </div>
+</section>

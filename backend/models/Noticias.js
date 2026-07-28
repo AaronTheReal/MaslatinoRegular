@@ -195,6 +195,57 @@ BlockSchema.pre('save', function (next) {
   }
 });
 
+// ==== Sub-esquemas para asistencia SEO con IA ====
+const SeoFaqSchema = new Schema({
+  question: { type: String, trim: true, maxlength: 220 },
+  answer: { type: String, trim: true, maxlength: 600 }
+}, { _id: false });
+
+const SeoSuggestionSchema = new Schema({
+  focusKeyphrase: { type: String, trim: true, maxlength: 80 },
+  title: { type: String, trim: true, maxlength: 80 },
+  slug: { type: String, trim: true, maxlength: 180 },
+  metaDescription: { type: String, trim: true, maxlength: 200 },
+  extracto: { type: String, trim: true, maxlength: 400 },
+  summary: { type: String, trim: true, maxlength: 250 },
+  tags: [{ type: String, trim: true, maxlength: 80 }],
+  imageAltGlobal: { type: String, trim: true, maxlength: 250 },
+  headings: [{ type: String, trim: true, maxlength: 220 }],
+  faq: { type: [SeoFaqSchema], default: [] }
+}, { _id: false });
+
+const SeoAiSchema = new Schema({
+  status: {
+    type: String,
+    enum: ['idle', 'pending', 'completed', 'failed', 'stale'],
+    default: 'idle'
+  },
+  analysisId: { type: String, trim: true },
+  generatedAt: { type: Date },
+  sourceContentHash: { type: String, trim: true },
+  provider: { type: String, trim: true },
+  model: { type: String, trim: true },
+  promptVersion: { type: String, trim: true },
+  suggestions: { type: SeoSuggestionSchema, default: undefined },
+  scores: {
+    overall: { type: Number, min: 0, max: 100 },
+    onPage: { type: Number, min: 0, max: 100 },
+    readability: { type: Number, min: 0, max: 100 },
+    topicalCoverage: { type: Number, min: 0, max: 100 }
+  },
+  warnings: [{ type: String, trim: true, maxlength: 400 }],
+  acceptedFields: [{ type: String, trim: true }],
+  acceptedBy: { type: Schema.Types.ObjectId, ref: 'UserAdmin' },
+  acceptedAt: { type: Date },
+  usage: {
+    inputTokens: { type: Number, min: 0 },
+    outputTokens: { type: Number, min: 0 },
+    totalTokens: { type: Number, min: 0 }
+  },
+  errorCode: { type: String, trim: true },
+  errorMessage: { type: String, trim: true, maxlength: 500 }
+}, { _id: false });
+
 // ==== Esquema principal de Noticia ====
 const NoticiaSchema = new Schema({
   title: { type: String, required: true, trim: true },
@@ -232,6 +283,7 @@ const NoticiaSchema = new Schema({
     imageHeight:{ type: Number, min: 1 },
     imageType:  { type: String, trim: true },
     canonical:       { type: String, trim: true },
+    imageSourceUrl:  { type: String, trim: true },
     ogTitle:         { type: String, trim: true },
     ogDescription:   { type: String, trim: true },
     twitterCard:     { type: String, trim: true },
@@ -245,8 +297,10 @@ const NoticiaSchema = new Schema({
 
   createdAt:  { type: Date, default: Date.now },
   updatedAt:  { type: Date, default: Date.now },
+  contentUpdatedAt: { type: Date, default: Date.now },
   autorizada: { type: Boolean, default: false },
   press: { type: Boolean, default: false },   // ← nueva propiedad "press"
+  aiSeo: { type: SeoAiSchema, default: () => ({ status: 'idle' }) }
 });
 
 // Helper: refuerza <a> con target/rel si faltan

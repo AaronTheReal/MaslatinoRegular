@@ -5,6 +5,12 @@ import Category from '../models/Categorias.js';
 import User from '../models/Usuarios.js';
 import { recacheNoticia } from '../utils/prerender-service.js';
 import mongoose from 'mongoose';
+import {
+  buildArticleCanonical,
+  isArticleCanonical,
+  isNoticiaPubliclyVisible,
+  publicNoticiaFilter
+} from '../utils/seo-foundation.js';
 
 dotenv.config();
 
@@ -102,18 +108,10 @@ async function resolveCategories(input) {
   return Array.from(idSet).map(id => new Types.ObjectId(id));
 }
 
-// Build canonical if not provided
-function pickCanonical(publicBaseUrl, slug, req) {
-  if (publicBaseUrl) {
-    return `${publicBaseUrl.replace(/\/+$/, '')}/${slug}`;
-  }
-  // Fallback from request
-  try {
-    const proto = (req.headers['x-forwarded-proto'] || '').split(',')[0] || req.protocol || 'https';
-    const host = req.get ? req.get('host') : req.headers.host;
-    if (host) return `${proto}://${host}/${slug}`;
-  } catch (_) {}
-  return `https://maslatino.com/${slug}`;
+// La canonical pública siempre apunta a la URL propia de la noticia. Nunca se
+// reutiliza la fuente de una imagen como canonical.
+function pickCanonical(publicBaseUrl, slug) {
+  return buildArticleCanonical(slug, publicBaseUrl);
 }
 // ---- Helpers para normalizar blocks provenientes del front ----
 function toPlainHtml(val) {
@@ -188,7 +186,7 @@ async getNoticiasPaginadas(req, res) {
 
     const skip = (page - 1) * limit;
 
-    const filtro = { autorizada: true };
+    const filtro = {};
 
     // ⭐ Búsqueda por texto
     if (q) {
@@ -203,14 +201,15 @@ async getNoticiasPaginadas(req, res) {
     if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
       filtro.categories = new mongoose.Types.ObjectId(categoryId);
     }
+    const publicFilter = publicNoticiaFilter(filtro);
 
     const [items, total] = await Promise.all([
-      Noticia.find(filtro)
+      Noticia.find(publicFilter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Noticia.countDocuments(filtro)
+      Noticia.countDocuments(publicFilter)
     ]);
 
     return res.json({
@@ -330,9 +329,25 @@ async updateNoticia(req, res) {
       ? data.state
       : (existing.state || 'draft');
 
-    const publishAt = data.publishAt
-      ? new Date(data.publishAt)
-      : (existing.publishAt || null);
+    const hasPublishAtUpdate = Object.prototype.hasOwnProperty.call(
+      data,
+      'publishAt'
+    );
+    let publishAt = existing.publishAt || null;
+
+    if (hasPublishAtUpdate) {
+      if (data.publishAt == null || String(data.publishAt).trim() === '') {
+        publishAt = null;
+      } else {
+        const parsedPublishAt = new Date(data.publishAt);
+        if (Number.isNaN(parsedPublishAt.getTime())) {
+          return res.status(400).json({
+            error: 'publishAt debe contener una fecha válida'
+          });
+        }
+        publishAt = parsedPublishAt;
+      }
+    }
 
     const press = typeof data.press === 'boolean' ? data.press : (existing.press ?? false);   // ← NUEVO
 
@@ -416,12 +431,21 @@ async updateNoticia(req, res) {
     );
 
     // 7) Meta final
-    const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL;
-    const canonical = String(
-      meta.canonical ||
-      existing.meta?.canonical ||
-      pickCanonical(PUBLIC_BASE_URL, finalSlug, req)
+    const publicSiteOrigin = process.env.PUBLIC_SITE_ORIGIN;
+    const canonical = pickCanonical(publicSiteOrigin, finalSlug);
+    const hasIncomingImageSource = Object.prototype.hasOwnProperty.call(
+      meta,
+      'imageSourceUrl'
     );
+    const incomingImageSource = String(meta.imageSourceUrl ?? '').trim();
+    const legacyImageSource = String(meta.canonical || '').trim();
+    const imageSourceUrl = hasIncomingImageSource
+      ? incomingImageSource
+      : (
+        legacyImageSource && !isArticleCanonical(legacyImageSource, publicSiteOrigin)
+          ? legacyImageSource
+          : String(existing.meta?.imageSourceUrl || '').trim()
+      );
 
     const ogTitle = String(meta.ogTitle || existing.meta?.ogTitle || title);
     const ogDescription = String(
@@ -439,6 +463,7 @@ async updateNoticia(req, res) {
       description:    metaDescription,
       image:          metaImageUrl,
       canonical,
+      imageSourceUrl,
       ogTitle,
       ogDescription,
       imageAltGlobal,
@@ -466,7 +491,8 @@ async updateNoticia(req, res) {
       content: normContent,
       meta: metaFinal,
       press,                    // ← AQUÍ SE ACTUALIZA
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      contentUpdatedAt: new Date()
     };
 
     // 9) Save
@@ -481,13 +507,14 @@ async updateNoticia(req, res) {
       return res.status(404).json({ error: 'Error al actualizar la noticia' });
     }
 
-    // 10) Recache
+    // 10) Refrescar únicamente URLs que eran o siguen siendo públicas.
     try {
-      if (state === 'published') {
-        await recacheNoticia(updated.slug);
-        if (slugChanged) {
-          await recacheNoticia(existing.slug).catch(() => {});
-        }
+      const slugsToRecache = new Set();
+      if (isNoticiaPubliclyVisible(existing)) slugsToRecache.add(existing.slug);
+      if (isNoticiaPubliclyVisible(updated)) slugsToRecache.add(updated.slug);
+
+      for (const slugToRecache of slugsToRecache) {
+        await recacheNoticia(slugToRecache);
       }
     } catch (e) {
       console.warn('recacheNoticia warning:', e && e.message ? e.message : e);
@@ -522,10 +549,9 @@ async getNoticiasByArchive(req, res) {
     const start = new Date(year, month - 1, 1);
     const end   = new Date(year, month, 1);
 
-    const filter = {
+    const filter = publicNoticiaFilter({
       createdAt: { $gte: start, $lt: end },
-      autorizada: true,
-    };
+    });
 
     const skip = (page - 1) * limit;
 
@@ -570,7 +596,7 @@ async getArchivos(req, res) {
     const skip = (page - 1) * limit;
 
     const result = await Noticia.aggregate([
-      { $match: { autorizada: true } },
+      { $match: publicNoticiaFilter() },
       {
         $group: {
           _id: {
@@ -655,10 +681,9 @@ async getNoticiasByCategory(req, res) {
       return res.status(404).json({ error: 'Categoría no encontrada' });
     }
 
-    const filter = {
-      categories: category._id,
-      autorizada: true
-    };
+    const filter = publicNoticiaFilter({
+      categories: category._id
+    });
 
     const [total, noticias] = await Promise.all([
       Noticia.countDocuments(filter),
@@ -711,8 +736,15 @@ async getCategorias(req, res) {
 
       await Noticia.findByIdAndDelete(id);
 
-      if (existingNoticia.state === 'published') {
-        await recacheNoticia(existingNoticia.slug);
+      if (isNoticiaPubliclyVisible(existingNoticia)) {
+        try {
+          await recacheNoticia(existingNoticia.slug);
+        } catch (recacheError) {
+          console.warn(
+            'recacheNoticia warning:',
+            recacheError?.message || recacheError
+          );
+        }
       }
 
       return res.status(204).json();
@@ -741,7 +773,7 @@ async getCategorias(req, res) {
       // Actualizar solo el campo autorizada
       const updatedNoticia = await Noticia.findByIdAndUpdate(
         id,
-        { autorizada, updatedAt: new Date() },
+        { autorizada, updatedAt: new Date(), contentUpdatedAt: new Date() },
         { new: true, runValidators: true }
       )
         .populate('categories', 'name slug color')
@@ -749,6 +781,20 @@ async getCategorias(req, res) {
 
       if (!updatedNoticia) {
         return res.status(404).json({ error: 'Error al actualizar la autorización de la noticia' });
+      }
+
+      if (
+        isNoticiaPubliclyVisible(existingNoticia)
+        || isNoticiaPubliclyVisible(updatedNoticia)
+      ) {
+        try {
+          await recacheNoticia(updatedNoticia.slug);
+        } catch (recacheError) {
+          console.warn(
+            'recacheNoticia warning:',
+            recacheError?.message || recacheError
+          );
+        }
       }
 
       return res.status(200).json(updatedNoticia);
@@ -772,7 +818,7 @@ async getNoticiasUsuario(req, res) {
     }
 
     // 2) Filtro: Noticia que tenga AL MENOS una categoría del usuario
-    const filter = { categories: { $in: userCategories } };
+    const filter = publicNoticiaFilter({ categories: { $in: userCategories } });
 
     // 3) Consulta SIN límite, ordenadas de más nuevas a más antiguas
     const items = await Noticia.find(filter)
@@ -821,7 +867,7 @@ async getNoticiaBySlug(req, res) {
     const { slug } = req.params;
     if (!slug) return res.status(400).json({ error: 'Slug no proporcionado' });
 
-    const noticia = await Noticia.findOne({ slug })
+    const noticia = await Noticia.findOne(publicNoticiaFilter({ slug }))
       .populate('categories', 'name slug color')
       .lean();
 
@@ -840,7 +886,9 @@ async getNoticiaBySlug(req, res) {
     const categoriaId = req.params.id;
 
     // Buscar todas las noticias con esa categoría
-    const noticias = await Noticia.find({ categories: categoriaId }).sort({ createdAt: -1 });
+    const noticias = await Noticia.find(
+      publicNoticiaFilter({ categories: categoriaId })
+    ).sort({ createdAt: -1 });
 
     res.json(noticias);
   } catch (error) {
@@ -855,7 +903,7 @@ async getNoticiasRecientes(req, res, next) {
 
     const noticias = await Noticia.find(
       
-      {autorizada: true},
+      publicNoticiaFilter(),
       //'title slug createdAt meta.image'
         // solo campos necesarios para sidebar
     )
@@ -875,7 +923,7 @@ async getNoticiasRecomendadas(req, res, next) {
     const limit = Math.min(parseInt(req.query.limit));
 
     const noticias = await Noticia.find(
-      {},
+      publicNoticiaFilter(),
       'title slug createdAt meta.image' // solo campos necesarios para sidebar
     )
       .sort({ createdAt: -1 })
@@ -902,9 +950,9 @@ async getNoticiasRecomendadas(req, res, next) {
 
 
     // 4. Consulta filtrando por categorías
-    const noticia = await Noticia.find({
+    const noticia = await Noticia.find(publicNoticiaFilter({
       _id: noticiaId
-    })
+    }))
     res.status(200).json(noticia);
   } catch (e) {
     console.error(e);
@@ -936,9 +984,9 @@ async getNoticiasRecomendadas(req, res, next) {
     const limite = parseInt(req.body.limite) || 10;
 
     // 2. Buscar noticias filtradas por ObjectId en categories[]
-    const noticias = await Noticia.find({
+    const noticias = await Noticia.find(publicNoticiaFilter({
       categories: { $in: idsCategorias }
-    })
+    }))
       .sort({ createdAt: -1 })
       .limit(limite);
 
@@ -952,7 +1000,7 @@ async getNoticiasRecomendadas(req, res, next) {
   
 async getAllNoticias(req, res, next) {
   try {
-    const noticias = await Noticia.find({})  //.sort({ createdAt: -1 }).limit(10); // solo las más recientes
+    const noticias = await Noticia.find(publicNoticiaFilter())
     res.status(200).json(noticias);
   } catch (e) {
     console.error(e);
@@ -1128,6 +1176,7 @@ async createNoticia(req, res, next) {
       focusKeyphrase,
       summary,
       author: authorId,
+      authorName: req.user?.name || req.body.authorName || '',
       categories: normCategories,
       tags: normTags,
       location: location || {},
@@ -1137,7 +1186,12 @@ async createNoticia(req, res, next) {
         description:    meta.description,
         image:          metaImageUrl,
         imageAltGlobal: meta.imageAltGlobal || '',
-        canonical:      meta.canonical || '',
+        canonical:      pickCanonical(process.env.PUBLIC_SITE_ORIGIN, finalSlug),
+        imageSourceUrl: meta.imageSourceUrl || (
+          meta.canonical && !isArticleCanonical(meta.canonical, process.env.PUBLIC_SITE_ORIGIN)
+            ? meta.canonical
+            : ''
+        ),
         ogTitle:        meta.ogTitle || title,
         ogDescription:  meta.ogDescription || (summary || meta.description),
         twitterCard:    meta.twitterCard || 'summary_large_image',
@@ -1154,9 +1208,13 @@ async createNoticia(req, res, next) {
 
     const saved = await doc.save();
 
-    // Recache (no bloqueante)
-    try { await recacheNoticia(saved.slug); } catch (e) {
-      console.warn('recacheNoticia falló (no bloqueante):', e?.message || e);
+    // No precachear borradores, notas no autorizadas ni publicaciones futuras.
+    if (isNoticiaPubliclyVisible(saved)) {
+      try {
+        await recacheNoticia(saved.slug);
+      } catch (e) {
+        console.warn('recacheNoticia falló (no bloqueante):', e?.message || e);
+      }
     }
 
     return res.status(201).json(saved);
@@ -1233,10 +1291,7 @@ async getNoticiasPress(req, res) {
 
     const skip = (page - 1) * limit;
 
-    const filtro = {
-      autorizada: true,
-      press: true
-    };
+    const filtro = publicNoticiaFilter({ press: true });
 
     const [items, total] = await Promise.all([
       Noticia.find(filtro)

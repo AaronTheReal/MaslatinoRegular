@@ -22,7 +22,8 @@ export class VistaPrevia {
     meta: {
       description: string;
       image: string;
-      canonical?: string;             // ahora opcional, la usas como fuente de imagen
+      canonical?: string;
+      imageSourceUrl?: string;
       ogTitle?: string;
       ogDescription?: string;
       imageAltGlobal?: string;
@@ -76,7 +77,7 @@ export class VistaPrevia {
   /** Artículo final (para compartir en redes, etc.) */
   getArticleUrl(): string {
     if (!this.data?.slug) return this.baseUrl;
-    return `${this.baseUrl}/${this.data.slug}`;
+    return `${this.baseUrl}/noticia/${this.data.slug}`;
   }
 
     /** Construye el src del iframe según el provider */

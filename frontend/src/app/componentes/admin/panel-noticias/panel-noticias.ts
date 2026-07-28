@@ -16,11 +16,24 @@ import { debounceTime, map, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 import { S3UploadAdapterPlugin } from '../../../../utils/ckeditor-s3-adapter';
+import { SeoAiAssistantComponent } from './seo-ai-assistant/seo-ai-assistant';
+import {
+  SeoAiApplySuggestionEvent,
+  SeoAiDraft
+} from '../../../../models/seo-ai.model';
 
 @Component({
   selector: 'app-panel-noticias',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, VistaPrevia, FormsModule, NgSelectModule, CKEditorModule],
+  imports: [
+    ReactiveFormsModule,
+    CommonModule,
+    VistaPrevia,
+    FormsModule,
+    NgSelectModule,
+    CKEditorModule,
+    SeoAiAssistantComponent
+  ],
   templateUrl: './panel-noticias.html',
   styleUrls: ['./panel-noticias.css']
 })
@@ -70,6 +83,7 @@ export class PanelNoticias implements OnInit {
 
   // Dominio para enlaces internos
   private domain = 'maslatino.com';
+  private autoSlugFromTitle = true;
 
   private escapeRegex(s: string): string {
     return (s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -199,7 +213,7 @@ export class PanelNoticias implements OnInit {
           Validators.minLength(8),
           this.altKeyphraseHyphenValidator()
         ]],
-        canonical: ['', Validators.pattern(/^https?:\/\/.+/)],
+        imageSourceUrl: ['', Validators.pattern(/^https?:\/\/.+/)],
         ogTitle: [''],
         ogDescription: ['', [Validators.maxLength(300)]],
         imageCaptionHtml: [
@@ -216,16 +230,16 @@ export class PanelNoticias implements OnInit {
 
     // Listeners
     this.noticiaForm.get('title')?.valueChanges.subscribe(title => {
-      if (title) {
+      if (title && this.autoSlugFromTitle) {
         const slug = this.generateSlug(title);
-        this.noticiaForm.get('slug')?.setValue(slug, { emitEvent: false });
+        this.noticiaForm.get('slug')?.setValue(slug);
       }
       this.updateTitleWarning();
       this.updateTitleRepetition();
     });
 
     this.noticiaForm.get('slug')?.valueChanges.subscribe(slug => {
-      this.canonicalUrl = `https://${this.domain}/${slug}`;
+      this.canonicalUrl = `https://${this.domain}/noticia/${slug}`;
     });
 
     this.noticiaForm.get('meta.description')?.valueChanges
@@ -277,6 +291,24 @@ export class PanelNoticias implements OnInit {
   // Getters
   get tags(): FormArray {
     return this.noticiaForm.get('tags') as FormArray;
+  }
+
+  get seoAiDraft(): SeoAiDraft {
+    const raw = this.noticiaForm.getRawValue() as any;
+    return {
+      focusKeyphrase: String(raw.focusKeyphrase || ''),
+      title: String(raw.title || ''),
+      slug: String(raw.slug || ''),
+      metaDescription: String(raw.meta?.description || ''),
+      extracto: String(raw.extracto || ''),
+      summary: String(raw.summary || ''),
+      tags: Array.isArray(raw.tags) ? raw.tags.map(String).filter(Boolean) : [],
+      imageAltGlobal: String(raw.meta?.imageAltGlobal || ''),
+      bodyHtml: String(raw.body || ''),
+      categories: Array.isArray(raw.categories)
+        ? raw.categories.map(String).filter(Boolean)
+        : []
+    };
   }
 
   // Tags
@@ -661,6 +693,42 @@ export class PanelNoticias implements OnInit {
       .replace(/-+$/, '');
   }
 
+  onSlugEdited(): void {
+    this.autoSlugFromTitle = false;
+  }
+
+  onApplySeoAiSuggestion(event: SeoAiApplySuggestionEvent): void {
+    if (event.field === 'tags') {
+      const values = Array.isArray(event.value)
+        ? event.value.map(String).map(value => value.trim()).filter(Boolean).slice(0, 5)
+        : [];
+      this.tags.clear({ emitEvent: false });
+      values.forEach(value => {
+        this.tags.push(this.fb.control(value, Validators.required), { emitEvent: false });
+      });
+      this.tags.markAsDirty();
+      this.tags.updateValueAndValidity({ emitEvent: true });
+      return;
+    }
+
+    if (typeof event.value !== 'string') return;
+    if (event.field === 'title' || event.field === 'slug') {
+      this.autoSlugFromTitle = false;
+    }
+
+    const controlPath = event.field === 'metaDescription'
+      ? 'meta.description'
+      : event.field === 'imageAltGlobal'
+        ? 'meta.imageAltGlobal'
+        : event.field;
+    const control = this.noticiaForm.get(controlPath);
+    if (!control) return;
+
+    control.setValue(event.value);
+    control.markAsDirty();
+    control.updateValueAndValidity();
+  }
+
   // EMBEDS a partir de un párrafo con solo un enlace
   private detectEmbedBlock(el: HTMLElement) {
     const text = (el.textContent || '').trim();
@@ -981,7 +1049,7 @@ if (tag === 'iframe') {
         ...meta,
         ogTitle: meta.ogTitle || raw.title,
         ogDescription: meta.ogDescription || (raw.extracto || meta.description),
-        canonical: meta.canonical || `https://${this.domain}/${raw.slug}`
+        canonical: `https://${this.domain}/noticia/${raw.slug}`
       }
     };
   }
@@ -1108,9 +1176,18 @@ if (tag === 'iframe') {
     const file = input?.files?.[0];
     if (!file) return;
 
+    const adminToken = localStorage.getItem('admin_token');
+    if (!adminToken) {
+      alert('Tu sesión de administrador expiró. Inicia sesión nuevamente.');
+      return;
+    }
+
     const sign = await fetch('https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`
+      },
       body: JSON.stringify({
         filename: file.name,
         contentType: file.type || 'application/octet-stream',
@@ -1179,6 +1256,7 @@ if (tag === 'iframe') {
   }
 
   private resetForm() {
+    this.autoSlugFromTitle = true;
     this.noticiaForm.reset({
       state: 'draft',
       publishAt: null,
@@ -1229,7 +1307,7 @@ if (tag === 'iframe') {
       ...raw.meta,
       ogTitle: raw.meta?.ogTitle || raw.title,
       ogDescription: raw.meta?.ogDescription || (raw.extracto || raw.meta?.description),
-      canonical: raw.meta?.canonical || `https://${this.domain}/${raw.slug}`,
+      canonical: `https://${this.domain}/noticia/${raw.slug}`,
       twitterCard: 'summary_large_image',
       imageCaptionHtml: hardenCaptionLinks(imageCaptionHtml)
     };

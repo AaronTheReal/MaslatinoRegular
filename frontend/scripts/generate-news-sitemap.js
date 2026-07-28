@@ -1,12 +1,29 @@
 import fs from 'fs';
 
-const API = 'https://maslatinoregular.onrender.com/aaron/maslatino/news-sitemap-data';
+const API_BASE = (process.env.SITEMAP_API_BASE || 'https://maslatinoregular.onrender.com/aaron/maslatino')
+  .replace(/\/+$/, '');
+const API = `${API_BASE}/news-sitemap-data`;
 const OUT = 'public/news-sitemap.xml';
+const PUBLIC_ORIGIN = 'https://maslatino.com';
+
+function escapeXml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function normalizePublicUrl(value) {
+  const url = new URL(String(value || ''), PUBLIC_ORIGIN);
+  return `${PUBLIC_ORIGIN}${url.pathname}`;
+}
 
 async function run() {
-  const res = await fetch(API);
+  const res = await fetch(API, { signal: AbortSignal.timeout(60_000) });
   if (!res.ok) {
-    throw new Error('No se pudo obtener news-sitemap-data');
+    throw new Error(`No se pudo obtener news-sitemap-data (${res.status})`);
   }
 
   const urls = await res.json();
@@ -17,14 +34,14 @@ async function run() {
 
   const xmlUrls = urls.map(u => `
   <url>
-    <loc>${u.loc}</loc>
+    <loc>${escapeXml(normalizePublicUrl(u.loc))}</loc>
     <news:news>
       <news:publication>
         <news:name>Mas Latino</news:name>
-        <news:language>en</news:language>
+        <news:language>es</news:language>
       </news:publication>
-      <news:publication_date>${u.publication_date}</news:publication_date>
-      <news:title><![CDATA[${u.title}]]></news:title>
+      <news:publication_date>${escapeXml(u.publication_date)}</news:publication_date>
+      <news:title>${escapeXml(u.title)}</news:title>
     </news:news>
   </url>
 `).join('');
@@ -42,5 +59,5 @@ ${xmlUrls}
 
 run().catch(err => {
   console.error(err);
-  process.exit(1);
+  process.exitCode = 1;
 });

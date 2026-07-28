@@ -12,9 +12,11 @@ Disallow: /podcast-panel
 Disallow: /radio-panel
 Disallow: /categorias-panel
 Disallow: /admin-noticias
+Disallow: /correos-panel
 Disallow: /admin-login
 Disallow: /admin/noticiaseditar/
+Disallow: /prueba-component
 
 # Sitemap
-Sitemap: https://www.maslatino.com/sitemap.xml
-Sitemap: https://www.maslatino.com/news-sitemap.xml
+Sitemap: https://maslatino.com/sitemap.xml
+Sitemap: https://maslatino.com/news-sitemap.xml

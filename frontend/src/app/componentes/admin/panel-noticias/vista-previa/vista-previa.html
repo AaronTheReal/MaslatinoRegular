@@ -110,14 +110,18 @@
         </div>
       </div>
 
-      <!-- FUENTE / CANONICAL (la estás usando como fuente de imagen) -->
+      <!-- Canonical y fuente de imagen son datos diferentes -->
       <div class="mb-3">
-        <label class="fw-bold">Fuente de la imagen (canonical)</label>
+        <label class="fw-bold">URL canónica del artículo</label>
         <p>
-          {{ data.meta?.canonical || '— Sin fuente —' }}
+          {{ data.meta?.canonical || getArticleUrl() }}
         </p>
-        <small class="text-muted" *ngIf="data.meta?.canonical">
-          Dominio: {{ getDomain(data.meta.canonical) }}
+        <label class="fw-bold">Fuente de la imagen</label>
+        <p>
+          {{ data.meta?.imageSourceUrl || '— Sin fuente —' }}
+        </p>
+        <small class="text-muted" *ngIf="data.meta?.imageSourceUrl">
+          Dominio: {{ getDomain(data.meta.imageSourceUrl) }}
         </small>
       </div>
 

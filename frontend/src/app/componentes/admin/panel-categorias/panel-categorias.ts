@@ -189,11 +189,22 @@ export class PanelCategorias {
     const contentType = file.type || 'application/octet-stream';
 
     try {
+      const adminToken = localStorage.getItem('admin_token')?.trim();
+
+      if (!adminToken) {
+        throw new Error(
+          'Tu sesión de administrador expiró. Inicia sesión nuevamente.'
+        );
+      }
+
       const sign = await fetch(
         'https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload',
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`
+          },
           body: JSON.stringify({
             filename: file.name,
             contentType,
@@ -229,7 +240,11 @@ export class PanelCategorias {
       input.value = '';
     } catch (err) {
       console.error(err);
-      alert('Error al subir la imagen.');
+      alert(
+        err instanceof Error && err.message.startsWith('Tu sesión')
+          ? err.message
+          : 'Error al subir la imagen.'
+      );
     }
   }
 }

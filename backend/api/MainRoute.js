@@ -33,6 +33,12 @@ import { flexibleChecksumsMiddlewareOptions } from '@aws-sdk/middleware-flexible
 import crypto from 'crypto';
 import { verifyToken, requireRole } from '../authAdmin.js';
 import correoController from './CorreoController.js';   // ← Cambia esto
+import SeoAiController from './SeoAiController.js';
+import {
+  buildArticleCanonical,
+  publicArticleLastModified,
+  publicNoticiaFilter
+} from '../utils/seo-foundation.js';
 dotenv.config();
 
 const CLIENT_ID = '839716319068-kvfo69vbtp239991itvmr367cb9fprkv.apps.googleusercontent.com'; // Your web client ID
@@ -40,6 +46,7 @@ const { APPLE_TEAM_ID, APPLE_CLIENT_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY, JWT_SEC
 const GOOGLE_WEB_CLIENT_ID = process.env.GOOGLE_WEB_CLIENT_ID;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const EDITORIAL_ROLES = ['Periodista', 'Escritor', 'Administrador', 'Tecnico'];
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -139,7 +146,11 @@ export default class MainRoute {
 
     //noticias
     //router.route('/noticiasGet').get(NoticiasController.getAllNoticias);
-    router.route('/noticiasPost').post(NoticiasController.createNoticia);
+    router.route('/noticiasPost').post(
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      NoticiasController.createNoticia
+    );
     router.route('/getNoticias').get(NoticiasController.getAllNoticias);
     router.route('/getNoticiasInicio').post(NoticiasController.getNoticiaCategorias);
     router.route('/noticias/recientes').get(NoticiasController.getNoticiasRecientes);
@@ -154,14 +165,50 @@ export default class MainRoute {
     router.get('/noticias/categoria/:id', NoticiasController.obtenerNoticiasPorCategoriaId);
 
     router.route('/getNoticiaDespliegue').post(NoticiasController.getNoticiaDespliegue);
-    router.route('/noticia/:id').get(NoticiasController.getNoticiaById);
+    router.route('/noticia/:id').get(
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      NoticiasController.getNoticiaById
+    );
     router.get('/noticia/slug/:slug', NoticiasController.getNoticiaBySlug);
-    router.put('/noticia/:id', NoticiasController.updateNoticia);
-    router.delete('/noticia/:id', NoticiasController.deleteNoticia);
-    router.patch('/noticia/:id/autorizar', NoticiasController.toggleAutorizarNoticia);
+    router.put(
+      '/noticia/:id',
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      NoticiasController.updateNoticia
+    );
+    router.delete(
+      '/noticia/:id',
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      NoticiasController.deleteNoticia
+    );
+    router.patch(
+      '/noticia/:id/autorizar',
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      NoticiasController.toggleAutorizarNoticia
+    );
     router.get('/noticias/paginadas', NoticiasController.getNoticiasPaginadas);
     router.get('/noticias/press', NoticiasController.getNoticiasPress);
-    router.get('/admin/paginadas', NoticiasController.getAdminNoticiasPaginadas);
+    router.get(
+      '/admin/paginadas',
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      NoticiasController.getAdminNoticiasPaginadas
+    );
+    router.get(
+      '/admin/seo-ai/status',
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      SeoAiController.status
+    );
+    router.post(
+      '/admin/seo-ai/analyze',
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      SeoAiController.analyze
+    );
     
     
     router.route('/registrarUsuario').post(UsuariosController.postNuevoUsuario);
@@ -212,7 +259,6 @@ router
   );
 
     router.post('/apple-login', async (req, res) => {
-  console.log('Solicitud recibida en /apple-login:', req.body);
   const { id_token } = req.body;
   try {
     if (!id_token) {
@@ -221,8 +267,14 @@ router
     }
 
     // Obtén claves públicas de Apple
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(503).json({
+        message: 'Autenticación temporalmente no disponible'
+      });
+    }
+
     const { data: appleKeys } = await axios.get('https://appleid.apple.com/auth/keys');
-    console.log('Claves públicas obtenidas:', appleKeys);
     const header = jwt.decode(id_token, { complete: true });
     if (!header) {
       console.log('No se pudo decodificar el id_token');
@@ -236,16 +288,12 @@ router
 
     // Convierte clave pública a PEM
     const pubKey = jwkToPem(appleKey);
-    console.log('Clave pública generada:', pubKey);
-
     // Verifica el token
     const decoded = jwt.verify(id_token, pubKey, {
       algorithms: ['RS256'],
       issuer: 'https://appleid.apple.com',
       audience: process.env.APPLE_CLIENT_ID,
     });
-    console.log('Token decodificado:', decoded);
-
     // Busca o crea usuario
     let user = await Usuario.findOne({ provider: 'apple', providerId: decoded.sub });
     if (!user) {
@@ -259,14 +307,10 @@ router
         createdAt: new Date(),
       });
       await user.save();
-      console.log('Usuario creado:', user);
-    } else {
-      console.log('Usuario encontrado:', user);
     }
 
     // Genera token JWT
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
-    console.log('Token JWT generado:', token);
+    const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '7d' });
 
     res.json({
       token,
@@ -291,6 +335,13 @@ router.post('/google-login', async (req, res) => {
   if (!id_token) return res.status(400).json({ message: 'No id_token proporcionado' });
 
   try {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(503).json({
+        message: 'Autenticación temporalmente no disponible'
+      });
+    }
+
     const client = new OAuth2Client(CLIENT_ID);
     const ticket = await client.verifyIdToken({
       idToken: id_token,
@@ -316,7 +367,7 @@ router.post('/google-login', async (req, res) => {
       await user.save();
     }
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: '7d' });
 
     res.json({
       token,
@@ -488,50 +539,69 @@ router.post('/google-login', async (req, res) => {
 
     // GET /aaron/maslatino/sitemap-data
 router.get('/sitemap-data', async (req, res) => {
-  const noticias = await Noticia.find({})
-    .select('slug updatedAt');
+  try {
+    const noticias = await Noticia.find(publicNoticiaFilter({
+      slug: { $exists: true, $nin: ['', null] }
+    }))
+      .select('slug contentUpdatedAt updatedAt createdAt')
+      .lean();
 
-  const urls = noticias.map(n => ({
-    loc: `https://www.maslatino.com/noticia/${n.slug}`,
-    lastmod: n.updatedAt.toISOString().split('T')[0],
-    changefreq: 'weekly',
-    priority: '0.9'
-  }));
+    const urls = noticias.map((noticia) => {
+      const lastmod = publicArticleLastModified(noticia);
+      return {
+        loc: buildArticleCanonical(noticia.slug, process.env.PUBLIC_SITE_ORIGIN),
+        lastmod: new Date(lastmod).toISOString().split('T')[0],
+        changefreq: 'weekly',
+        priority: '0.9'
+      };
+    });
 
-  res.json(urls);
+    return res.json(urls);
+  } catch (error) {
+    console.error('Error generando sitemap-data:', error);
+    return res.status(500).json({ error: 'No se pudo generar el sitemap' });
+  }
 });
 
 router.get('/news-sitemap-data', async (req, res) => {
-  const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  try {
+    const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const now = new Date();
 
-  const noticias = await Noticia.find({
-    autorizada: true,
-    $or: [
-      { publishAt: { $gte: since } },
-      { publishAt: { $exists: false }, createdAt: { $gte: since } }
-    ]
-  })
-  .select('slug title publishAt createdAt')
-  .sort({ publishAt: -1, createdAt: -1 })
-  .limit(1000);
+    const noticias = await Noticia.find(publicNoticiaFilter({
+      slug: { $exists: true, $nin: ['', null] },
+      $or: [
+        { publishAt: { $gte: since, $lte: now } },
+        { publishAt: null, createdAt: { $gte: since, $lte: now } }
+      ]
+    }, now))
+      .select('slug title publishAt createdAt')
+      .sort({ publishAt: -1, createdAt: -1 })
+      .limit(1000)
+      .lean();
 
-  console.log(noticias);
+    const urls = noticias.map((noticia) => {
+      const publicationDate = noticia.publishAt ?? noticia.createdAt;
+      return {
+        loc: buildArticleCanonical(noticia.slug, process.env.PUBLIC_SITE_ORIGIN),
+        title: noticia.title,
+        publication_date: publicationDate.toISOString()
+      };
+    });
 
-  const urls = noticias.map(n => {
-    const date = n.publishAt ?? n.createdAt;
-
-    return {
-      loc: `https://www.maslatino.com/noticia/${n.slug}`,
-      title: n.title,
-      publication_date: date.toISOString()
-    };
-  });
-
-  res.json(urls);
+    return res.json(urls);
+  } catch (error) {
+    console.error('Error generando news-sitemap-data:', error);
+    return res.status(500).json({ error: 'No se pudo generar el sitemap de noticias' });
+  }
 });
 
 
-    router.post('/sign-upload', async (req, res) => {
+    router.post(
+      '/sign-upload',
+      verifyToken,
+      requireRole(EDITORIAL_ROLES),
+      async (req, res) => {
       try {
         const { filename = 'archivo', contentType = 'application/octet-stream', approxSize = 0 } = req.body || {};
         console.log('Signing with ContentType:', contentType);
@@ -574,7 +644,8 @@ router.get('/news-sitemap-data', async (req, res) => {
         console.error('sign-upload error:', err);
         return res.status(500).json({ error: 'No se pudo firmar la subida' });
       }
-    });
+      }
+    );
 
     return router;
   }

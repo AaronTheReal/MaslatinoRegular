@@ -1,8 +1,8 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
 import { Observable, of, tap, map, shareReplay, catchError } from 'rxjs';
 import { Noticia } from '../../models/noticia.model';
-import { isPlatformServer } from '@angular/common';
+import { isPlatformBrowser, isPlatformServer } from '@angular/common';
 import { CategoriaPayload } from '../services/categorias-service'; 
 
 
@@ -49,7 +49,7 @@ export class NoticiasService {
 
   // Ajusta para prod con ENV si aplica
   //private baseUrl = 'http://localhost:3000/aaron/maslatino';
-   private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
+  private baseUrl = 'https://maslatinoregular.onrender.com/aaron/maslatino';
    //private baseUrl = 'https://maslatino.onrender.com/aaron/maslatino'; // Ajusta si tu backend cambia
 
   /** ======== CRUD ======== */
@@ -118,28 +118,36 @@ export class NoticiasService {
   createNoticia(data: Noticia): Observable<Noticia> {
     console.log("queee", data);
     return this.http
-      .post<Noticia>(`${this.baseUrl}/noticiasPost`, data)
+      .post<Noticia>(`${this.baseUrl}/noticiasPost`, data, {
+        headers: this.getAdminHeaders()
+      })
       .pipe(shareReplay(1));
   }
 
   /** Actualizar */
   updateNoticia(id: string, data: Noticia): Observable<Noticia> {
     return this.http
-      .put<Noticia>(`${this.baseUrl}/noticia/${id}`, data)
+      .put<Noticia>(`${this.baseUrl}/noticia/${id}`, data, {
+        headers: this.getAdminHeaders()
+      })
       .pipe(shareReplay(1));
   }
 
   /** Eliminar */
   deleteNoticia(id: string): Observable<void> {
     return this.http
-      .delete<void>(`${this.baseUrl}/noticia/${id}`)
+      .delete<void>(`${this.baseUrl}/noticia/${id}`, {
+        headers: this.getAdminHeaders()
+      })
       .pipe(shareReplay(1));
   }
 
   /** Autorizar/Desautorizar */
   toggleAutorizarNoticia(id: string, autorizada: boolean): Observable<Noticia> {
     return this.http
-      .patch<Noticia>(`${this.baseUrl}/noticia/${id}/autorizar`, { autorizada })
+      .patch<Noticia>(`${this.baseUrl}/noticia/${id}/autorizar`, { autorizada }, {
+        headers: this.getAdminHeaders()
+      })
       .pipe(shareReplay(1));
   }
 
@@ -185,7 +193,9 @@ export class NoticiasService {
       return of(data);
     }
     const observable = this.http
-      .get<{ noticia: Noticia }>(`${this.baseUrl}/noticia/${id}`)
+      .get<{ noticia: Noticia }>(`${this.baseUrl}/noticia/${id}`, {
+        headers: this.getAdminHeaders()
+      })
       .pipe(map(r => r.noticia || null), shareReplay(1));
     if (isPlatformServer(this.platformId)) {
       return observable.pipe(tap(data => this.ts.set(key, data)));
@@ -364,7 +374,19 @@ getNoticiasByArchive(
     if (categoryId) params = params.set('categoryId', categoryId);
     if (press !== 'all') params = params.set('press', press);   // ← aquí se envía al backend
 
-    return this.http.get<any>(`${this.baseUrl}/admin/paginadas`, { params })
+    return this.http.get<any>(`${this.baseUrl}/admin/paginadas`, {
+      params,
+      headers: this.getAdminHeaders()
+    })
       .pipe(shareReplay(1));
+  }
+
+  private getAdminHeaders(): HttpHeaders {
+    if (!isPlatformBrowser(this.platformId)) return new HttpHeaders();
+
+    const token = localStorage.getItem('admin_token');
+    return token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
   }
 }

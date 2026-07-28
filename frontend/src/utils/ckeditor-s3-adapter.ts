@@ -28,11 +28,21 @@ export class S3UploadAdapter {
     if (!file) throw new Error('No file provided');
     const contentType = file.type || 'application/octet-stream';
     const filename = sanitizeFilename(file.name || 'upload');
+    const adminToken = localStorage.getItem('admin_token')?.trim();
+
+    if (!adminToken) {
+      throw new Error(
+        'Tu sesión de administrador expiró. Inicia sesión nuevamente.'
+      );
+    }
 
     // 1) pedir URL firmada
     const signRes = await fetch('https://maslatinoregular.onrender.com/aaron/maslatino/sign-upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`
+      },
       body: JSON.stringify({
         filename,
         contentType,

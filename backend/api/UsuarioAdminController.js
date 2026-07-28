@@ -165,6 +165,12 @@ class UserAdminController {
    */
   async login(req, res) {
     try {
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        console.error('JWT_SECRET no está configurado');
+        return res.status(503).json({ message: 'Autenticación temporalmente no disponible' });
+      }
+
       const { email, password } = req.body;
 
       if (!email || !password) {
@@ -197,7 +203,7 @@ class UserAdminController {
 
       const token = jwt.sign(
         payload,
-        process.env.JWT_SECRET || 'changeme',
+        jwtSecret,
         { expiresIn: '8h' }
       );
 

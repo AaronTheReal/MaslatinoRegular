@@ -14,9 +14,10 @@ dotenv.config();
    CONFIG
    ========================= */
 
-const MONGO_URI =
-  process.env.MONGODB_URI ||
-  'mongodb+srv://aaronguapo69:X3B7D2o5jPZMgMlm@cluster0.uxax8yp.mongodb.net/RealMedia';
+const MONGO_URI = process.env.MONGODB_URI || process.env.DB_URL;
+if (!MONGO_URI) {
+  throw new Error('Configura MONGODB_URI o DB_URL antes de ejecutar esta migración.');
+}
 
 // Ruta del JSON exportado desde phpMyAdmin (wp_posts)
 const SQL_EXPORT_PATH = '../api/wp_posts_sql.json';

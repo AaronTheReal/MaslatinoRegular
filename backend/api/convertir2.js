@@ -9,9 +9,10 @@ dotenv.config();
    CONFIG MONGO
    ========================= */
 
-const MONGO_URI =
-  process.env.MONGODB_URI ||
-  'mongodb+srv://aaronguapo69:X3B7D2o5jPZMgMlm@cluster0.uxax8yp.mongodb.net/RealMedia';
+const MONGO_URI = process.env.MONGODB_URI || process.env.DB_URL;
+if (!MONGO_URI) {
+  throw new Error('Configura MONGODB_URI o DB_URL antes de ejecutar esta migración.');
+}
 
 /* =========================
    PREFIJOS VIEJO / NUEVO

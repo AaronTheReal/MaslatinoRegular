@@ -1,8 +1,11 @@
 {
   "name": "nombre-proyecto",
+  "type": "module",
   "scripts": {
     "ng": "ng",
+    "prebuild": "npm run generate:sitemaps",
     "build": "ng build",
+    "generate:sitemaps": "node scripts/generate-sitemap.js && node scripts/generate-news-sitemap.js",
     "start": "ng serve",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",

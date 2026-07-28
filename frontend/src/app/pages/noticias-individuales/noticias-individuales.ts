@@ -1,4 +1,11 @@
-import { Component, ChangeDetectionStrategy, inject, Renderer2, PLATFORM_ID } from '@angular/core';
+import {
+  Component,
+  ChangeDetectionStrategy,
+  inject,
+  Renderer2,
+  PLATFORM_ID,
+  RESPONSE_INIT
+} from '@angular/core';
 import { CommonModule, DatePipe, isPlatformBrowser, isPlatformServer, DOCUMENT } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -29,6 +36,7 @@ export class NoticiasIndividuales {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly document = inject(DOCUMENT);
+  private readonly responseInit = inject(RESPONSE_INIT, { optional: true });
 
 
   busqueda = '';
@@ -44,7 +52,7 @@ export class NoticiasIndividuales {
     switchMap(params => {
       const slug = params.get('slug');
       if (!slug) {
-        console.log('No slug provided');
+        this.setNotFoundMetadata();
         return of(null);
       }
       return this.noticiasService.getNoticiaBySlug(slug).pipe(
@@ -60,8 +68,6 @@ export class NoticiasIndividuales {
             return of(noticia);
 
           }
-          console.log("antes",noticia);
-
           return this.categoriasService.getCategoriasByIds(categoryIds).pipe(
             catchError(() =>
               of(categoryIds.map(id => ({ _id: id, name: 'Sin categoría', slug: '', color: '' })))
@@ -74,10 +80,15 @@ export class NoticiasIndividuales {
         }),
         tap(noticia => {
           if (noticia) {
+            this.setResponseStatus(200);
             const title = noticia.title || 'Noticia';
+            const socialTitle = noticia.meta?.ogTitle || title;
             const description = (noticia.meta?.description || noticia.summary || 'Descripción no disponible')
               .replace(/<[^>]*>/g, '')    // strip HTML
-              .slice(0, 300);             // truncar a 300 chars
+              .slice(0, 160);
+            const socialDescription = (noticia.meta?.ogDescription || description)
+              .replace(/<[^>]*>/g, '')
+              .slice(0, 300);
             const rawImage = noticia.meta?.image || '';
             const image = this.ensureAbsoluteHttpsUrl(rawImage);
             const url = `https://maslatino.com/noticia/${encodeURIComponent(noticia.slug ?? '')}`;
@@ -85,16 +96,32 @@ export class NoticiasIndividuales {
             // ── Meta tags ─────────────────────────────────────────────────
             this.title.setTitle(`${title} | Mas Latino`);
             this.meta.updateTag({ name: 'description', content: description });
+            this.meta.updateTag({ name: 'robots', content: 'index, follow, max-image-preview:large' });
             this.meta.updateTag({ name: 'keywords', content: noticia.tags?.join(', ') || 'noticias, Mas Latino' });
             this.meta.updateTag({ property: 'og:type', content: 'article' });
-            this.meta.updateTag({ property: 'og:title', content: title });
-            this.meta.updateTag({ property: 'og:description', content: description });
+            this.meta.updateTag({ property: 'og:title', content: socialTitle });
+            this.meta.updateTag({ property: 'og:description', content: socialDescription });
             this.meta.updateTag({ property: 'og:url', content: url });
             this.meta.updateTag({ property: 'og:image', content: image });
             this.meta.updateTag({ property: 'og:image:secure_url', content: image });
-            this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
-            this.meta.updateTag({ name: 'twitter:title', content: title });
-            this.meta.updateTag({ name: 'twitter:description', content: description });
+            if (noticia.meta?.imageWidth) {
+              this.meta.updateTag({ property: 'og:image:width', content: String(noticia.meta.imageWidth) });
+            } else {
+              this.meta.removeTag('property="og:image:width"');
+            }
+            if (noticia.meta?.imageHeight) {
+              this.meta.updateTag({ property: 'og:image:height', content: String(noticia.meta.imageHeight) });
+            } else {
+              this.meta.removeTag('property="og:image:height"');
+            }
+            if (noticia.meta?.imageType) {
+              this.meta.updateTag({ property: 'og:image:type', content: noticia.meta.imageType });
+            } else {
+              this.meta.removeTag('property="og:image:type"');
+            }
+            this.meta.updateTag({ name: 'twitter:card', content: noticia.meta?.twitterCard || 'summary_large_image' });
+            this.meta.updateTag({ name: 'twitter:title', content: socialTitle });
+            this.meta.updateTag({ name: 'twitter:description', content: socialDescription });
             this.meta.updateTag({ name: 'twitter:image', content: image });
 
             // ── Canonical — en SSR Y en browser, sin duplicar ─────────────
@@ -112,8 +139,16 @@ export class NoticiasIndividuales {
             // ── JSON-LD NewsArticle — en SSR Y en browser, sin duplicar ──
             // SSR: se serializa en el HTML → los bots lo ven.
             // Browser (navegación client-side): actualiza el script existente.
-            const publishedDate = (noticia as any).publishAt ?? noticia.createdAt ?? new Date().toISOString();
-            const modifiedDate = noticia.updatedAt ?? (noticia as any).publishAt ?? noticia.createdAt ?? new Date().toISOString();
+            const publishedDate = (noticia as any).publishAt ?? noticia.createdAt;
+            const modifiedDate = noticia.contentUpdatedAt ?? noticia.updatedAt ?? publishedDate;
+            const authorName = noticia.authorName?.trim() || 'Redacción Mas Latino';
+            const author = noticia.authorName?.trim()
+              ? { '@type': 'Person', name: authorName }
+              : {
+                  '@type': 'Organization',
+                  name: authorName,
+                  url: 'https://maslatino.com'
+                };
 
             const schema = {
               '@context': 'https://schema.org',
@@ -121,17 +156,16 @@ export class NoticiasIndividuales {
               headline: title,
               description: description,
               image: [image],
-              datePublished: (new Date(publishedDate)).toISOString(),
-              dateModified: (new Date(modifiedDate)).toISOString(),
-              author: {
-                '@type': 'Organization',
-                name: 'Redacción Mas Latino',
-                url: 'https://maslatino.com'
-              },
+              datePublished: this.toIsoDate(publishedDate),
+              dateModified: this.toIsoDate(modifiedDate),
+              author,
               publisher: {
                 '@type': 'Organization',
                 name: 'Mas Latino',
-                logo: { '@type': 'ImageObject', url: 'https://maslatino.com/logo.png' }
+                logo: {
+                  '@type': 'ImageObject',
+                  url: 'https://maslatino.com/assets/iconosnavbar/maslatinologo.png'
+                }
               },
               mainEntityOfPage: { '@type': 'WebPage', '@id': url },
               keywords: noticia.tags?.join(', ') || '',
@@ -157,18 +191,17 @@ export class NoticiasIndividuales {
             this.loadTwitterWidgetsIfNeeded(noticia);
 
           } else {
-            this.title.setTitle('Noticia no encontrada | Mas Latino');
-            this.meta.updateTag({ name: 'description', content: 'La noticia solicitada no está disponible.' });
-            this.meta.updateTag({ property: 'og:title', content: 'Noticia no encontrada' });
-            this.meta.updateTag({ property: 'og:description', content: 'La noticia solicitada no está disponible.' });
-            this.meta.updateTag({ property: 'og:image', content: '/assets/og.jpg' });
+            this.setNotFoundMetadata();
           }
 
         }),
         catchError(error => {
-          console.error('Error fetching noticia (slug):', error);
-          this.title.setTitle('Error | Mas Latino');
-          this.meta.updateTag({ name: 'description', content: 'Error al cargar la noticia.' });
+          if (error?.status === 404) {
+            this.setNotFoundMetadata();
+          } else {
+            console.error('Error fetching noticia (slug):', error);
+            this.setServiceErrorMetadata();
+          }
           return of(null);
         })
       );
@@ -245,11 +278,81 @@ export class NoticiasIndividuales {
   }
 
   private ensureAbsoluteHttpsUrl(url: string): string {
-    if (!url || url.trim() === '') return 'https://maslatino.com/assets/og.jpg';
+    if (!url || url.trim() === '') {
+      return 'https://maslatino.com/assets/iconosnavbar/maslatinologo.png';
+    }
     if (url.startsWith('https://')) return url;
     if (url.startsWith('http://')) return url.replace('http://', 'https://');
     // URL relativa — prepend dominio
     return `https://maslatino.com${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
+  private toIsoDate(value: string | Date | undefined): string {
+    const date = value ? new Date(value) : new Date(0);
+    return Number.isNaN(date.getTime()) ? new Date(0).toISOString() : date.toISOString();
+  }
+
+  private setNotFoundMetadata(): void {
+    this.setResponseStatus(404);
+    this.title.setTitle('Noticia no encontrada | Mas Latino');
+    this.meta.updateTag({ name: 'description', content: 'La noticia solicitada no está disponible.' });
+    this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+    this.meta.updateTag({ property: 'og:title', content: 'Noticia no encontrada' });
+    this.meta.updateTag({ property: 'og:description', content: 'La noticia solicitada no está disponible.' });
+    this.meta.updateTag({ name: 'twitter:title', content: 'Noticia no encontrada' });
+    this.meta.updateTag({ name: 'twitter:description', content: 'La noticia solicitada no está disponible.' });
+    this.clearArticleOnlyMetadata();
+  }
+
+  private setServiceErrorMetadata(): void {
+    this.setResponseStatus(503);
+    this.title.setTitle('Servicio temporalmente no disponible | Mas Latino');
+    this.meta.updateTag({ name: 'description', content: 'No fue posible cargar la noticia en este momento.' });
+    this.meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
+    this.meta.updateTag({ property: 'og:title', content: 'Servicio temporalmente no disponible' });
+    this.meta.updateTag({
+      property: 'og:description',
+      content: 'No fue posible cargar la noticia en este momento.'
+    });
+    this.meta.updateTag({ name: 'twitter:title', content: 'Servicio temporalmente no disponible' });
+    this.meta.updateTag({
+      name: 'twitter:description',
+      content: 'No fue posible cargar la noticia en este momento.'
+    });
+    this.clearArticleOnlyMetadata();
+  }
+
+  private setResponseStatus(status: number): void {
+    if (!this.responseInit) return;
+
+    this.responseInit.status = status;
+    if (status >= 400) {
+      const headers = new Headers(this.responseInit.headers);
+      headers.set('Cache-Control', 'private, no-store');
+      this.responseInit.headers = headers;
+    }
+  }
+
+  private clearArticleOnlyMetadata(): void {
+    this.meta.removeTag('property="og:image"');
+    this.meta.removeTag('property="og:image:secure_url"');
+    this.meta.removeTag('property="og:image:width"');
+    this.meta.removeTag('property="og:image:height"');
+    this.meta.removeTag('property="og:image:type"');
+    this.meta.removeTag('property="og:url"');
+    this.meta.removeTag('name="twitter:image"');
+
+    const canonical = this.document.querySelector('link[rel="canonical"]');
+    if (canonical?.parentNode) {
+      this.renderer.removeChild(canonical.parentNode, canonical);
+    }
+
+    const existingJsonLd = this.document.querySelector(
+      'script[type="application/ld+json"][data-noticia]'
+    );
+    if (existingJsonLd?.parentNode) {
+      this.renderer.removeChild(existingJsonLd.parentNode, existingJsonLd);
+    }
   }
 
   // ====== EMBEDS ======

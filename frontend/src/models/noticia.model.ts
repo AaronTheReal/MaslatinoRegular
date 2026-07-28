@@ -98,6 +98,7 @@ export interface NoticiaMeta {
   imageCaptionHtml?: string;
 
   canonical?: string;
+  imageSourceUrl?: string;
   ogTitle?: string;
   ogDescription?: string;
   twitterCard?: string;
@@ -151,7 +152,19 @@ export interface Noticia {
 
   createdAt?: string;
   updatedAt?: string;
+  contentUpdatedAt?: string;
   slug?: string;
   autorizada?: boolean;
   press?: boolean;
+  aiSeo?: {
+    status?: 'idle' | 'pending' | 'completed' | 'failed' | 'stale';
+    analysisId?: string;
+    generatedAt?: string;
+    sourceContentHash?: string;
+    provider?: string;
+    model?: string;
+    promptVersion?: string;
+    warnings?: string[];
+    acceptedFields?: string[];
+  };
 }

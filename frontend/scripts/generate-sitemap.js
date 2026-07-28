@@ -1,22 +1,55 @@
 import fs from 'fs';
 
-const API = 'https://maslatinoregular.onrender.com/aaron/maslatino/sitemap-data';
+const API_BASE = (process.env.SITEMAP_API_BASE || 'https://maslatinoregular.onrender.com/aaron/maslatino')
+  .replace(/\/+$/, '');
+const API = `${API_BASE}/sitemap-data`;
 const OUT = 'public/sitemap.xml';
+const PUBLIC_ORIGIN = 'https://maslatino.com';
+const STATIC_PATHS = ['/'];
+
+function escapeXml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function normalizePublicUrl(value) {
+  const url = new URL(String(value || ''), PUBLIC_ORIGIN);
+  return `${PUBLIC_ORIGIN}${url.pathname}`.replace(/\/+$/, '') || PUBLIC_ORIGIN;
+}
 
 async function run() {
-  const res = await fetch(API); // fetch NATIVO de Node 18+
+  const res = await fetch(API, { signal: AbortSignal.timeout(60_000) });
   if (!res.ok) {
-    throw new Error('No se pudo obtener sitemap-data');
+    throw new Error(`No se pudo obtener sitemap-data (${res.status})`);
   }
 
-  const urls = await res.json();
+  const apiUrls = await res.json();
+  if (!Array.isArray(apiUrls)) throw new Error('sitemap-data no devolvió una lista');
+
+  const today = new Date().toISOString().slice(0, 10);
+  const staticUrls = STATIC_PATHS.map((pathname) => ({
+    loc: `${PUBLIC_ORIGIN}${pathname === '/' ? '' : pathname}`,
+    lastmod: today,
+    changefreq: pathname === '/' ? 'daily' : 'weekly',
+    priority: pathname === '/' ? '1.0' : '0.7',
+  }));
+  const deduplicated = new Map();
+  for (const item of [...staticUrls, ...apiUrls]) {
+    const loc = normalizePublicUrl(item.loc);
+    deduplicated.set(loc, { ...item, loc });
+  }
+  const urls = [...deduplicated.values()];
 
   const xmlUrls = urls.map(u => `
   <url>
-    <loc>${u.loc}</loc>
-    <lastmod>${u.lastmod}</lastmod>
-    <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
+    <loc>${escapeXml(u.loc)}</loc>
+    <lastmod>${escapeXml(u.lastmod)}</lastmod>
+    <changefreq>${escapeXml(u.changefreq)}</changefreq>
+    <priority>${escapeXml(u.priority)}</priority>
   </url>
 `).join('');
 
@@ -31,5 +64,5 @@ ${xmlUrls}
 
 run().catch(err => {
   console.error(err);
-  process.exit(1);
+  process.exitCode = 1;
 });

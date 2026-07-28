@@ -23,7 +23,7 @@ La aplicación está dividida en dos proyectos:
 | Frontend | Angular 20, standalone components, SSR, TransferState | Netlify CDN + Angular Runtime |
 | Backend | Node.js, Express 4, Mongoose/MongoDB | Render (`maslatinoregular.onrender.com`) |
 | Multimedia | AWS S3/CloudFront y Mux | Servicios externos |
-| Dominio público | `https://www.maslatino.com` | Netlify |
+| Dominio público | `https://maslatino.com` | Netlify |
 
 ## 2. Mapa técnico
 
@@ -275,7 +275,9 @@ Todos deben exigir JWT y un rol editorial autorizado. `apply` debe aceptar una l
 - cada sugerencia muestra el valor actual y el propuesto;
 - el redactor puede aceptar campos individualmente;
 - SSR entrega title, description, canonical, OG y JSON-LD correctos;
-- borradores y no autorizadas nunca aparecen en sitemaps;
+- [pendiente de migración editorial] borradores y no autorizadas nunca aparecen
+  en sitemaps; por compatibilidad, hoy la elegibilidad todavía usa
+  `autorizada` + `publishAt` y no puede exigir `state=published`;
 - errores/noticias inexistentes entregan 404 y `noindex`;
 - noticias, podcasts y eventos pasan validación de datos estructurados;
 - existen pruebas de regresión para canonical, schemas y elegibilidad pública;
@@ -284,3 +286,81 @@ Todos deben exigir JWT y un rol editorial autorizado. `apply` debe aceptar una l
 ## 12. Próximo bloque de trabajo recomendado
 
 Comenzar por la Fase 0 y la base determinista. Una vez estabilizada, implementar el primer botón del panel: **“Analizar con IA”**, limitado a título, keyword, slug, metadescripción, extracto, tags y advertencias, con aprobación campo por campo.
+
+## 13. Avance implementado en `feature/seo-ia`
+
+Respaldo previo a IA:
+
+- rama: `main`;
+- commit: `1382f0d0` (`docs: respaldo previo a SEO con IA`);
+- respaldo confirmado en GitHub antes de iniciar estos cambios.
+
+Base técnica ya implementada:
+
+- regla pública compartida: `autorizada=true` y `publishAt` vacío o vencido;
+- compatibilidad mantenida con el histórico: todavía no se filtra por `state`,
+  porque 1,389 de las 1,390 noticias productivas no están marcadas como
+  `published`;
+- canonical único sobre `https://maslatino.com/noticia/:slug`;
+- separación entre canonical e `imageSourceUrl`;
+- sitemap general conectado al build, dominio apex, XML escapado y portada;
+- news sitemap en español y limitado a las últimas 48 horas;
+- `NewsArticle` con autor real cuando existe y fallback editorial;
+- noticias inexistentes con respuesta SSR `404`, errores de dependencia con
+  `503` y ambos con `noindex`;
+- consultas con `?page=` excluidas de la caché CDN para no mezclar páginas;
+- rutas administrativas con `X-Robots-Tag: noindex`;
+- rutas de creación, edición, eliminación, autorización, lectura administrativa
+  y firma de uploads protegidas con JWT y roles editoriales;
+- eliminación del fallback inseguro `JWT_SECRET || "changeme"`;
+- verificación del usuario administrador activo y de su rol actual en base de
+  datos;
+- credencial Firebase retirada del seguimiento de Git y carga por secreto de
+  entorno;
+- URI de MongoDB retirada de tres scripts de migración y sustituida por
+  `MONGODB_URI`/`DB_URL`;
+- token de Prerender retirado del código y sustituido por `PRERENDER_TOKEN`;
+- recaché de noticias alineado con la elegibilidad pública para no precachear
+  borradores, notas no autorizadas o publicaciones futuras;
+- `contentUpdatedAt` separado de la actividad interna de IA para no falsear
+  `dateModified` ni `lastmod`;
+- almacenamiento preparado en `aiSeo`, sin guardar razonamiento interno.
+
+Primer flujo SEO IA ya preparado:
+
+- endpoints protegidos `GET /admin/seo-ai/status` y
+  `POST /admin/seo-ai/analyze`;
+- contrato estructurado para ocho campos seguros;
+- validación de tamaño, texto plano y defensa contra instrucciones incrustadas;
+- proveedor mock determinista, marcado visualmente como simulación y habilitable
+  solo con `SEO_AI_MOCK=true`;
+- componente compartido en crear y editar noticias;
+- comparación entre valor actual y sugerido;
+- aplicación manual campo por campo;
+- aplicar un título no cambia el slug existente;
+- ninguna sugerencia se guarda o publica automáticamente.
+
+La integración real con OpenAI todavía no está implementada: configurar
+`OPENAI_API_KEY` por sí solo no la activa ni habilita el botón. Las variables
+esperadas están documentadas en `backend/.env.example`. La credencial Firebase
+y la contraseña de MongoDB que estuvieron versionadas, junto con el token
+histórico de Prerender, deben rotarse, porque retirarlas del commit actual no
+las elimina del historial previo.
+
+Bloqueadores conocidos antes de considerar todo el producto endurecido para
+producción:
+
+- migrar y normalizar `state` antes de excluir borradores históricos
+  autorizados;
+- proteger y adaptar las mutaciones administrativas heredadas de podcasts,
+  categorías, calendario, radio, streaming, correos y notificaciones;
+- completar SEO específico y datos estructurados de podcasts y eventos;
+- implementar el proveedor real de OpenAI, su telemetría de costo/latencia y
+  pruebas de integración, una vez configurada la credencial.
+
+Verificación actual:
+
+- backend: 16 pruebas pasan;
+- frontend Angular SSR: build de producción correcto;
+- generadores de sitemap: ejecución correcta;
+- advertencias de build restantes: preexistentes y no bloqueantes.

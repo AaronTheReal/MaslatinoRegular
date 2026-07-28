@@ -3,3 +3,9 @@
 
 # Claude Code local files (worktrees, memory, settings)
 .claude/
+
+# Credenciales y configuración local del backend
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/serviceAccountKey.json

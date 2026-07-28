@@ -18,9 +18,10 @@ const WP_BASE_URL = process.env.WP_BASE_URL || 'https://maslatino.com';
 const WP_POST_TYPE = process.env.WP_POST_TYPE || 'posts'; // si fuera custom: 'noticia', etc.
 const WP_PER_PAGE = Number(process.env.WP_PER_PAGE || 100);
 
-const MONGO_URI =
-  process.env.MONGODB_URI ||
-  'mongodb+srv://aaronguapo69:X3B7D2o5jPZMgMlm@cluster0.uxax8yp.mongodb.net/RealMedia';
+const MONGO_URI = process.env.MONGODB_URI || process.env.DB_URL;
+if (!MONGO_URI) {
+  throw new Error('Configura MONGODB_URI o DB_URL antes de ejecutar esta migración.');
+}
 
 /* =========================
    UTILIDADES GENERALES

@@ -19,12 +19,33 @@ const SSR_CDN_CACHE = 'public, s-maxage=300, stale-while-revalidate=86400, durab
 // solo cambian con un deploy, que ya purga el cache → TTL largo.
 const SHELL_CACHE_EXACT = new Set(['/noticias-todas'])
 const SHELL_CDN_CACHE = 'public, s-maxage=86400, stale-while-revalidate=604800, durable'
+const NOINDEX_EXACT = new Set([
+  '/admin-login',
+  '/admin-panel',
+  '/usuarios-panel',
+  '/calendario-panel',
+  '/calendario-panel-pc',
+  '/multimedia-panel',
+  '/noticias-panel',
+  '/podcast-panel',
+  '/radio-panel',
+  '/categorias-panel',
+  '/admin-noticias',
+  '/correos-panel',
+  '/prueba-component',
+])
+const NOINDEX_PREFIXES = ['/admin/']
 
 function cdnCacheFor(pathname: string): string | null {
   if (SSR_CACHE_EXACT.has(pathname)) return SSR_CDN_CACHE
   if (SSR_CACHE_PREFIXES.some((p) => pathname.startsWith(p))) return SSR_CDN_CACHE
   if (SHELL_CACHE_EXACT.has(pathname)) return SHELL_CDN_CACHE
   return null
+}
+
+function mustNotBeIndexed(pathname: string): boolean {
+  return NOINDEX_EXACT.has(pathname)
+    || NOINDEX_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 }
 
 export async function netlifyAppEngineHandler(request: Request): Promise<Response> {
@@ -34,8 +55,22 @@ export async function netlifyAppEngineHandler(request: Request): Promise<Respons
     return new Response('Not found', { status: 404 })
   }
 
-  const { pathname } = new URL(request.url)
-  const cdnCache = request.method === 'GET' && result.ok ? cdnCacheFor(pathname) : null
+  const url = new URL(request.url)
+  if (mustNotBeIndexed(url.pathname)) {
+    const headers = new Headers(result.headers)
+    headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+    headers.set('Cache-Control', 'private, no-store')
+    return new Response(result.body, {
+      status: result.status,
+      statusText: result.statusText,
+      headers
+    })
+  }
+
+  const cdnCache =
+    request.method === 'GET' && result.ok && !url.search
+      ? cdnCacheFor(url.pathname)
+      : null
   if (cdnCache) {
     const headers = new Headers(result.headers)
     // Navegador: revalida siempre (la revalidacion al edge es rapida).
