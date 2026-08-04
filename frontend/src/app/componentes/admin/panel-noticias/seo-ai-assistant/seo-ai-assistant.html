@@ -79,6 +79,39 @@
       >
         {{ currentStatus.message }}
       </p>
+
+      <dl
+        *ngIf="currentStatus.telemetry as telemetry"
+        class="row g-2 mb-0 mt-2 small telemetry-panel"
+        aria-label="Uso del asistente en este servidor"
+      >
+        <div class="col-6 col-lg-3">
+          <dt>Análisis</dt>
+          <dd class="mb-0">
+            {{ telemetry.succeeded }}
+            <span *ngIf="telemetry.cached" class="text-body-secondary">
+              (+{{ telemetry.cached }} reutilizados)
+            </span>
+          </dd>
+        </div>
+        <div class="col-6 col-lg-3">
+          <dt>Latencia media</dt>
+          <dd class="mb-0">{{ formatLatency(telemetry.averageLatencyMs) }}</dd>
+        </div>
+        <div class="col-6 col-lg-3">
+          <dt>Costo estimado</dt>
+          <dd class="mb-0">{{ formatCost(telemetry.estimatedCostUsd) }}</dd>
+        </div>
+        <div class="col-6 col-lg-3">
+          <dt>Errores</dt>
+          <dd class="mb-0">
+            {{ telemetry.failed }}
+            <span *ngIf="telemetry.refused" class="text-body-secondary">
+              ({{ telemetry.refused }} rechazados)
+            </span>
+          </dd>
+        </div>
+      </dl>
     </div>
 
     <div *ngIf="statusError()" class="alert alert-warning mt-3 mb-0" role="alert">
@@ -111,10 +144,25 @@
 
       <div class="analysis-header mb-4">
         <div>
-          <h3 class="h6 mb-1">Resultado del análisis</h3>
+          <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+            <h3 class="h6 mb-0">Resultado del análisis</h3>
+            <span
+              *ngIf="analysis.cached"
+              class="badge text-bg-light border"
+              title="Se reutilizó el análisis previo de este mismo borrador, sin volver a consultar al modelo."
+            >
+              Reutilizado
+            </span>
+          </div>
           <p class="small text-body-secondary mb-0">
             {{ analysis.provider }} · {{ analysis.model }} ·
             {{ modeLabel(analysis.mode) }}
+            <ng-container *ngIf="analysis.mode === 'live'">
+              · {{ formatLatency(analysis.latencyMs) }}
+              <ng-container *ngIf="totalTokens(analysis) as tokens">
+                · {{ tokens }} tokens
+              </ng-container>
+            </ng-container>
           </p>
         </div>
         <span

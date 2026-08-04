@@ -32,12 +32,26 @@ export interface SeoAiDraft {
   categories?: string[];
 }
 
+/** Consumo y costo estimado del proveedor real, reportado por el backend. */
+export interface SeoAiTelemetry {
+  requests: number;
+  succeeded: number;
+  failed: number;
+  refused: number;
+  cached: number;
+  errorRate: number;
+  averageLatencyMs: number;
+  estimatedCostUsd: number;
+}
+
 export interface SeoAiStatusResponse {
   configured: boolean;
   provider: string;
   model: string;
   mode: SeoAiMode;
   message?: string;
+  promptVersion?: string;
+  telemetry?: SeoAiTelemetry;
 }
 
 export interface SeoAiAnalyzeRequest {
@@ -57,6 +71,13 @@ export interface SeoAiSuggestion {
   reason: string;
 }
 
+export interface SeoAiUsage {
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheCreationTokens: number;
+}
+
 export interface SeoAiAnalyzeResponse {
   analysisId: string;
   sourceContentHash: string;
@@ -67,6 +88,11 @@ export interface SeoAiAnalyzeResponse {
   scores: SeoAiScores;
   warnings: string[];
   suggestions: SeoAiSuggestion[];
+  promptVersion?: string;
+  /** El backend reutilizó un análisis previo del mismo borrador. */
+  cached?: boolean;
+  latencyMs?: number;
+  usage?: SeoAiUsage;
 }
 
 export interface SeoAiApplySuggestionEvent {

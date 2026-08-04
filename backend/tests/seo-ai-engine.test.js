@@ -34,13 +34,13 @@ function mockResponse() {
   };
 }
 
-test('status solo declara configurado el mock realmente disponible', () => {
+test('status distingue sin configurar, mock y proveedor real', () => {
   assert.deepEqual(getSeoAiStatus({}), {
     configured: false,
     provider: 'none',
     model: '',
     mode: 'disabled',
-    message: 'Configura OPENAI_API_KEY o activa SEO_AI_MOCK=true para desarrollo.',
+    message: 'Configura ANTHROPIC_API_KEY o activa SEO_AI_MOCK=true para desarrollo.',
   });
 
   assert.deepEqual(getSeoAiStatus({ SEO_AI_MOCK: 'true' }), {
@@ -50,16 +50,24 @@ test('status solo declara configurado el mock realmente disponible', () => {
     mode: 'mock',
   });
 
-  const pendingProvider = getSeoAiStatus({
-    OPENAI_API_KEY: 'no-debe-aparecer',
-    OPENAI_MODEL: 'modelo-configurado',
+  const live = getSeoAiStatus({
+    ANTHROPIC_API_KEY: 'no-debe-aparecer',
+    ANTHROPIC_MODEL: 'modelo-configurado',
   });
-  assert.equal(pendingProvider.configured, false);
-  assert.equal(pendingProvider.provider, 'openai');
-  assert.equal(pendingProvider.model, 'modelo-configurado');
-  assert.equal(pendingProvider.mode, 'disabled');
-  assert.match(pendingProvider.message, /todavía no está implementado/u);
-  assert.equal(JSON.stringify(pendingProvider).includes('no-debe-aparecer'), false);
+  assert.equal(live.configured, true);
+  assert.equal(live.provider, 'anthropic');
+  assert.equal(live.model, 'modelo-configurado');
+  assert.equal(live.mode, 'live');
+  assert.equal(JSON.stringify(live).includes('no-debe-aparecer'), false);
+});
+
+test('el mock explícito tiene prioridad sobre la credencial real', () => {
+  const status = getSeoAiStatus({
+    SEO_AI_MOCK: 'true',
+    ANTHROPIC_API_KEY: 'presente',
+  });
+  assert.equal(status.mode, 'mock');
+  assert.equal(status.provider, 'mock');
 });
 
 test('valida que exista draft y limita los campos grandes', () => {
@@ -117,23 +125,17 @@ test('las sugerencias solo contienen texto plano y omiten instrucciones peligros
   assert.ok(result.warnings.includes('Se omitió texto no seguro de las sugerencias.'));
 });
 
-test('el controller bloquea disabled y proveedor pendiente, y analiza solamente en mock', () => {
+test('el controller bloquea el modo disabled y analiza en modo mock', async () => {
   const disabledResponse = mockResponse();
-  createSeoAiController({ env: {} }).analyze(
+  await createSeoAiController({ env: {} }).analyze(
     { body: { draft: validDraft } },
     disabledResponse
   );
   assert.equal(disabledResponse.statusCode, 503);
-
-  const liveResponse = mockResponse();
-  createSeoAiController({ env: { OPENAI_API_KEY: 'presente' } }).analyze(
-    { body: { draft: validDraft } },
-    liveResponse
-  );
-  assert.equal(liveResponse.statusCode, 501);
+  assert.equal(disabledResponse.body.error.code, 'SEO_AI_NOT_CONFIGURED');
 
   const mockModeResponse = mockResponse();
-  createSeoAiController({
+  await createSeoAiController({
     env: { SEO_AI_MOCK: 'true' },
     now: () => new Date('2026-07-28T12:00:00.000Z'),
   }).analyze(

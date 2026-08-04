@@ -14,7 +14,13 @@
   background: var(--bs-tertiary-bg, #f8f9fa);
 }
 
+.telemetry-panel {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bs-border-color, #dee2e6);
+}
+
 .status-panel dt,
+.telemetry-panel dt,
 .value-label {
   color: var(--bs-secondary-color, #6c757d);
   font-size: 0.75rem;

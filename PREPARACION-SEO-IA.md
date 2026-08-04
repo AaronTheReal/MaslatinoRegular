@@ -340,27 +340,81 @@ Primer flujo SEO IA ya preparado:
 - aplicar un título no cambia el slug existente;
 - ninguna sugerencia se guarda o publica automáticamente.
 
-La integración real con OpenAI todavía no está implementada: configurar
-`OPENAI_API_KEY` por sí solo no la activa ni habilita el botón. Las variables
-esperadas están documentadas en `backend/.env.example`. La credencial Firebase
-y la contraseña de MongoDB que estuvieron versionadas, junto con el token
-histórico de Prerender, deben rotarse, porque retirarlas del commit actual no
-las elimina del historial previo.
+La credencial Firebase y la contraseña de MongoDB que estuvieron versionadas,
+junto con el token histórico de Prerender, deben rotarse, porque retirarlas del
+commit actual no las elimina del historial previo.
 
-Bloqueadores conocidos antes de considerar todo el producto endurecido para
-producción:
+## 14. Proveedor real de IA implementado
+
+El asistente ya no depende del mock. El proveedor real es **Anthropic (Claude)**
+sobre `claude-opus-5`, elegido en lugar del OpenAI que asumía el andamiaje
+inicial. La constante `gpt-5.6-sol` que quedó en la preparación nunca fue un
+modelo verificado; se retiró junto con las variables `OPENAI_*`.
+
+### Cómo se activa
+
+| Variable | Efecto |
+|---|---|
+| `ANTHROPIC_API_KEY` | Activa el modo `live`. Es lo único obligatorio. |
+| `SEO_AI_MOCK=true` | Fuerza la simulación local aunque exista credencial. Tiene prioridad para no gastar tokens sin querer en desarrollo. |
+| Ninguna de las dos | El asistente queda en `disabled` y el botón permanece apagado. |
+
+El resto de los ajustes (`ANTHROPIC_MODEL`, `ANTHROPIC_EFFORT`,
+`ANTHROPIC_MAX_TOKENS`, `ANTHROPIC_TIMEOUT_MS`, `ANTHROPIC_MAX_RETRIES`,
+`SEO_AI_IDEMPOTENCY_TTL_MS`, `SEO_AI_FALLBACK`) está documentado en
+`backend/.env.example` con sus valores por defecto.
+
+### Controles aplicados
+
+- salida JSON con esquema estricto (`output_config.format`), no texto libre;
+- los límites de longitud los aplica el código, no la confianza en el modelo:
+  toda respuesta vuelve a pasar por el mismo saneador anti-inyección que ya
+  filtraba el contenido editorial;
+- el borrador viaja delimitado y el prompt declara que su contenido es material
+  a analizar, nunca instrucciones a obedecer;
+- `stop_reason: "refusal"` se detecta antes de leer el contenido y se traduce a
+  un 422 explicable, en vez de tratarse como análisis válido;
+- respuesta truncada por límite de tokens → error explícito, nunca JSON parcial;
+- `timeout` configurable y un solo reintento automático;
+- reintento en otro modelo (`fallbacks`) si el clasificador declina, degradando
+  al endpoint estable si el SDK instalado no lo expone;
+- idempotencia por `sourceContentHash` + modelo + versión de prompt: un doble
+  clic sobre el mismo borrador reutiliza el análisis y no genera un segundo
+  cargo;
+- caché de prompt sobre el bloque de sistema para abaratar análisis repetidos;
+- el proveedor real omite los campos donde no propone ningún cambio; el editor
+  solo revisa diferencias reales.
+
+### Telemetría
+
+`GET /admin/seo-ai/status` devuelve, solo en modo `live`, un bloque `telemetry`
+con análisis completados, reutilizados por caché, fallos, rechazos, tasa de
+error, latencia media y costo estimado en USD. El panel lo muestra bajo el
+estado del asistente. Los contadores viven en memoria por proceso: alcanzan para
+vigilar el gasto desde el panel sin añadir almacenamiento nuevo, y se pierden al
+reiniciar el backend.
+
+Lo que **no** cambió: la IA sigue sin publicar nada, sin escribir en la noticia y
+sin aplicar sugerencias por su cuenta. La aprobación campo por campo del editor
+continúa siendo el único camino.
+
+## 15. Bloqueadores restantes
 
 - migrar y normalizar `state` antes de excluir borradores históricos
   autorizados;
 - proteger y adaptar las mutaciones administrativas heredadas de podcasts,
   categorías, calendario, radio, streaming, correos y notificaciones;
 - completar SEO específico y datos estructurados de podcasts y eventos;
-- implementar el proveedor real de OpenAI, su telemetría de costo/latencia y
-  pruebas de integración, una vez configurada la credencial.
+- `backend/node_modules` está versionado (18.718 archivos rastreados). No
+  bloquea el despliegue porque Render instala dependencias, pero conviene
+  añadirlo a `.gitignore` y sacarlo del índice en un cambio aparte;
+- ejecutar una prueba de humo contra la API real con la credencial puesta: la
+  suite actual cubre el contrato con un cliente falso, no la red.
 
-Verificación actual:
+## 16. Verificación actual
 
-- backend: 16 pruebas pasan;
+- backend: 29 pruebas pasan (`npm test` en `backend/`);
 - frontend Angular SSR: build de producción correcto;
-- generadores de sitemap: ejecución correcta;
-- advertencias de build restantes: preexistentes y no bloqueantes.
+- advertencias de build restantes: preexistentes y no bloqueantes;
+- corregido de paso un desbordamiento de un carácter en el recorte por palabras
+  (`compactAtWord`) que afectaba también al mock.

@@ -17,6 +17,8 @@ import {
   SeoAiStatusResponse,
   SeoAiSuggestion,
   SeoAiSuggestionValue,
+  SeoAiTelemetry,
+  SeoAiUsage,
 } from '../../models/seo-ai.model';
 
 const DEFAULT_API_BASE_URL =
@@ -111,6 +113,27 @@ function normalizeStatus(payload: unknown): SeoAiStatusResponse {
     model: readString(source?.['model']) || 'No configurado',
     mode: configured ? rawMode : 'disabled',
     message: readString(source?.['message']) || undefined,
+    promptVersion: readString(source?.['promptVersion']) || undefined,
+    telemetry: normalizeTelemetry(source?.['telemetry']),
+  };
+}
+
+function normalizeTelemetry(value: unknown): SeoAiTelemetry | undefined {
+  const source = asRecord(value);
+  if (!source) {
+    return undefined;
+  }
+
+  const latency = asRecord(source['latency']);
+  return {
+    requests: readNumber(source['requests']),
+    succeeded: readNumber(source['succeeded']),
+    failed: readNumber(source['failed']),
+    refused: readNumber(source['refused']),
+    cached: readNumber(source['cached']),
+    errorRate: readNumber(source['errorRate']),
+    averageLatencyMs: readNumber(latency?.['averageMs']),
+    estimatedCostUsd: readNumber(source['estimatedCostUsd']),
   };
 }
 
@@ -137,6 +160,24 @@ function normalizeAnalysis(payload: unknown): SeoAiAnalyzeResponse {
     },
     warnings,
     suggestions,
+    promptVersion: readString(source['promptVersion']) || undefined,
+    cached: source['cached'] === true,
+    latencyMs: readNumber(source['latencyMs']),
+    usage: normalizeUsage(source['usage']),
+  };
+}
+
+function normalizeUsage(value: unknown): SeoAiUsage | undefined {
+  const source = asRecord(value);
+  if (!source) {
+    return undefined;
+  }
+
+  return {
+    inputTokens: readNumber(source['inputTokens']),
+    outputTokens: readNumber(source['outputTokens']),
+    cacheReadTokens: readNumber(source['cacheReadTokens']),
+    cacheCreationTokens: readNumber(source['cacheCreationTokens']),
   };
 }
 

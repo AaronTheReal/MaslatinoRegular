@@ -176,6 +176,37 @@ export class SeoAiAssistantComponent implements OnInit {
     return Math.round(result.scores.after - result.scores.before);
   }
 
+  formatLatency(milliseconds: number | undefined): string {
+    if (!milliseconds || milliseconds <= 0) {
+      return '—';
+    }
+    return milliseconds < 1000
+      ? `${Math.round(milliseconds)} ms`
+      : `${(milliseconds / 1000).toFixed(1)} s`;
+  }
+
+  formatCost(usd: number): string {
+    if (!usd) {
+      return 'US$ 0';
+    }
+    // Los análisis individuales cuestan céntimos: cuatro decimales evitan que
+    // todo se muestre como cero mientras el gasto crece.
+    return `US$ ${usd < 0.01 ? usd.toFixed(4) : usd.toFixed(2)}`;
+  }
+
+  totalTokens(result: SeoAiAnalyzeResponse): number {
+    const usage = result.usage;
+    if (!usage) {
+      return 0;
+    }
+    return (
+      usage.inputTokens +
+      usage.outputTokens +
+      usage.cacheReadTokens +
+      usage.cacheCreationTokens
+    );
+  }
+
   trackSuggestion(
     _index: number,
     suggestion: SeoAiSuggestion,
