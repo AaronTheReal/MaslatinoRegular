@@ -116,11 +116,11 @@ export const CITIES: readonly CityDefinition[] = [
   { slug: 'dallas', name: 'Dallas', image: 'assets/cyties/dallas.png' },
   { slug: 'filadelfia', name: 'Filadelfia', image: 'assets/cyties/filadelfia.png' },
   { slug: 'houston', name: 'Houston', image: 'assets/cyties/houston.png' },
-  { slug: 'kansas-city', name: 'Kansas City', image: 'assets/cyties/kansas city.png' },
-  { slug: 'los-angeles', name: 'Los Ángeles', image: 'assets/cyties/los angeles.png' },
+  { slug: 'kansas-city', name: 'Kansas City', image: 'assets/cyties/kansas-city.png' },
+  { slug: 'los-angeles', name: 'Los Ángeles', image: 'assets/cyties/los-angeles.png' },
   { slug: 'miami', name: 'Miami', image: 'assets/cyties/miami.png' },
-  { slug: 'new-york', name: 'Nueva York', image: 'assets/cyties/new york.png' },
-  { slug: 'san-francisco', name: 'San Francisco', image: 'assets/cyties/san francisco.png' },
+  { slug: 'new-york', name: 'Nueva York', image: 'assets/cyties/new-york.png' },
+  { slug: 'san-francisco', name: 'San Francisco', image: 'assets/cyties/san-francisco.png' },
   { slug: 'seattle', name: 'Seattle', image: 'assets/cyties/seattle.png' },
 ] as const;
 

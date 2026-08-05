@@ -120,11 +120,24 @@ El clima usa Open-Meteo, que no pide credencial. Documentada en
 
 ## 5. Pendiente
 
-### Assets — ya copiados, y servidos por el Image CDN
+### Assets — copiados, renombrados y servidos por el Image CDN
 
-Los 11 PNG de ciudad (28 MB) y los 13 iconos (2 MB) ya están en
-`frontend/public/assets/cyties/` y `.../iconospartes/`, con los nombres
-originales (cuatro llevan espacio: `kansas city.png`).
+Los 11 PNG de ciudad (28 MB) y los 13 iconos (2 MB) están en
+`frontend/public/assets/cyties/` y `.../iconospartes/`.
+
+**Los cuatro nombres con espacio se renombraron a guiones** (`los angeles.png`
+→ `los-angeles.png`). No era una mejora opcional: en producción, Netlify
+devolvía **404** para esos archivos incluso pidiéndolos en directo con el
+espacio codificado, mientras que un archivo hermano sin espacio respondía 200.
+La comprobación fue:
+
+```
+/assets/cyties/boston.png          -> 200
+/assets/cyties/los%20angeles.png   -> 404
+```
+
+Como las rutas viven solo en `CITIES` (`frontend/src/models/cities.model.ts`),
+el arreglo fue renombrar los archivos y actualizar esas cuatro entradas.
 
 Esos pesos eran un problema real: `kansas city.png` son 8.7 MB y
 `restaurantes.webp` 1.2 MB para mostrarse a 195 px, y la rejilla de ciudades
@@ -144,6 +157,29 @@ Queda pendiente, si se quiere: los originales siguen pesando 30 MB en el
 repositorio. Convertirlos a WebP reduciría el tamaño del repo, aunque ya no
 afecta a lo que descarga el visitante. Si se renombran sin espacios, el único
 sitio a tocar es `CITIES` en `cities.model.ts`.
+
+### Despliegue del backend en Render
+
+Al dejar de versionar `backend/node_modules` (commit `02f7f0cf`), el despliegue
+pasó a depender de que Render instale las dependencias. Se comprobó que no lo
+estaba haciendo: tras fusionar a `main`, el backend seguía respondiendo con el
+código anterior y todas las rutas del módulo devolvían el *catch-all*
+`{"error":"Not Found"}` de `index.js`.
+
+El mismo efecto se reprodujo en local: al fusionar, git borró del árbol de
+trabajo los 18.718 archivos que `main` tenía versionados, y el backend dejó de
+encontrar `express` hasta ejecutar `npm install`.
+
+Dos cosas que hacen falta en el panel de Render:
+
+| Ajuste | Valor |
+|---|---|
+| Build Command | `npm install` |
+| Start Command | `npm start` (ahora existe; antes `package.json` no declaraba `start`) |
+
+`backend/package.json` no tenía script `start`, así que se añadió
+(`node index.js`). Sin él, el arranque dependía de un comando escrito a mano en
+el panel.
 
 ### Precarga de datos
 
