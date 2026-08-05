@@ -2,11 +2,12 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { CITIES, CityDefinition } from '../../../models/cities.model';
+import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-cities',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, CdnImagePipe],
   templateUrl: './cities.html',
   styleUrl: './cities.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

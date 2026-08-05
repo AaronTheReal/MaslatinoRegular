@@ -3,9 +3,11 @@
   <section class="position-relative">
     <div class="ciudad-hero position-relative overflow-hidden">
       @if (city(); as currentCity) {
+        <!-- Hero a pantalla completa: es la imagen que marca el LCP, así que
+             se sirve por el Image CDN en vez del PNG original. -->
         <img
           class="ciudad-hero__image"
-          [src]="currentCity.image"
+          [src]="currentCity.image | cdnimg:1600"
           [alt]="'Vista de ' + currentCity.name"
           fetchpriority="high"
           decoding="async"

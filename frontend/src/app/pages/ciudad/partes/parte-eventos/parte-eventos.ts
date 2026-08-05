@@ -2,10 +2,12 @@ import { ChangeDetectionStrategy, Component, effect, inject, input, signal } fro
 
 import { findSection, Match } from '../../../../../models/cities.model';
 import { EventosService } from '../../../../services/eventos-service';
+import { CdnImagePipe } from '../../../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-parte-eventos',
   standalone: true,
+  imports: [CdnImagePipe],
   templateUrl: './parte-eventos.html',
   styleUrl: './parte-eventos.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

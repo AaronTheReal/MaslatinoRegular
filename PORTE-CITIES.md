@@ -11,6 +11,11 @@ Dos pantallas: `/cities` (rejilla de 11 ciudades) y `/cities/:ciudad` (hub con
 clima en vivo y cinco secciones: Eventos, Para salir, Fan Zone, Turismo y
 Restaurantes).
 
+Puntos de entrada: la rejilla de ciudades sustituye a `conectar-raices` en la
+portada, y el menú desplegable de la navbar tiene un enlace «Ciudades». El
+componente `conectar-raices` sigue en el repositorio, solo deja de renderizarse
+en el dashboard.
+
 | Capa | Archivos |
 |---|---|
 | Backend | 4 controllers, 2 services, 4 models, 2 datasets, 1 util de fotos |
@@ -115,22 +120,30 @@ El clima usa Open-Meteo, que no pide credencial. Documentada en
 
 ## 5. Pendiente
 
-### Assets (bloqueado, requiere acción manual)
+### Assets — ya copiados, y servidos por el Image CDN
 
-Los binarios **no venían en el paquete** (el brief lo advierte: ~30 MB) y no
-existen en este repositorio. Hay que copiarlos desde MasLatino Network:
+Los 11 PNG de ciudad (28 MB) y los 13 iconos (2 MB) ya están en
+`frontend/public/assets/cyties/` y `.../iconospartes/`, con los nombres
+originales (cuatro llevan espacio: `kansas city.png`).
 
-- `frontend/public/assets/cyties/` → 11 imágenes de ciudad
-- `frontend/public/assets/iconospartes/` → 13 iconos
+Esos pesos eran un problema real: `kansas city.png` son 8.7 MB y
+`restaurantes.webp` 1.2 MB para mostrarse a 195 px, y la rejilla de ciudades
+ahora vive en la portada. En vez de reconvertir los binarios, se usa el pipe
+`cdnimg` que el proyecto ya tenía para exactamente este caso (Netlify Image CDN:
+redimensiona y negocia WebP/AVIF):
 
-Ambas carpetas están creadas con un `README.md` que lista los archivos exactos y
-el comando de conversión a WebP. Hasta que se copien, las páginas funcionan pero
-sin fotos ni iconos.
+| Uso | Ancho servido |
+|---|---|
+| Tarjeta de ciudad en `/cities` y en la portada | `cdnimg:600` |
+| Hero de `/cities/:ciudad` (marca el LCP) | `cdnimg:1600` |
+| Iconos de sección | `cdnimg:400` |
 
-Al copiarlas conviene convertirlas: 28 MB para once fotos es desproporcionado y
-`kansas city.png` (8.4 MB) se carga en el hero, bloqueando el LCP. Si se
-renombran sin espacios, el único sitio a tocar es `CITIES` en
-`cities.model.ts`.
+Los iconos del clima son SVG de ~500 bytes y no pasan por el pipe.
+
+Queda pendiente, si se quiere: los originales siguen pesando 30 MB en el
+repositorio. Convertirlos a WebP reduciría el tamaño del repo, aunque ya no
+afecta a lo que descarga el visitante. Si se renombran sin espacios, el único
+sitio a tocar es `CITIES` en `cities.model.ts`.
 
 ### Precarga de datos
 

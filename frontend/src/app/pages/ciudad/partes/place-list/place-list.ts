@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { Place, SectionDefinition } from '../../../../../models/cities.model';
+import { CdnImagePipe } from '../../../../pipes/cdn-image.pipe';
 
 /**
  * Rejilla de lugares con su hero de sección.
@@ -14,7 +15,7 @@ import { Place, SectionDefinition } from '../../../../../models/cities.model';
 @Component({
   selector: 'app-place-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CdnImagePipe],
   templateUrl: './place-list.html',
   styleUrl: './place-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

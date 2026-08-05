@@ -23,6 +23,7 @@ import {
   WEATHER_PRECIPITATION_ICON,
   WeatherData,
 } from '../../../models/cities.model';
+import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
 import { WeatherService } from '../../services/weather-service';
 import { Partes } from './partes/partes';
 import { ParteEventos } from './partes/parte-eventos/parte-eventos';
@@ -37,6 +38,7 @@ const SITE_ORIGIN = 'https://maslatino.com';
   selector: 'app-ciudad',
   standalone: true,
   imports: [
+    CdnImagePipe,
     Partes,
     ParteEventos,
     ParteFanzone,

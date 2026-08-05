@@ -13,9 +13,11 @@
             [routerLink]="['/cities', city.slug]"
             [attr.aria-label]="'Ver qué pasa en ' + city.name"
           >
+            <!-- Los originales pesan hasta 8.7 MB y aquí se ven a ~400 px:
+                 el Image CDN los sirve redimensionados y en WebP/AVIF. -->
             <img
               class="city-card__image"
-              [src]="city.image"
+              [src]="city.image | cdnimg:600"
               [alt]="'Vista de ' + city.name"
               loading="lazy"
               decoding="async"

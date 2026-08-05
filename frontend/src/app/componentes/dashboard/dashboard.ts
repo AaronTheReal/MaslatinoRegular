@@ -1,5 +1,5 @@
 import { Component, OnInit,CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import {ConectarRaices} from './conectar-raices/conectar-raices'
+import {Cities} from '../../pages/cities/cities'
 import {Contactanos} from './contactanos/contactanos'
 import {Eventos} from './eventos/eventos'
 import {ExperienciaTodo} from './experiencia-todo/experiencia-todo'
@@ -18,7 +18,7 @@ import {QueEstaPasando} from './que-esta-pasando/que-esta-pasando'
 @Component({
   selector: 'app-dashboard',
   imports: [
-    ConectarRaices,
+    Cities,
     Contactanos,
     Eventos,
     ExperienciaTodo,
