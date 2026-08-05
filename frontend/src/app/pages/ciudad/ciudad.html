@@ -1,0 +1,148 @@
+<main class="ciudad container-fluid px-3 px-sm-4 px-lg-5 pt-4 pb-5">
+
+  <section class="position-relative">
+    <div class="ciudad-hero position-relative overflow-hidden">
+      @if (city(); as currentCity) {
+        <img
+          class="ciudad-hero__image"
+          [src]="currentCity.image"
+          [alt]="'Vista de ' + currentCity.name"
+          fetchpriority="high"
+          decoding="async"
+        />
+      }
+      <span class="ciudad-hero__fade" aria-hidden="true"></span>
+    </div>
+
+    <div class="ciudad-hero__heading position-relative text-center px-3">
+      <h1 class="ciudad-hero__title fw-bold mb-0">
+        ¿Qué pasa en<br />
+        <span class="ciudad-hero__city">{{ cityName() || 'tu ciudad' }}?</span>
+      </h1>
+    </div>
+
+    <div class="ciudad-weather row row-cols-3 g-3 g-sm-4 mx-auto mt-4 mt-lg-5">
+      <div class="col d-flex flex-column align-items-center gap-2 gap-sm-3">
+        <p class="ciudad-weather__label text-uppercase fw-bold text-center mb-0">Clima</p>
+        <span class="ciudad-weather__icon d-flex align-items-center justify-content-center">
+          <img [src]="weatherIcon()" [alt]="weather()?.description ?? 'Clima'" decoding="async" />
+        </span>
+        <div class="d-flex flex-column flex-sm-row align-items-center gap-1 gap-sm-2">
+          <p class="ciudad-weather__value fw-bold mb-0">{{ displayTemperature() ?? '--' }}°</p>
+          <div class="ciudad-weather__unit d-flex align-items-center gap-1 fw-bold">
+            <button type="button" class="btn btn-link p-0 border-0"
+                    [class.is-active]="temperatureUnit() === 'C'" (click)="setUnit('C')">°C</button>
+            <span aria-hidden="true">|</span>
+            <button type="button" class="btn btn-link p-0 border-0"
+                    [class.is-active]="temperatureUnit() === 'F'" (click)="setUnit('F')">°F</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col d-flex flex-column align-items-center gap-2 gap-sm-3">
+        <p class="ciudad-weather__label text-uppercase fw-bold text-center mb-0">Sensación</p>
+        <span class="ciudad-weather__icon d-flex align-items-center justify-content-center">
+          <img [src]="feelsLikeIcon" alt="Sensación térmica" decoding="async" />
+        </span>
+        <p class="ciudad-weather__value fw-bold mb-0">{{ displayFeelsLike() ?? '--' }}°</p>
+      </div>
+
+      <div class="col d-flex flex-column align-items-center gap-2 gap-sm-3">
+        <p class="ciudad-weather__label text-uppercase fw-bold text-center mb-0">
+          Prob. de lluvia
+        </p>
+        <span class="ciudad-weather__icon d-flex align-items-center justify-content-center">
+          <img [src]="precipitationIcon" alt="Probabilidad de lluvia" decoding="async" />
+        </span>
+        <p class="ciudad-weather__value fw-bold mb-0">
+          {{ weather()?.precipitationProbability ?? '--' }}%
+        </p>
+      </div>
+    </div>
+
+    @if (weatherError()) {
+      <p class="text-center text-body-secondary small mt-3 mb-0" role="status">
+        {{ weatherError() }}
+      </p>
+    }
+  </section>
+
+  <div class="ciudad-spacer"></div>
+
+  @if (!carouselMode()) {
+    <app-partes
+      [selectedSection]="selectedSection()"
+      (sectionSelected)="onSectionSelected($event)"
+    ></app-partes>
+  } @else {
+    <section class="position-relative">
+      <button
+        type="button"
+        class="ciudad-arrow ciudad-arrow--prev btn rounded-circle d-flex align-items-center justify-content-center"
+        (click)="prevSection()"
+        aria-label="Sección anterior"
+      >
+        <span aria-hidden="true">&lsaquo;</span>
+      </button>
+
+      <button
+        type="button"
+        class="ciudad-arrow ciudad-arrow--next btn rounded-circle d-flex align-items-center justify-content-center"
+        (click)="nextSection()"
+        aria-label="Sección siguiente"
+      >
+        <span aria-hidden="true">&rsaquo;</span>
+      </button>
+
+      <div class="ciudad-carousel py-4 py-sm-5">
+        @switch (selectedSection()) {
+          @case ('eventos') {
+            <app-parte-eventos [citySlug]="citySlug()" [cityName]="cityName()"></app-parte-eventos>
+          }
+          @case ('hangout') {
+            <app-parte-hangout [citySlug]="citySlug()" [cityName]="cityName()"></app-parte-hangout>
+          }
+          @case ('fanzone') {
+            <app-parte-fanzone [citySlug]="citySlug()" [cityName]="cityName()"></app-parte-fanzone>
+          }
+          @case ('turismo') {
+            <app-parte-turismo [citySlug]="citySlug()" [cityName]="cityName()"></app-parte-turismo>
+          }
+          @case ('restaurantes') {
+            <app-parte-restaurantes
+              [citySlug]="citySlug()"
+              [cityName]="cityName()"
+            ></app-parte-restaurantes>
+          }
+        }
+      </div>
+
+      <div class="ciudad-dock d-flex flex-column align-items-center gap-3">
+        <div class="d-flex align-items-center gap-2">
+          @for (section of sectionOrder; track section) {
+            <button
+              type="button"
+              class="ciudad-dot rounded-circle border-0"
+              [class.ciudad-dot--active]="selectedSection() === section"
+              [style.background-color]="selectedSection() === section ? colorFor(section) : null"
+              [attr.aria-label]="'Ir a la sección ' + section"
+              [attr.aria-current]="selectedSection() === section ? 'true' : null"
+              (click)="selectedSection.set(section)"
+            ></button>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="ciudad-back btn bg-white rounded-pill px-4 py-2 d-flex align-items-center gap-2"
+          [style.border-color]="activeSectionColor()"
+          (click)="closeCarousel()"
+        >
+          <span class="ciudad-back__icon" [style.background-color]="activeSectionColor()" aria-hidden="true"></span>
+          Volver a las secciones
+        </button>
+      </div>
+    </section>
+  }
+
+</main>

@@ -1,0 +1,87 @@
+<!-- PRÓXIMA PARADA - 100% TAILWIND -->
+<section class="bg-white w-full px-4 sm:px-6 py-7 md:py-8 lg:py-10">
+
+  <div class="max-w-[920px] mx-auto">
+
+    <!-- TÍTULO -->
+    <h2 class="text-center font-black uppercase tracking-[0.5px] leading-[0.95] text-[#111]
+               text-[28px] md:text-[34px] lg:text-[42px] mb-6 md:mb-7">
+      ¿WHAT'S YOUR NEXT<br>STOP?
+    </h2>
+
+    <!-- CITY GRID -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 justify-items-center">
+
+      <!-- ATLANTA -->
+      <a [routerLink]="['/restaurantes', 'atlanta']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/atlanta.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Atlanta</span>
+      </a>
+
+      <!-- BOSTON -->
+      <a [routerLink]="['/restaurantes', 'boston']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/boston.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Boston</span>
+      </a>
+
+      <!-- DALLAS -->
+      <a [routerLink]="['/restaurantes', 'dallas']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/dallas.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Dallas</span>
+      </a>
+
+      <!-- FILADELFIA -->
+      <a [routerLink]="['/restaurantes', 'filadelfia']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/filadelfia.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Filadelfia</span>
+      </a>
+
+      <!-- HOUSTON -->
+      <a [routerLink]="['/restaurantes', 'houston']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/houston.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Houston</span>
+      </a>
+
+      <!-- KANSAS CITY -->
+      <a [routerLink]="['/restaurantes', 'kansas-city']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/kansas%20city.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Kansas City</span>
+      </a>
+
+      <!-- LOS ANGELES -->
+      <a [routerLink]="['/restaurantes', 'los-angeles']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/los%20angeles.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Los Angeles</span>
+      </a>
+
+      <!-- MIAMI -->
+      <a [routerLink]="['/restaurantes', 'miami']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/miami.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Miami</span>
+      </a>
+
+      <!-- NEW YORK -->
+      <a [routerLink]="['/restaurantes', 'new-york']" class="group relative w-full min-w-[160px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/new%20york.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">New York</span>
+      </a>
+
+    </div>
+
+    <!-- ÚLTIMAS 2 CIUDADES - CENTRADAS (Pirámide) -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-5 mt-4 md:mt-5">
+      <!-- SAN FRANCISCO -->
+      <a [routerLink]="['/restaurantes', 'san-francisco']" class="group relative w-full sm:max-w-[280px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/san%20francisco.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">San Francisco</span>
+      </a>
+
+      <!-- SEATTLE -->
+      <a [routerLink]="['/restaurantes', 'seattle']" class="group relative w-full sm:max-w-[280px] aspect-[1.72/1] rounded-3xl overflow-hidden shadow-[0_8px_18px_rgba(0,0,0,0.12)] bg-cover bg-center bg-no-repeat transition-all duration-200 hover:-translate-y-[2px] hover:shadow-[0_12px_24px_rgba(0,0,0,0.16)]" style="background-image: url('assets/cyties/seattle.png');">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent"></div>
+        <span class="absolute bottom-0 left-0 right-0 px-4 pb-4 md:pb-5 text-left font-black uppercase text-white leading-[1.05] tracking-[0.4px] text-[15px] md:text-[19px] lg:text-[23px] max-w-[calc(100%-32px)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">Seattle</span>
+      </a>
+    </div>
+
+  </div>
+</section>

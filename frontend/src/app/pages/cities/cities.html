@@ -1,0 +1,33 @@
+<section class="cities-section bg-white py-4 py-md-5">
+  <div class="cities-container mx-auto px-3 px-sm-4">
+
+    <h1 class="cities-title text-center text-uppercase fw-bolder mb-4 mb-md-5">
+      ¿Cuál es tu<br />próxima parada?
+    </h1>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3 g-md-4 justify-content-center">
+      @for (city of cities; track city.slug) {
+        <div class="col">
+          <a
+            class="city-card d-block position-relative overflow-hidden text-decoration-none"
+            [routerLink]="['/cities', city.slug]"
+            [attr.aria-label]="'Ver qué pasa en ' + city.name"
+          >
+            <img
+              class="city-card__image"
+              [src]="city.image"
+              [alt]="'Vista de ' + city.name"
+              loading="lazy"
+              decoding="async"
+            />
+            <span class="city-card__overlay" aria-hidden="true"></span>
+            <span class="city-card__name text-uppercase fw-bolder text-white">
+              {{ city.name }}
+            </span>
+          </a>
+        </div>
+      }
+    </div>
+
+  </div>
+</section>

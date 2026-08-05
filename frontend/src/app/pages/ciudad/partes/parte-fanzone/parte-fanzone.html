@@ -1,0 +1,18 @@
+<app-place-list
+  [section]="section"
+  [cityName]="cityName()"
+  [places]="places()"
+  [loading]="loading()"
+  [error]="error()"
+>
+  @if (fanFest(); as zone) {
+    <aside class="fan-fest mt-4 p-4 p-sm-5 text-white" aria-label="Sede oficial del FIFA Fan Festival">
+      <p class="fan-fest__label text-uppercase fw-semibold mb-1">
+        Sede oficial del FIFA Fan Festival
+      </p>
+      <h2 class="fan-fest__name fw-bold mb-2">{{ zone.name }}</h2>
+      <p class="mb-1">{{ zone.address }}</p>
+      <p class="mb-0 fw-semibold">{{ zone.dates }}</p>
+    </aside>
+  }
+</app-place-list>

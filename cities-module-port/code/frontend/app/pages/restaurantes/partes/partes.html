@@ -1,0 +1,62 @@
+<section class="w-full max-w-[1300px] mx-auto px-0 py-8 sm:py-10">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 lg:gap-x-10 gap-y-8 lg:gap-y-10">
+
+    <div *ngFor="let item of categories" class="space-y-4">
+      <h3 class="text-xl sm:text-2xl lg:text-3xl font-bold tracking-[-0.02em]">
+        {{ item.subtitle }}
+      </h3>
+
+      <button
+        class="w-full h-40 sm:h-60 lg:h-72 rounded-[28px] sm:rounded-[34px] lg:rounded-[40px] flex items-center justify-between gap-2 px-5 sm:px-10 lg:px-12 text-left hover:scale-[1.01] transition-all duration-300 overflow-hidden"
+        [ngClass]="[item.bg, selectedSection() === item.id ? 'ring-4 ring-offset-2 ring-black/80 -translate-y-1 shadow-2xl' : '']"
+        (click)="sectionSelected.emit(item.id)"
+      >
+        <span
+          class="text-white text-xl sm:text-4xl lg:text-5xl font-extrabold uppercase tracking-tight leading-none z-10"
+        >
+          {{ item.title }}
+        </span>
+
+        <div class="relative w-20 h-20 sm:w-56 sm:h-56 lg:w-72 lg:h-72 flex items-center justify-center shrink-0 overflow-hidden">
+          <img
+            [ngSrc]="item.icon"
+            [alt]="item.title"
+            fill
+            class="object-contain"
+          />
+        </div>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="mt-10 lg:mt-12 flex justify-center">
+    <div class="w-full md:w-[58%] space-y-4">
+      <h3 class="text-xl sm:text-2xl lg:text-3xl font-bold tracking-[-0.02em]">
+        {{ foodCategory.subtitle }}
+      </h3>
+
+      <button
+        class="w-full h-40 sm:h-60 lg:h-72 rounded-[28px] sm:rounded-[34px] lg:rounded-[40px] flex items-center justify-between gap-2 px-5 sm:px-10 lg:px-12 text-left hover:scale-[1.01] transition-all duration-300 overflow-hidden"
+        [ngClass]="[foodCategory.bg, selectedSection() === foodCategory.id ? 'ring-4 ring-offset-2 ring-black/80 -translate-y-1 shadow-2xl' : '']"
+        (click)="sectionSelected.emit(foodCategory.id)"
+      >
+        <span
+          class="text-white text-xl sm:text-4xl lg:text-5xl font-extrabold uppercase leading-[0.9] tracking-tight z-10"
+        >
+          The best<br />
+          restaurants
+        </span>
+
+        <div class="relative w-20 h-20 sm:w-56 sm:h-56 lg:w-72 lg:h-72 flex items-center justify-center shrink-0 overflow-hidden">
+          <img
+            [ngSrc]="foodCategory.icon"
+            [alt]="foodCategory.title"
+            fill
+            class="object-contain"
+          />
+        </div>
+      </button>
+    </div>
+  </div>
+</section>

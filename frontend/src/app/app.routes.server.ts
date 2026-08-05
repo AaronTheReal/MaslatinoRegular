@@ -30,6 +30,11 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'archivo/:anio/:mes',   renderMode: RenderMode.Server },
   // ':slug' exacto para coincidir con 'categoria/:slug'
   { path: 'categoria/:slug',      renderMode: RenderMode.Server },
+  // Cities: SSR para que las 11 ciudades sean indexables y compartibles.
+  // El módulo no toca window/document, así que es seguro en servidor.
+  { path: 'cities',               renderMode: RenderMode.Server },
+  { path: 'cities/:ciudad',       renderMode: RenderMode.Server },
+
   { path: 'eventos-show',         renderMode: RenderMode.Server },
   { path: 'recomendadas-show',    renderMode: RenderMode.Server },
   { path: 'podcast-show',         renderMode: RenderMode.Server },

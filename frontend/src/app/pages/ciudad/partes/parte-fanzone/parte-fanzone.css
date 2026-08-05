@@ -1,0 +1,20 @@
+:host {
+  display: block;
+}
+
+.fan-fest {
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, #00cf82, #00a266);
+  box-shadow: 0 18px 40px -22px rgba(0, 207, 130, 0.65);
+}
+
+.fan-fest__label {
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  opacity: 0.95;
+}
+
+.fan-fest__name {
+  font-size: clamp(1.25rem, 3.5vw, 1.75rem);
+  line-height: 1.15;
+}

@@ -34,6 +34,10 @@ import{PrivacyPolicy} from './pages/privacy-policy/privacy-policy'
 import {Terminos} from './pages/terminos/terminos'
 import { CorreosPanel } from './componentes/admin/correos-panel/correos-panel';
 
+//cities
+import { Cities } from './pages/cities/cities';
+import { Ciudad } from './pages/ciudad/ciudad';
+
 
 export const routes: Routes = [
   { path: '', component: Dashboard },
@@ -65,6 +69,11 @@ export const routes: Routes = [
 
   { path: 'archivo/:anio/:mes', component: NoticiasDespliegue },
   { path: 'categoria/:slug', component: NoticiasDespliegue },
+
+  // Módulo Cities: listado de ciudades y hub de cada una.
+  { path: 'cities', component: Cities },
+  { path: 'cities/:ciudad', component: Ciudad },
+
     { path: 'eventos-show', component: Eventos },
     { path: 'recomendadas-show', component: NoticiasRecomendadas },
 

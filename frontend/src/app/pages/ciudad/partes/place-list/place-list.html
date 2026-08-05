@@ -1,0 +1,84 @@
+<section
+  class="section-hero position-relative overflow-hidden d-flex align-items-center justify-content-between gap-3 px-4 px-sm-5 py-4 py-sm-5"
+  [style.--section-color]="section().color"
+  [style.--section-color-dark]="section().colorDark"
+>
+  <div class="min-w-0">
+    <p class="section-hero__subtitle text-white mb-1 fw-semibold">{{ section().subtitle }}</p>
+    <h1 class="section-hero__title text-white fw-bold mb-0">{{ section().title }}</h1>
+  </div>
+  <img
+    class="section-hero__icon flex-shrink-0"
+    [src]="section().icon"
+    alt=""
+    aria-hidden="true"
+    loading="lazy"
+    decoding="async"
+  />
+</section>
+
+<!-- Contenido extra de la sección (p. ej. la sede del Fan Festival). -->
+<ng-content></ng-content>
+
+<section class="mt-4">
+  @if (loading()) {
+    <div class="text-center py-5" role="status">
+      <span class="spinner-border text-secondary" aria-hidden="true"></span>
+      <p class="mt-3 mb-0">Cargando lo mejor de {{ cityName() }}…</p>
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-danger text-center" role="alert">{{ error() }}</div>
+  } @else if (!places().length) {
+    <p class="text-center text-body-secondary py-5 mb-0" role="status">
+      Todavía no hay lugares publicados para {{ cityName() }}.
+    </p>
+  } @else {
+    <div class="row row-cols-2 row-cols-sm-3 row-cols-lg-4 g-3 g-sm-4">
+      @for (place of places(); track place.placeId) {
+        <div class="col">
+          <article class="place-card h-100 bg-white p-3 p-sm-4">
+            <div class="place-card__media position-relative overflow-hidden">
+              @if (place.photos.length) {
+                <img
+                  class="place-card__image"
+                  [src]="place.photos[0].url"
+                  [alt]="place.name"
+                  loading="lazy"
+                  decoding="async"
+                />
+              }
+            </div>
+
+            <div class="pt-3">
+              <h3 class="place-card__name fw-bold mb-1">{{ place.name }}</h3>
+              <p class="place-card__address text-body-secondary small mb-0">
+                {{ place.formattedAddress }}
+              </p>
+
+              <div class="d-flex align-items-center gap-2 mt-3">
+                <span class="place-card__star" aria-hidden="true">★</span>
+                <span class="fw-semibold">{{ place.rating || '—' }}</span>
+                @if (priceLabel(place.priceLevel); as price) {
+                  <span class="text-body-secondary small">• {{ price }}</span>
+                }
+              </div>
+            </div>
+
+            @if (place.googleMapsUri) {
+              <div class="d-flex justify-content-center mt-3">
+                <a
+                  class="place-card__link btn btn-dark btn-sm rounded-pill px-4"
+                  [href]="place.googleMapsUri"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Ver en Maps
+                </a>
+              </div>
+            }
+          </article>
+        </div>
+      }
+    </div>
+  }
+</section>

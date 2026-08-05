@@ -34,6 +34,11 @@ import crypto from 'crypto';
 import { verifyToken, requireRole } from '../authAdmin.js';
 import correoController from './CorreoController.js';   // ← Cambia esto
 import SeoAiController from './SeoAiController.js';
+import PlacesController from './PlacesController.js';
+import PlacesExtraController from './PlacesExtraController.js';
+import WeatherController from './WeatherController.js';
+import EventosController from './EventosController.js';
+import { servePlacePhoto } from '../utils/place-photos.js';
 import {
   buildArticleCanonical,
   publicArticleLastModified,
@@ -209,8 +214,36 @@ export default class MainRoute {
       requireRole(EDITORIAL_ROLES),
       SeoAiController.analyze
     );
-    
-    
+
+    // ── Módulo Cities ──────────────────────────────────────────────────────
+    // El orden importa: las rutas estáticas van ANTES que las dinámicas, o
+    // Express interpretaría `cities` y `refresh-all` como nombres de ciudad.
+    //
+    // Los endpoints de refresco disparan llamadas de pago a Google Places, así
+    // que exigen sesión editorial. En el módulo de origen eran públicos: un
+    // POST anónimo a /restaurants/refresh-all encadenaba 11 llamadas facturables.
+    const requireEditor = [verifyToken, requireRole(EDITORIAL_ROLES)];
+
+    router.route('/restaurants/cities').get(PlacesController.apiGetAvailableCities);
+    router.route('/restaurants/refresh-all').post(...requireEditor, PlacesController.apiRefreshAllCities);
+    router.route('/restaurants/refresh/:city').post(...requireEditor, PlacesController.apiRefreshRestaurants);
+    router.route('/restaurants/:city').get(PlacesController.apiGetBestRestaurants);
+
+    router.route('/weather/:city').get(WeatherController.apiGetWeather);
+
+    router.route('/turismo/refresh/:city').post(...requireEditor, PlacesExtraController.apiRefreshTurismo);
+    router.route('/turismo/:city').get(PlacesExtraController.apiGetTurismo);
+    router.route('/hangout/refresh/:city').post(...requireEditor, PlacesExtraController.apiRefreshHangout);
+    router.route('/hangout/:city').get(PlacesExtraController.apiGetHangout);
+    router.route('/fanzone/refresh/:city').post(...requireEditor, PlacesExtraController.apiRefreshFanzone);
+    router.route('/fanzone/:city').get(PlacesExtraController.apiGetFanzone);
+
+    router.route('/eventos/:city').get(EventosController.apiGetEventosByCity);
+
+    // Proxy de fotos de Google Places: la credencial se añade aquí, en el
+    // servidor, y nunca viaja al navegador ni queda guardada en Mongo.
+    router.get('/places/photo/*', servePlacePhoto);
+
     router.route('/registrarUsuario').post(UsuariosController.postNuevoUsuario);
     router.route('/IdiomaUsuarioInicio').put(UsuariosController.postIdiomaUsuario);
     router.route('/enviar-codigo').post(UsuariosController.enviarCodigo);

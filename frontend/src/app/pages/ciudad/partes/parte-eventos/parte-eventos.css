@@ -1,0 +1,55 @@
+:host {
+  display: block;
+}
+
+.section-hero {
+  border-radius: 2.25rem;
+  background: linear-gradient(
+    to bottom,
+    var(--section-color, #fe0900),
+    var(--section-color-dark, #c40700)
+  );
+  box-shadow: 0 25px 55px -20px color-mix(in srgb, var(--section-color, #fe0900) 55%, transparent);
+}
+
+.section-hero__subtitle {
+  font-size: clamp(0.875rem, 1.6vw, 1rem);
+  letter-spacing: 0.02em;
+  opacity: 0.95;
+}
+
+.section-hero__title {
+  font-size: clamp(1.5rem, 6vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
+}
+
+.section-hero__icon {
+  width: clamp(5rem, 14vw, 12.1875rem);
+  height: clamp(5rem, 14vw, 12.1875rem);
+  object-fit: contain;
+  filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.28));
+}
+
+.match-card {
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 10px 28px -12px rgba(0, 0, 0, 0.14);
+}
+
+.match-card__stage {
+  color: #fe0900;
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+}
+
+.match-card__teams {
+  font-size: clamp(1.0625rem, 2.4vw, 1.375rem);
+  line-height: 1.25;
+}
+
+.match-card__vs {
+  color: var(--bs-secondary-color, #6c757d);
+  font-weight: 400;
+}

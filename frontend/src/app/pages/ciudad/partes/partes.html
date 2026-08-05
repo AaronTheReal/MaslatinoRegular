@@ -1,0 +1,28 @@
+<div class="row row-cols-1 row-cols-sm-2 g-3 g-md-4">
+  @for (section of sections; track section.id) {
+    <div class="col" [class.col-sm-12]="section.id === 'restaurantes'">
+      <button
+        type="button"
+        class="section-card w-100 h-100 text-start text-white border-0 p-4 p-sm-5 d-flex align-items-center justify-content-between gap-3"
+        [style.--section-color]="section.color"
+        [style.--section-color-dark]="section.colorDark"
+        [class.section-card--active]="selectedSection() === section.id"
+        [attr.aria-pressed]="selectedSection() === section.id"
+        (click)="sectionSelected.emit(section.id)"
+      >
+        <span class="min-w-0">
+          <span class="section-card__subtitle d-block fw-semibold">{{ section.subtitle }}</span>
+          <span class="section-card__title d-block fw-bold">{{ section.title }}</span>
+        </span>
+        <img
+          class="section-card__icon flex-shrink-0"
+          [src]="section.icon"
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+        />
+      </button>
+    </div>
+  }
+</div>

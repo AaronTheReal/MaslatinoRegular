@@ -1,0 +1,170 @@
+:host {
+  display: block;
+}
+
+.ciudad {
+  max-width: 1500px;
+  margin-inline: auto;
+  color: #171717;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+
+.ciudad-hero {
+  height: clamp(21.25rem, 45vw, 43.75rem);
+  border-radius: clamp(2rem, 3vw, 3.25rem);
+  background: var(--bs-secondary-bg, #e9ecef);
+}
+
+.ciudad-hero__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Difumina la base de la foto para que el titular se lea encima de ella. */
+.ciudad-hero__fade {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 75%;
+  pointer-events: none;
+  background: linear-gradient(to top, #fff, rgba(255, 255, 255, 0.75) 45%, transparent);
+}
+
+.ciudad-hero__heading {
+  margin-top: clamp(-12rem, -14vw, -6rem);
+}
+
+.ciudad-hero__title {
+  font-size: clamp(2.375rem, 7vw, 5.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+
+.ciudad-hero__city {
+  color: #9333ea;
+}
+
+/* ── Clima ─────────────────────────────────────────────────────────────── */
+
+.ciudad-weather {
+  max-width: 56rem;
+}
+
+.ciudad-weather__label {
+  font-size: clamp(0.75rem, 1.6vw, 1.25rem);
+  letter-spacing: 0.02em;
+}
+
+.ciudad-weather__icon {
+  width: clamp(2.5rem, 7vw, 5rem);
+  height: clamp(2.5rem, 7vw, 5rem);
+  border-radius: 1.5rem;
+  background: var(--bs-tertiary-bg, #f8f9fa);
+}
+
+.ciudad-weather__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.5rem;
+}
+
+.ciudad-weather__value {
+  font-size: clamp(1.5rem, 5vw, 3.75rem);
+}
+
+.ciudad-weather__unit button {
+  color: var(--bs-secondary-color, #adb5bd);
+  font-size: clamp(0.75rem, 1.4vw, 0.875rem);
+  text-decoration: none;
+}
+
+.ciudad-weather__unit button.is-active {
+  color: #171717;
+}
+
+.ciudad-spacer {
+  height: clamp(4rem, 8vw, 7rem);
+}
+
+/* ── Carrusel ──────────────────────────────────────────────────────────── */
+
+.ciudad-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  width: clamp(2.5rem, 5vw, 3.5rem);
+  height: clamp(2.5rem, 5vw, 3.5rem);
+  font-size: 1.75rem;
+  line-height: 1;
+  color: #171717;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(4px);
+}
+
+.ciudad-arrow:hover {
+  background: #fff;
+}
+
+.ciudad-arrow--prev {
+  left: max(0.5rem, calc(50% - 750px + 1rem));
+}
+
+.ciudad-arrow--next {
+  right: max(0.5rem, calc(50% - 750px + 1rem));
+}
+
+/* Deja hueco bajo el contenido para que el dock fijo no tape las tarjetas. */
+.ciudad-carousel {
+  padding-bottom: 8rem !important;
+}
+
+.ciudad-dock {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 1.5rem;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.ciudad-dock > * {
+  pointer-events: auto;
+}
+
+.ciudad-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  background: var(--bs-secondary-bg, #dee2e6);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.ciudad-dot--active {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.ciudad-back {
+  border: 2px solid transparent;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(6px);
+  font-weight: 600;
+}
+
+.ciudad-back__icon {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ciudad-dot {
+    transition: none;
+  }
+}
