@@ -1,3 +1,7 @@
+# Dependencias: se instalan desde package.json/package-lock.json en cada
+# despliegue. Versionarlas ensuciaba cada commit con miles de archivos.
+node_modules/
+
 # Local Netlify folder
 .netlify
 
