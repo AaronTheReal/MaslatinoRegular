@@ -48,10 +48,12 @@
               class="result-item"
               [class.highlighted]="i === highlightedIndex"
               (click)="pick(item)">
-            <img [src]="item.image || 'assets/default.jpg'"
+            <img [src]="(item.image | cdnimg:200) || 'assets/placeholder.svg'"
                  [alt]="item.title"
                  class="item-img"
-                 loading="lazy" />
+                 loading="lazy"
+                 decoding="async"
+                 appImgFade />
 
             <div class="item-content">
               <div class="item-title">{{ item.title }}</div>

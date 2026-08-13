@@ -46,13 +46,14 @@
             role="button"
             aria-label="Ver detalles del evento">
 
-            <div class="event-image-wrapper">
+            <div class="event-image-wrapper img-skeleton">
               <img
-                [src]="event.imageUrl"
+                [src]="event.imageUrl | cdnimg:600"
                 [alt]="event.title"
                 class="event-image"
                 loading="lazy"
-                decoding="async" />
+                decoding="async"
+                appImgFade />
               <div class="wca-badge" *ngIf="true">WCA</div>
             </div>
 
@@ -89,13 +90,14 @@
       <button class="modal-close" (click)="closeModal()" aria-label="Cerrar">×</button>
 
       <div class="modal-content">
-        <div class="modal-image">
+        <div class="modal-image img-skeleton">
           <img
-            [src]="selectedEvent()!.imageUrl"
+            [src]="selectedEvent()!.imageUrl | cdnimg:1200"
             [alt]="selectedEvent()!.title"
             class="modal-image-el"
             loading="lazy"
-            decoding="async" />
+            decoding="async"
+            appImgFade />
         </div>
 
         <div class="modal-info">

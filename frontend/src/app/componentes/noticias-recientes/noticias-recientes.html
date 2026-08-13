@@ -20,7 +20,8 @@
     </div>
 
     <!-- Imagen: solo si existe -->
-    <img *ngIf="noticia?.meta?.image as img" [src]="img" [alt]="noticia?.title || ''" />
+    <img *ngIf="noticia?.meta?.image as img" [src]="img | cdnimg:800" [alt]="noticia?.title || ''"
+         loading="lazy" decoding="async" appImgFade />
 
     <!-- Fecha: no uses ?? con el pipe; usa ternario antes del pipe -->
     <p>

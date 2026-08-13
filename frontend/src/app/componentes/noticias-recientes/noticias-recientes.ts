@@ -3,11 +3,13 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NoticiasService } from '../../services/noticias-service';
 import { Noticia } from '../../../models/noticia.model';
+import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../../shared/img-fade.directive';
 
 @Component({
   selector: 'app-noticias-recientes',
   standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe],
+  imports: [CommonModule, RouterModule, DatePipe, CdnImagePipe, ImgFadeDirective],
   templateUrl: './noticias-recientes.html',
   styleUrls: ['./noticias-recientes.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

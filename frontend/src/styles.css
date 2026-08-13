@@ -51,3 +51,52 @@ html,
 body {
   overflow-x: clip;
 }
+
+/* === 3) Esqueleto de imagen ===============================================
+   El contenedor de una <img> lleva .img-skeleton y late mientras la imagen
+   descarga; ImgFadeDirective le pone .img-ready al terminar y funde la imagen.
+   Cubre el hueco que dejaban los esqueletos anteriores, que se retiraban al
+   llegar el JSON y dejaban recuadros en blanco durante toda la descarga. */
+/* El brillo va en un ::before y no en el fondo del contenedor: casi todos
+   estos contenedores ya traen su propio background desde el CSS del
+   componente, que gana en especificidad por el atributo de encapsulacion
+   (.thumb-wrap[_ngcontent-x] es mas especifico que .img-skeleton). */
+.img-skeleton {
+  position: relative;
+}
+
+.img-skeleton::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-color: #e9edf2;
+  background-image: linear-gradient(90deg, #e9edf2 0%, #dde3ea 50%, #e9edf2 100%);
+  background-size: 200% 100%;
+  animation: img-skeleton-shimmer 1.4s linear infinite;
+}
+
+/* Variante para superficies oscuras (detalle de podcast, buscador) */
+.img-skeleton--dark::before {
+  background-color: #1b1b1f;
+  background-image: linear-gradient(90deg, #1b1b1f 0%, #2a2a30 50%, #1b1b1f 100%);
+}
+
+/* Imagen lista: el esqueleto desaparece justo cuando la imagen empieza a
+   fundirse, asi que no llegan a solaparse. */
+.img-skeleton.img-ready::before {
+  content: none;
+}
+
+@keyframes img-skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .img-skeleton::before {
+    animation: none;
+  }
+}

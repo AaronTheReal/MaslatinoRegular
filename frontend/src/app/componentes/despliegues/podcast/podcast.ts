@@ -5,6 +5,8 @@ import { RouterModule, Router } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { PodcastService, Podcast } from '../../../services/podcastDespliegue-service';
 import { AdsComponent } from '../../ads/ads';
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../../../shared/img-fade.directive';
 
 type Lang =
   | 'es' | 'es-MX' | 'es-AR' | 'es-BO' | 'es-CL' | 'es-CO' | 'es-CR' | 'es-CU' | 'es-DO'
@@ -23,7 +25,7 @@ type LayoutKey = 'frame' | 'list';
 @Component({
   selector: 'app-podcast',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule, AdsComponent],
+  imports: [CommonModule, FormsModule, RouterModule, HttpClientModule, AdsComponent, CdnImagePipe, ImgFadeDirective],
   templateUrl: './podcast.html',
   styleUrls: ['./podcast.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -40,6 +42,9 @@ export class PodcastComponent implements OnInit {
   // Paginación
   page = signal<number>(1);
   pageSize = 12;
+
+  /** Tarjetas fantasma que se pintan mientras llega el listado */
+  readonly skeletonSlots = [1, 2, 3, 4, 5, 6];
 
   // Datos
   loading = signal<boolean>(true);

@@ -86,11 +86,12 @@
             <!-- AUDIO -->
       <div *ngSwitchCase="'audio'" class="player-shell audio-mode">
         <div class="audio-hero">
-          <div class="audio-hero-cover">
+          <div class="audio-hero-cover img-skeleton img-skeleton--dark">
             <img
-              [src]="selectedEpisode()?.image || 'https://via.placeholder.com/640x360'"
+              [src]="(selectedEpisode()?.image | cdnimg:800) || 'assets/placeholder.svg'"
               [alt]="selectedEpisode()?.title || 'Audio'"
               decoding="async"
+              appImgFade
             />
           </div>
 
@@ -162,8 +163,9 @@
           (click)="playEpisode(episode)"
           [class.active]="episode._id === selectedEpisode()?._id"
         >
-          <div class="thumbnail">
-            <img [src]="episode.image || 'https://via.placeholder.com/120x68'" alt="thumbnail" loading="lazy" decoding="async" />
+          <div class="thumbnail img-skeleton img-skeleton--dark">
+            <img [src]="(episode.image | cdnimg:240) || 'assets/placeholder.svg'" alt="thumbnail"
+                 width="120" height="68" loading="lazy" decoding="async" appImgFade />
             <div class="play-overlay">▶</div>
           </div>
 

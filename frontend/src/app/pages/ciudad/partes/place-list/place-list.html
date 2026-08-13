@@ -37,14 +37,15 @@
       @for (place of places(); track place.placeId) {
         <div class="col">
           <article class="place-card h-100 bg-white p-3 p-sm-4">
-            <div class="place-card__media position-relative overflow-hidden">
+            <div class="place-card__media position-relative overflow-hidden img-skeleton">
               @if (place.photos.length) {
                 <img
                   class="place-card__image"
-                  [src]="place.photos[0].url"
+                  [src]="place.photos[0].url | cdnimg:600"
                   [alt]="place.name"
                   loading="lazy"
                   decoding="async"
+                  appImgFade
                 />
               }
             </div>

@@ -1,6 +1,9 @@
 import { Component, Input, CUSTOM_ELEMENTS_SCHEMA, OnChanges, SimpleChanges, inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Podcast } from '../../../../services/podcastDespliegue-service';
+import { CdnImagePipe } from '../../../../pipes/cdn-image.pipe';
+
+const PLACEHOLDER = 'assets/placeholder.svg';
 
 @Component({
   selector: 'app-podcast-pagina-episodios',
@@ -15,8 +18,23 @@ export class PodcastPaginaEpisodios implements OnChanges {
 
   private readonly platformId = inject(PLATFORM_ID);
 
+  // El pipe se usa desde TS porque la precarga y el <img> tienen que pedir
+  // exactamente la misma URL; si una fuera la original y otra la del CDN el
+  // navegador descargaria la portada dos veces.
+  private readonly cdn = new CdnImagePipe();
+
   heroBgLoaded = false;
   coverLoaded = false;
+
+  /** Portada cuadrada: se muestra a 230px como maximo, 480 cubre pantallas 2x */
+  get coverSrc(): string {
+    return this.cdn.transform(this.podcast?.coverImage, 480) || PLACEHOLDER;
+  }
+
+  /** Fondo del hero: ocupa el ancho completo de la seccion */
+  get heroBgSrc(): string {
+    return this.cdn.transform(this.podcast?.coverImage2, 1600);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['podcast']) {
@@ -30,22 +48,18 @@ export class PodcastPaginaEpisodios implements OnChanges {
         return;
       }
 
-      if (this.podcast?.coverImage2) {
-        this.preloadImage(this.podcast.coverImage2, 'background');
+      const heroBg = this.heroBgSrc;
+      if (heroBg) {
+        this.preloadImage(heroBg, 'background');
       } else {
         this.heroBgLoaded = true;
       }
 
       if (this.podcast?.coverImage) {
-        this.preloadImage(this.podcast.coverImage, 'cover');
+        this.preloadImage(this.coverSrc, 'cover');
       } else {
         this.coverLoaded = true;
       }
-
-      console.log('🎙️ Podcast recibido en PodcastPaginaEpisodios:', this.podcast);
-      console.log('📌 Título del podcast:', this.podcast?.title);
-      console.log('📌 Cantidad de episodios:', this.podcast?.episodes?.length || 0);
-      console.log('📌 Episodios:', this.podcast?.episodes);
     }
   }
 
@@ -77,9 +91,8 @@ export class PodcastPaginaEpisodios implements OnChanges {
   }
 
   get heroBackgroundStyle(): string {
-    return this.heroBgLoaded && this.podcast?.coverImage2
-      ? `url("${this.podcast.coverImage2}")`
-      : 'none';
+    const bg = this.heroBgSrc;
+    return this.heroBgLoaded && bg ? `url("${bg}")` : 'none';
   }
 
   get contentReady(): boolean {

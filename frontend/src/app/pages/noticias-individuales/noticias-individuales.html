@@ -4,11 +4,12 @@
   <section
     class="hero-section hero-fullbleed mb-5"
     *ngIf="noticia?.meta?.image"
-    [style.--hero-url]="'url(' + (noticia?.meta?.image || '') + ')'">
-    <!-- Real img kept for SEO/SSR (itemprop) but visually hidden -->
+    [style.--hero-url]="'url(' + (noticia?.meta?.image | cdnimg:1600) + ')'">
+    <!-- Real img kept for SEO/SSR (itemprop) but visually hidden.
+         Misma URL que el fondo para que el navegador reutilice la descarga. -->
     <img
       class="sr-only"
-      [src]="noticia?.meta?.image || ''"
+      [src]="noticia?.meta?.image | cdnimg:1600"
       [alt]="noticia?.meta?.imageAltGlobal || noticia?.title || 'Noticia'"
       itemprop="image" />
     <div class="hero-overlay">
@@ -148,9 +149,11 @@
               <!-- IMAGE -->
               <figure *ngSwitchCase="'image'">
                 <img
-                  [src]="block?.url || ''"
+                  [src]="block?.url | cdnimg:1200"
                   [alt]="block?.alt || noticia?.meta?.imageAltGlobal || noticia?.title || 'Noticia'"
-                  class="img-fluid" />
+                  class="img-fluid"
+                  loading="lazy"
+                  decoding="async" />
                 <figcaption *ngIf="block?.captionHtml || block?.caption"
                             [innerHTML]="block?.captionHtml || block?.caption">
                 </figcaption>

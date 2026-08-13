@@ -17,6 +17,8 @@ import { Meta, Title } from '@angular/platform-browser';
 import { NoticiasService } from '../../services/noticias-service';
 import { CategoriaService } from '../../services/categorias-service'; // Asegúrate de que la ruta sea correcta
 import { Noticia, Category } from '../../../models/noticia.model';
+import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../../shared/img-fade.directive';
 
 type Vm = {
   items: Noticia[];
@@ -36,7 +38,7 @@ type Vm = {
 @Component({
   selector: 'app-noticias-despliegue',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterModule, FormsModule],
+  imports: [CommonModule, RouterLink, RouterModule, FormsModule, CdnImagePipe, ImgFadeDirective],
   templateUrl: './noticias-despliegue.html',
   styleUrls: ['./noticias-despliegue.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

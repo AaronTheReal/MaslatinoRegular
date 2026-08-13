@@ -218,6 +218,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .podcast-item-title {
@@ -466,8 +467,17 @@
   border-radius: 50%;
 }
 
+/* La tarjeta esqueleto conserva el fondo y la sombra de la tarjeta real: lo
+   unico que late son los huecos de la portada y del titulo. */
 .skeleton-item {
-  background: transparent !important; /* Para que los items usen los skeletons internos */
+  pointer-events: none;
+}
+
+/* Renglon del titulo dentro de la tarjeta esqueleto */
+.skeleton-item .skeleton-line {
+  width: 70%;
+  height: 18px;
+  border-radius: 6px;
 }
 
 @keyframes shimmer {
@@ -490,12 +500,6 @@
   border-radius: 24px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   background: #fff;
-}
-
-.more-podcasts-grid .podcast-thumbnail.skeleton {
-  width: 212px;
-  height: 211px;
-  border-radius: 22px;
 }
 
 .detail-header .skeleton {

@@ -8,22 +8,23 @@
     <div class="badge-group">
       <div class="badge-wrapper">
         <a (click)="openAndroid($event)">
-          <img src="assets/podcasts/imagen2.png" alt="Google Play" class="badge-image"
+          <img [src]="'assets/podcasts/imagen2.png' | cdnimg:340" alt="Google Play" class="badge-image"
                width="448" height="149" decoding="async">
         </a>
       </div>
       <div class="badge-wrapper">
         <a (click)="openIOS($event)">
-          <img src="assets/podcasts/imagen3.png" alt="App Store" class="badge-image"
+          <img [src]="'assets/podcasts/imagen3.png' | cdnimg:340" alt="App Store" class="badge-image"
                width="471" height="167" decoding="async">
         </a>
       </div>
     </div>
   </div>
 
-  <!-- Imagen pegada abajo-derecha (sin espacio) — es el LCP del hero -->
+  <!-- Imagen pegada abajo-derecha (sin espacio) — es el LCP del hero.
+       Sin appImgFade a proposito: fundir el LCP retrasa su pintado. -->
   <img
-    src="assets/podcasts/imagen1.png"
+    [src]="'assets/podcasts/imagen1.png' | cdnimg:463"
     alt="Podcast Cover"
     class="imagen-derecha"
     width="463"
@@ -34,13 +35,14 @@
 </section>
 
 
-<!-- Skeleton para Lista de Podcasts -->
-<section class="more-podcasts-section" *ngIf="loading()">
-  <h2 class="section-title skeleton skeleton-text" style="width: 200px; height: 34px; margin: 0 auto 60px;"></h2>
+<!-- Skeleton para Lista de Podcasts: misma rejilla y mismas medidas que la
+     lista real, para que al llegar los datos no se mueva nada. -->
+<section class="more-podcasts-section" *ngIf="loading()" aria-hidden="true">
+  <h2 class="section-title">PODCASTS</h2>
   <div class="more-podcasts-grid">
-    <div class="podcast-item skeleton-item" *ngFor="let i of [1,2,3,4,5,6]">
-      <div class="podcast-thumbnail skeleton skeleton-rect"></div>
-      <h3 class="podcast-item-title skeleton skeleton-text" style="width: 80%; height: 18px;"></h3>
+    <div class="podcast-item skeleton-item" *ngFor="let i of skeletonSlots">
+      <div class="podcast-thumbnail img-skeleton"></div>
+      <h3 class="podcast-item-title img-skeleton skeleton-line"></h3>
     </div>
   </div>
 </section>
@@ -52,9 +54,9 @@
     <div class="podcast-item" 
          *ngFor="let podcast of podcasts(); trackBy: trackById" 
          (click)="navigateToPodcast(podcast)">
-      <div class="podcast-thumbnail">
-        <img [src]="podcast.coverImage" [alt]="podcast.title" class="thumbnail-image"
-             loading="lazy" decoding="async">
+      <div class="podcast-thumbnail img-skeleton">
+        <img [src]="podcast.coverImage | cdnimg:480" [alt]="podcast.title" class="thumbnail-image"
+             width="212" height="211" loading="lazy" decoding="async" appImgFade>
       </div>
       <h3 class="podcast-item-title">{{ podcast.title }}</h3>
     </div>

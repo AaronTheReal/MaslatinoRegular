@@ -16,12 +16,13 @@ import { Meta, Title, DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { switchMap, tap, catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import {AdsComponent} from '../../componentes/ads/ads'
+import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
 declare const twttr: any;
 
 @Component({
   selector: 'app-noticias-individuales',
   standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe, FormsModule,AdsComponent],
+  imports: [CommonModule, RouterModule, DatePipe, FormsModule,AdsComponent, CdnImagePipe],
   templateUrl: './noticias-individuales.html',
   styleUrls: ['./noticias-individuales.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

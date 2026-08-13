@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { CalendarioService, CalendarItem, PaginatedResponse } from '../../../services/calendario-service';
 import { RouterModule } from '@angular/router';
 import {AdsComponent} from '../../ads/ads'
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../../../shared/img-fade.directive';
 
 type Filtro = 'Todo' | 'Esta semana' | 'Próxima semana';
 
@@ -25,7 +27,7 @@ interface EventVM {
 @Component({
   selector: 'app-eventos',
   standalone: true,
-  imports: [CommonModule, RouterModule,AdsComponent],
+  imports: [CommonModule, RouterModule,AdsComponent, CdnImagePipe, ImgFadeDirective],
   templateUrl: './eventos.html',
   styleUrls: ['./eventos.css'],
 })

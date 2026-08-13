@@ -6,13 +6,15 @@ import { Noticia, Category } from '../../../../models/noticia.model';
 import { NoticiasService } from '../../../services/noticias-service';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
 import {AdsComponent} from '../../ads/ads'
+import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../../../shared/img-fade.directive';
 
 type CatLike = string | { _id?: string; $oid?: string; slug?: string; name?: string } | Category;
 
 @Component({
   selector: 'app-noticias',
   standalone: true,
-  imports: [CommonModule, RouterModule,AdsComponent],
+  imports: [CommonModule, RouterModule,AdsComponent, CdnImagePipe, ImgFadeDirective],
   templateUrl: './noticias-todas.html',
   styleUrls: ['./noticias-todas.css'],
 })

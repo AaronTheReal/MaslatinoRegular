@@ -21,11 +21,13 @@ import { AudioPlayerService, AudioPlayerTrack } from '../../../../services/audio
 import { PodcastPaginaEpisodios } from '../podcast-pagina-episodios/podcast-pagina-episodios';
 import { PodcastPaginaEscucharaqui } from '../podcast-pagina-escucharaqui/podcast-pagina-escucharaqui';
 import { PodcastPaginaSuscribete } from '../podcast-pagina-suscribete/podcast-pagina-suscribete';
+import { CdnImagePipe } from '../../../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../../../../shared/img-fade.directive';
 
 @Component({
   selector: 'app-podcast-pagina',
   standalone: true,
-  imports: [CommonModule, HttpClientModule, PodcastPaginaEpisodios, PodcastPaginaEscucharaqui, PodcastPaginaSuscribete],
+  imports: [CommonModule, HttpClientModule, PodcastPaginaEpisodios, PodcastPaginaEscucharaqui, PodcastPaginaSuscribete, CdnImagePipe, ImgFadeDirective],
   templateUrl: './podcast-pagina.html',
   styleUrl: './podcast-pagina.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

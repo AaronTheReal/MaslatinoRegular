@@ -12,6 +12,8 @@ import { forkJoin } from 'rxjs';
 import { NoticiasService } from '../../services/noticias-service';
 import { PodcastService, PodcastPayload } from '../../services/podcast-service';
 import { CategoriaService, CategoriaPayload } from '../../services/categorias-service';
+import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../img-fade.directive';
 
 interface SearchItem {
   id: string;
@@ -26,7 +28,7 @@ interface SearchItem {
 @Component({
   selector: 'app-overlay',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CdnImagePipe, ImgFadeDirective],
   templateUrl: './overlay.html',
   styleUrls: ['./overlay.css']
 })

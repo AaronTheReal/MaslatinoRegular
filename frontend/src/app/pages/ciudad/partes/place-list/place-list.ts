@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { Place, SectionDefinition } from '../../../../../models/cities.model';
 import { CdnImagePipe } from '../../../../pipes/cdn-image.pipe';
+import { ImgFadeDirective } from '../../../../shared/img-fade.directive';
 
 /**
  * Rejilla de lugares con su hero de sección.
@@ -15,7 +16,7 @@ import { CdnImagePipe } from '../../../../pipes/cdn-image.pipe';
 @Component({
   selector: 'app-place-list',
   standalone: true,
-  imports: [CommonModule, CdnImagePipe],
+  imports: [CommonModule, CdnImagePipe, ImgFadeDirective],
   templateUrl: './place-list.html',
   styleUrl: './place-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

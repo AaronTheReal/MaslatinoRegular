@@ -36,7 +36,7 @@
           *ngFor="let noticia of noticias.slice(3, 5); trackBy: trackBySlug"
           [routerLink]="['/noticia', (noticia?.slug || '')]"
         >
-          <img [src]="(noticia?.meta?.image || 'assets/default-news.jpg') | cdnimg:500" [alt]="noticia?.title || ''" loading="lazy" decoding="async" />
+          <img [src]="(noticia?.meta?.image | cdnimg:500) || 'assets/placeholder.svg'" [alt]="noticia?.title || ''" loading="lazy" decoding="async" />
           <div class="superpuesto-arriba">
             <h3>{{ noticia?.title }}</h3>
             <p>{{ noticia?.createdAt | date: 'longDate' }}</p>

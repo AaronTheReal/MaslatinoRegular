@@ -1,8 +1,9 @@
 <a class="card" [routerLink]="['/eventos', (evento._id || evento.slug)]">
   <!-- Marco negro -->
   <div class="frame">
-    <div class="media">
-      <img [src]="cover" [alt]="evento.title" loading="lazy" />
+    <div class="media img-skeleton">
+      <img [src]="(cover | cdnimg:600) || 'assets/placeholder.svg'" [alt]="evento.title"
+           loading="lazy" decoding="async" appImgFade />
       <div class="badge-date">
         <span class="day">{{ evento.startAt | date:'dd' }}</span>
         <span class="mon">{{ evento.startAt | date:'MMM' }}</span>
