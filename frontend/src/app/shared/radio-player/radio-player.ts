@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RadioPlayerService } from '../../services/radio-player.service';
 import { AudioPlayerService } from '../../services/audio-player.service';
 import { Observable } from 'rxjs';
+import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
 
 @Component({
   selector: 'app-radio-player',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CdnImagePipe],
   templateUrl: './radio-player.html',
   styleUrls: ['./radio-player.css']
 })

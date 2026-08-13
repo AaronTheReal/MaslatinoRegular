@@ -6,10 +6,15 @@
 >
   <!-- IZQUIERDA: icono / logo de la radio -->
   <div class="radio-player__section radio-player__section--left">
+    <!-- El original es un PNG de 4500x4500 (221 KB) que se pinta a 52 px de
+         alto, y el reproductor sale en todas las paginas. -->
     <img
-      src="assets/radio/logoradio.png"
+      [src]="'assets/radio/logoradio.png' | cdnimg:160"
       alt="MásLatino Radio"
       class="radio-player__logo"
+      width="160"
+      height="160"
+      decoding="async"
     />
   </div>
 
