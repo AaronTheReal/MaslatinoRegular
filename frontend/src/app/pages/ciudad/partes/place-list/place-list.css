@@ -56,6 +56,16 @@
   background: var(--bs-secondary-bg, #e9ecef);
 }
 
+/* Lugar sin foto: un marcador quieto. Antes esta caja llevaba el esqueleto
+   aunque no hubiera ninguna imagen en camino, asi que latia indefinidamente y
+   la pagina parecia estar siempre cargando. */
+.place-card__media--vacia {
+  background:
+    var(--bs-secondary-bg, #e9ecef)
+    url("/assets/placeholder.svg") center / 42% no-repeat;
+  opacity: 0.55;
+}
+
 .place-card__image {
   position: absolute;
   inset: 0;

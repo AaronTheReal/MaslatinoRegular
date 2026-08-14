@@ -37,18 +37,25 @@
       @for (place of places(); track place.placeId) {
         <div class="col">
           <article class="place-card h-100 bg-white p-3 p-sm-4">
-            <div class="place-card__media position-relative overflow-hidden img-skeleton">
-              @if (place.photos.length) {
+            @if (place.photos.length) {
+              <div class="place-card__media position-relative overflow-hidden img-skeleton">
                 <img
                   class="place-card__image"
-                  [src]="place.photos[0].url | cdnimg:600"
+                  [src]="photoUrl(place)"
                   [alt]="place.name"
                   loading="lazy"
                   decoding="async"
                   appImgFade
                 />
-              }
-            </div>
+              </div>
+            } @else {
+              <!-- Sin .img-skeleton: no hay imagen en camino, y el brillo se
+                   quedaria latiendo para siempre en cada tarjeta. -->
+              <div
+                class="place-card__media place-card__media--vacia position-relative overflow-hidden"
+                aria-hidden="true"
+              ></div>
+            }
 
             <div class="pt-3">
               <h3 class="place-card__name fw-bold mb-1">{{ place.name }}</h3>
