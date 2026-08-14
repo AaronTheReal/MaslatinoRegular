@@ -27,6 +27,8 @@
  * Opciones:
  *   --base <url>      Raiz de la API (por defecto la de produccion)
  *   --pausa <ms>      Espera entre llamadas (por defecto 1500)
+ *   --faltantes       Consulta antes y solo refresca lo que no tiene fotos
+ *   --estado          Solo enseña que ciudades y secciones tienen fotos
  *   --dry-run         Enumera lo que haria, sin llamar a nada
  */
 
@@ -54,6 +56,8 @@ function parseArgs(argv) {
     else if (a === '--base') args.base = String(next() || '').replace(/\/+$/, '');
     else if (a === '--pausa') args.pausa = Number.parseInt(next(), 10) || 0;
     else if (a === '--todas') args.todas = true;
+    else if (a === '--faltantes') args.faltantes = true;
+    else if (a === '--estado') args.estado = true;
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--help' || a === '-h') args.help = true;
   }
@@ -61,6 +65,22 @@ function parseArgs(argv) {
 }
 
 const dormir = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * Cuantos lugares tienen ya foto. La consulta es gratis, al contrario que el
+ * refresco, asi que sirve para no volver a pagar por lo que ya esta hecho.
+ */
+async function contarFotos({ base, seccion, ciudad }) {
+  try {
+    const res = await fetch(`${base}/${seccion}/${encodeURIComponent(ciudad)}`);
+    if (!res.ok) return { total: 0, conFoto: 0, error: `HTTP ${res.status}` };
+    const d = await res.json();
+    const items = d.restaurants || d.places || [];
+    return { total: items.length, conFoto: items.filter((p) => (p.photos || []).length > 0).length };
+  } catch (e) {
+    return { total: 0, conFoto: 0, error: e.message };
+  }
+}
 
 async function refrescar({ base, token, seccion, ciudad, dryRun }) {
   const url = `${base}/${seccion}/refresh/${encodeURIComponent(ciudad)}`;
@@ -85,6 +105,20 @@ async function refrescar({ base, token, seccion, ciudad, dryRun }) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
 
+  if (args.estado) {
+    console.log(`Estado de las fotos en ${args.base}\n`);
+    for (const ciudad of CIUDADES) {
+      let linea = ciudad.padEnd(15);
+      for (const seccion of SECCIONES) {
+        const { total, conFoto, error } = await contarFotos({ base: args.base, seccion, ciudad });
+        const marca = error ? '?' : conFoto > 0 ? '✔' : '✘';
+        linea += `${marca} ${seccion.slice(0, 4)} ${String(conFoto)}/${total}`.padEnd(16);
+      }
+      console.log(linea);
+    }
+    return;
+  }
+
   if (args.help || (!args.ciudad && !args.todas)) {
     console.log(`
 Precarga de las secciones de lugares del modulo Cities.
@@ -95,6 +129,8 @@ Precarga de las secciones de lugares del modulo Cities.
   --seccion <nombre>  Solo una: restaurantes, turismo, hangout, fanzone
   --base <url>        Raiz de la API (por defecto produccion)
   --pausa <ms>        Espera entre llamadas (por defecto 1500)
+  --faltantes         Consulta antes y solo refresca lo que no tiene fotos
+  --estado            Solo enseña que ciudades y secciones tienen fotos
   --dry-run           Enumera sin llamar
 
 Empieza por una ciudad y comprueba el resultado antes de lanzar el resto.
@@ -130,10 +166,21 @@ Empieza por una ciudad y comprueba el resultado antes de lanzar el resto.
 
   let ok = 0;
   let fallos = 0;
+  let saltadas = 0;
 
   for (const ciudad of ciudades) {
     for (const seccion of secciones) {
       const etiqueta = `${ciudad}/${seccion}`.padEnd(28);
+
+      if (args.faltantes) {
+        const { conFoto, total } = await contarFotos({ base: args.base, seccion, ciudad });
+        if (conFoto > 0) {
+          saltadas += 1;
+          console.log(`  – ${etiqueta} ya tiene ${conFoto}/${total} con foto, se salta`);
+          continue;
+        }
+      }
+
       const r = await refrescar({ ...args, ciudad, seccion });
       if (r.ok) { ok += 1; console.log(`  ✔ ${etiqueta} ${r.detalle}`); }
       else { fallos += 1; console.log(`  ✘ ${etiqueta} ${r.detalle}`); }
@@ -142,7 +189,7 @@ Empieza por una ciudad y comprueba el resultado antes de lanzar el resto.
     }
   }
 
-  console.log(`\nHecho: ${ok} correcta(s), ${fallos} con error.`);
+  console.log(`\nHecho: ${ok} refrescada(s), ${saltadas} saltada(s), ${fallos} con error.`);
   if (fallos) process.exitCode = 1;
 }
 
