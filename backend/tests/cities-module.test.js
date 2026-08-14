@@ -169,3 +169,54 @@ test('los slugs de ciudad son coherentes entre clima, Places y partidos', () => 
     assert.ok(weatherCities.includes(slug), `fan fest en ciudad no soportada: ${slug}`);
   }
 });
+
+test('una respuesta de Google acaba en una foto que el navegador puede pedir', () => {
+  // Camino completo: lo que devuelve Google -> lo que se guarda en Mongo ->
+  // lo que recibe el frontend. Se escribió al investigar por qué Boston salía
+  // sin fotos: sirve para separar un fallo de código de unos datos viejos.
+  const respuestaDeGoogle = {
+    id: 'ChIJ-3vNbw1644kRQUMVs5yqVL4',
+    displayName: { text: 'The Salty Pig' },
+    formattedAddress: '130 Dartmouth St, Boston, MA 02116',
+    rating: 4.5,
+    photos: [
+      {
+        name: 'places/ChIJ-3vNbw1644kRQUMVs5yqVL4/photos/AeJbb3d_FOTO',
+        authorAttributions: [{ displayName: 'Ana', uri: 'https://x.test' }],
+      },
+    ],
+  };
+
+  const guardado = respuestaDeGoogle.photos.map((p) => GooglePlacesService.toStoredPhoto(p));
+  assert.equal(guardado[0].photoName, 'places/ChIJ-3vNbw1644kRQUMVs5yqVL4/photos/AeJbb3d_FOTO');
+
+  const [publico] = toPublicPlaces(fakeRequest(), [
+    { placeId: respuestaDeGoogle.id, name: 'The Salty Pig', photos: guardado },
+  ]);
+
+  assert.equal(publico.photos.length, 1, 'la foto tiene que sobrevivir al viaje');
+  assert.equal(
+    publico.photos[0].url,
+    'https://api.maslatino.com/aaron/maslatino/places/photo/places/ChIJ-3vNbw1644kRQUMVs5yqVL4/photos/AeJbb3d_FOTO'
+  );
+  // La ruta resultante tiene que pasar el filtro del propio proxy.
+  const ruta = publico.photos[0].url.split('/places/photo/')[1];
+  assert.equal(PLACE_PHOTO_NAME_PATTERN.test(ruta), true);
+});
+
+test('un documento con el formato de fotos anterior llega vacío al frontend', () => {
+  // Los documentos escritos antes del porte guardaban la URL final con la
+  // clave dentro, sin `photoName`. Es lo que hay hoy en Boston: 20
+  // restaurantes y ninguna foto. No es un fallo, y no se puede rescatar sin
+  // volver a publicar la credencial: hay que refrescar contra Google.
+  const documentoViejo = {
+    placeId: 'ChIJ-3vNbw1644kRQUMVs5yqVL4',
+    name: 'The Salty Pig',
+    photos: [{ url: 'https://maps.googleapis.com/...&key=CLAVE_FILTRADA' }],
+  };
+
+  const [publico] = toPublicPlaces(fakeRequest(), [documentoViejo]);
+
+  assert.deepEqual(publico.photos, [], 'sin photoName no hay foto que servir');
+  assert.equal(JSON.stringify(publico).includes('key='), false);
+});
