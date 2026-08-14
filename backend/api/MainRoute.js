@@ -24,7 +24,6 @@ import jwt from 'jsonwebtoken';
 import jwkToPem from 'jwk-to-pem'; // Cambia require a import
 import Usuario from '../models/Usuarios.js';
 import { OAuth2Client } from 'google-auth-library';
-import admin from './firebase-admin.js';
 import { sendNotificationToUser } from './onesignal-service.js';  // Ajusta la ruta si es necesario
 
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
