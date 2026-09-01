@@ -12,15 +12,16 @@
     (keydown.enter)="onSearchClick($event)"
   />
 
-  <!-- Botón hamburguesa accesible -->
+  <!-- Botón hamburguesa accesible.
+       Sin (keydown.enter): un <button> nativo ya dispara (click) con Enter y
+       el listener extra abría y cerraba el menú en la misma pulsación. -->
   <button
     class="hamburger-btn"
-    aria-label="Abrir menú"
+    [attr.aria-label]="isMenuOpen ? 'Cerrar menú' : 'Abrir menú'"
     aria-haspopup="true"
     [attr.aria-expanded]="isMenuOpen"
     aria-controls="nav-quick-menu"
     (click)="toggleMenu($event)"
-    (keydown.enter)="toggleMenu($event)"
   >
     <svg class="sabor" width="37" height="32" viewBox="0 0 37 32" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M34 32H3C1.343 32 0 30.657 0 29C0 27.343 1.343 26 3 26H34C35.657 26 37 27.343 37 29C37 30.657 35.657 32 34 32Z" fill="black"/>
@@ -37,7 +38,7 @@
   [class.open]="isMenuOpen"
   role="menu"
   aria-labelledby="nav-quick-menu"
-  (click)="$event.stopPropagation()"
+  (click)="onPanelClick($event)"
   *ngIf="showFloatingActions && !hideFloatingActionsOnPodcastDetail"
 >
   <div class="menu-section">
