@@ -124,6 +124,17 @@ export const CITIES: readonly CityDefinition[] = [
   { slug: 'seattle', name: 'Seattle', image: 'assets/cyties/seattle.png' },
 ] as const;
 
+/**
+ * Ciudades que se muestran hoy en la portada. Las demás siguen en `CITIES`
+ * (rutas, API y `findCityBySlug` las resuelven igual): solo están ocultas del
+ * listado. Para volver a mostrarlas basta con añadir su slug aquí.
+ */
+export const VISIBLE_CITY_SLUGS: readonly string[] = ['boston', 'miami', 'new-york'];
+
+export const VISIBLE_CITIES: readonly CityDefinition[] = CITIES.filter((city) =>
+  VISIBLE_CITY_SLUGS.includes(city.slug),
+);
+
 export function findCityBySlug(slug: string): CityDefinition | undefined {
   const normalized = (slug || '').toLowerCase().trim();
   return CITIES.find((city) => city.slug === normalized);
