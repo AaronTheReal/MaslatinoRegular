@@ -14,10 +14,18 @@
 # /.netlify/images?url=...&w=1200 — usado en og:image porque LinkedIn
 # rechaza imagenes gigantes (las portadas vienen de 8000px de ancho).
 [images]
+  # Solo los origenes de los que salen portadas de verdad. El comodin
+  # "https://maslatino\.com/.*" que habia aqui convertia el Image CDN en un
+  # proxy de transformacion abierto sobre el propio sitio: cualquiera podia
+  # pedir /.netlify/images?url=/assets/cyties/kansas-city.png&w=N con N
+  # arbitrario y cada valor de N era un objeto de cache nuevo y otra descarga
+  # del PNG original de 8,7 MB. Las imagenes del propio dominio no necesitan
+  # estar aqui: el pipe cdnimg las pide con ruta relativa, que el CDN sirve
+  # sin allowlist. Lo unico que se pedia en absoluto era el logo de respaldo.
   remote_images = [
     "https://d1w8u1yfnsws5m\\.cloudfront\\.net/.*",
     "https://maslatino-contenido\\.s3\\.us-east-2\\.amazonaws\\.com/.*",
-    "https://maslatino\\.com/.*"
+    "https://maslatino\\.com/assets/iconosnavbar/.*"
   ]
 
 # NO agregar [[redirects]] con "/* /index.html 200".

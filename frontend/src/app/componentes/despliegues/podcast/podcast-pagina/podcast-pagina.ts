@@ -23,6 +23,12 @@ import { PodcastPaginaEscucharaqui } from '../podcast-pagina-escucharaqui/podcas
 import { PodcastPaginaSuscribete } from '../podcast-pagina-suscribete/podcast-pagina-suscribete';
 import { CdnImagePipe } from '../../../../pipes/cdn-image.pipe';
 import { ImgFadeDirective } from '../../../../shared/img-fade.directive';
+import {
+  SOCIAL_IMAGE_HEIGHT,
+  SOCIAL_IMAGE_WIDTH,
+  buildSocialImageUrl,
+  ensureAbsoluteHttpsUrl,
+} from '../../../../shared/social-preview';
 
 @Component({
   selector: 'app-podcast-pagina',
@@ -166,10 +172,10 @@ export class PodcastPagina implements OnInit {
       .replace(/<[^>]*>/g, '')    // strip HTML
       .slice(0, 300);
     // Prioridad: meta.image (o coverImage) — la portada "principal" del admin
-    const rawImage = this.ensureAbsoluteHttpsUrl(podcast.meta?.image || podcast.coverImage || podcast.coverImage2 || '');
+    const rawImage = podcast.meta?.image || podcast.coverImage || podcast.coverImage2 || '';
     // LinkedIn rechaza imágenes gigantes (las portadas vienen de ~8000px).
     // Netlify Image CDN la sirve redimensionada a 1200×630 (ideal para previews).
-    const image = `https://maslatino.com/.netlify/images?url=${encodeURIComponent(rawImage)}&w=1200&h=630&fit=cover&fm=jpg&q=80`;
+    const image = buildSocialImageUrl(rawImage);
     // URL bonita como canónica (compartible); fallback al id si el slug queda vacío
     const slug = this.slugify(title);
     const url = slug
@@ -186,8 +192,8 @@ export class PodcastPagina implements OnInit {
     this.meta.updateTag({ property: 'og:image', content: image });
     this.meta.updateTag({ property: 'og:image:secure_url', content: image });
     this.meta.updateTag({ property: 'og:image:type', content: 'image/jpeg' });
-    this.meta.updateTag({ property: 'og:image:width', content: '1200' });
-    this.meta.updateTag({ property: 'og:image:height', content: '630' });
+    this.meta.updateTag({ property: 'og:image:width', content: String(SOCIAL_IMAGE_WIDTH) });
+    this.meta.updateTag({ property: 'og:image:height', content: String(SOCIAL_IMAGE_HEIGHT) });
     this.meta.updateTag({ name: 'twitter:card', content: 'summary_large_image' });
     this.meta.updateTag({ name: 'twitter:title', content: title });
     this.meta.updateTag({ name: 'twitter:description', content: description });
@@ -219,7 +225,7 @@ export class PodcastPagina implements OnInit {
       publisher: {
         '@type': 'Organization',
         name: 'Mas Latino',
-        logo: { '@type': 'ImageObject', url: 'https://maslatino.com/logo.png' }
+        logo: { '@type': 'ImageObject', url: 'https://maslatino.com/assets/iconosnavbar/maslatinologo.png' }
       },
       keywords: podcast.tags?.join(', ') || '',
       hasPart: (podcast.episodes ?? []).slice(0, 10).map(ep => ({
@@ -252,16 +258,9 @@ export class PodcastPagina implements OnInit {
     this.meta.updateTag({ name: 'description', content: 'El podcast solicitado no está disponible.' });
     this.meta.updateTag({ property: 'og:title', content: 'Podcast no encontrado' });
     this.meta.updateTag({ property: 'og:description', content: 'El podcast solicitado no está disponible.' });
-    this.meta.updateTag({ property: 'og:image', content: 'https://maslatino.com/assets/og.jpg' });
+    this.meta.updateTag({ property: 'og:image', content: ensureAbsoluteHttpsUrl('') });
   }
 
-  private ensureAbsoluteHttpsUrl(url: string): string {
-    if (!url || url.trim() === '') return 'https://maslatino.com/assets/og.jpg';
-    if (url.startsWith('https://')) return url;
-    if (url.startsWith('http://')) return url.replace('http://', 'https://');
-    // URL relativa — prepend dominio
-    return `https://maslatino.com${url.startsWith('/') ? '' : '/'}${url}`;
-  }
 
   private buildQueue(podcast: Podcast): AudioPlayerTrack[] {
     return (podcast.episodes ?? [])

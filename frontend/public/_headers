@@ -1,0 +1,29 @@
+# Cabeceras de cache del navegador.
+#
+# Sin este archivo Netlify sirve todo lo estatico con
+# "max-age=0, must-revalidate": cada carga de pagina revalidaba los ~7 bundles
+# y cada imagen. En el plan por creditos las peticiones se pagan (2 creditos
+# por 10.000), asi que eran miles de peticiones al mes que no hacian falta.
+
+# Bundles de Angular: el build los publica con hash de contenido
+# (outputHashing: "all"), asi que un cambio siempre estrena nombre de archivo.
+# Son inmutables por construccion y se pueden cachear un año sin riesgo.
+/*.js
+  Cache-Control: public, max-age=31536000, immutable
+/*.css
+  Cache-Control: public, max-age=31536000, immutable
+
+# Imagenes, iconos y fuentes de public/: NO llevan hash, asi que se reemplazan
+# con el mismo nombre. Una semana fresco y un mes sirviendo el anterior
+# mientras se refresca: si se cambia un icono, tarda en propagarse, pero no
+# hay que esperar un año.
+/assets/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+
+# Los sitemaps y robots.txt los relee Google a menudo; una hora basta.
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+/news-sitemap.xml
+  Cache-Control: public, max-age=3600
+/robots.txt
+  Cache-Control: public, max-age=3600

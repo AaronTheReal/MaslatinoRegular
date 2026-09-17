@@ -41,7 +41,7 @@
           },
           "configurations": {
             "production": {
-              "sourceMap": true,
+              "sourceMap": false,
               "optimization": {
                 "scripts": true,
                 "styles": true,
