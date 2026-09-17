@@ -179,6 +179,14 @@
   font-weight: 400;
 }
 
+/* El botón de compartir de la firma convive en línea con autor y fecha; el
+   componente es display:block por defecto. */
+.noticia-meta__share {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
 .noticia-summary {
   font-style: italic;
   margin-bottom: 1.25rem;

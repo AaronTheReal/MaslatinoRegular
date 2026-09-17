@@ -17,12 +17,23 @@ import { switchMap, tap, catchError } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 import {AdsComponent} from '../../componentes/ads/ads'
 import { CdnImagePipe } from '../../pipes/cdn-image.pipe';
+import { ShareButton } from '../../shared/share-button/share-button';
+import {
+  DEFAULT_AUTHOR,
+  SOCIAL_IMAGE_HEIGHT,
+  SOCIAL_IMAGE_TYPE,
+  SOCIAL_IMAGE_WIDTH,
+  buildSocialDescription,
+  buildSocialImageUrl,
+  ensureAbsoluteHttpsUrl,
+  truncate,
+} from '../../shared/social-preview';
 declare const twttr: any;
 
 @Component({
   selector: 'app-noticias-individuales',
   standalone: true,
-  imports: [CommonModule, RouterModule, DatePipe, FormsModule,AdsComponent, CdnImagePipe],
+  imports: [CommonModule, RouterModule, DatePipe, FormsModule,AdsComponent, CdnImagePipe, ShareButton],
   templateUrl: './noticias-individuales.html',
   styleUrls: ['./noticias-individuales.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -84,14 +95,28 @@ export class NoticiasIndividuales {
             this.setResponseStatus(200);
             const title = noticia.title || 'Noticia';
             const socialTitle = noticia.meta?.ogTitle || title;
-            const description = (noticia.meta?.description || noticia.summary || 'Descripción no disponible')
-              .replace(/<[^>]*>/g, '')    // strip HTML
-              .slice(0, 160);
-            const socialDescription = (noticia.meta?.ogDescription || description)
-              .replace(/<[^>]*>/g, '')
-              .slice(0, 300);
+            const description = truncate(
+              noticia.meta?.description || noticia.summary || 'Descripción no disponible',
+              160
+            );
+            const authorName = noticia.authorName?.trim() || DEFAULT_AUTHOR;
+            // La firma va DENTRO de la descripción social porque la tarjeta de
+            // WhatsApp no tiene campo de autor: title, description, imagen y
+            // dominio es todo lo que pinta. Delante, además, porque recorta a
+            // dos líneas.
+            const socialDescription = buildSocialDescription(
+              authorName,
+              noticia.meta?.ogDescription || description
+            );
             const rawImage = noticia.meta?.image || '';
-            const image = this.ensureAbsoluteHttpsUrl(rawImage);
+            const image = buildSocialImageUrl(rawImage);
+            // El panel guarda a veces el slug como alt ("alex-saab-declara-…"),
+            // que leído en voz alta no dice nada. Si no parece una frase, mejor
+            // el titular.
+            const rawAlt = noticia.meta?.imageAltGlobal?.trim() || '';
+            const imageAlt = rawAlt.includes(' ') ? rawAlt : title;
+            const publishedDate = (noticia as any).publishAt ?? noticia.createdAt;
+            const modifiedDate = noticia.contentUpdatedAt ?? noticia.updatedAt ?? publishedDate;
             const url = `https://maslatino.com/noticia/${encodeURIComponent(noticia.slug ?? '')}`;
 
             // ── Meta tags ─────────────────────────────────────────────────
@@ -103,22 +128,34 @@ export class NoticiasIndividuales {
             this.meta.updateTag({ property: 'og:title', content: socialTitle });
             this.meta.updateTag({ property: 'og:description', content: socialDescription });
             this.meta.updateTag({ property: 'og:url', content: url });
+            this.meta.updateTag({ property: 'og:site_name', content: 'Más Latino' });
+            this.meta.updateTag({ property: 'og:locale', content: 'es_US' });
             this.meta.updateTag({ property: 'og:image', content: image });
             this.meta.updateTag({ property: 'og:image:secure_url', content: image });
-            if (noticia.meta?.imageWidth) {
-              this.meta.updateTag({ property: 'og:image:width', content: String(noticia.meta.imageWidth) });
+            this.meta.updateTag({ property: 'og:image:alt', content: imageAlt });
+            // El Image CDN devuelve siempre el mismo formato, así que las
+            // medidas son constantes y van SIEMPRE. Antes salían del backend,
+            // que no las manda nunca, y se acababan borrando: sin ellas el bot
+            // tiene que bajarse la imagen entera para decidir si le sirve.
+            this.meta.updateTag({ property: 'og:image:width', content: String(SOCIAL_IMAGE_WIDTH) });
+            this.meta.updateTag({ property: 'og:image:height', content: String(SOCIAL_IMAGE_HEIGHT) });
+            this.meta.updateTag({ property: 'og:image:type', content: SOCIAL_IMAGE_TYPE });
+            // Autoría para Google Discover, LinkedIn y los lectores de feeds.
+            // OJO: WhatsApp ignora estas etiquetas; allí el autor se ve porque
+            // va dentro de og:description.
+            this.meta.updateTag({ name: 'author', content: authorName });
+            this.meta.updateTag({ property: 'article:author', content: authorName });
+            // Sin fecha no se pone nada: `toIsoDate` devuelve 1970 y una nota
+            // fechada en 1970 es peor señal que una nota sin fecha.
+            if (publishedDate) {
+              this.meta.updateTag({ property: 'article:published_time', content: this.toIsoDate(publishedDate) });
             } else {
-              this.meta.removeTag('property="og:image:width"');
+              this.meta.removeTag('property="article:published_time"');
             }
-            if (noticia.meta?.imageHeight) {
-              this.meta.updateTag({ property: 'og:image:height', content: String(noticia.meta.imageHeight) });
+            if (modifiedDate) {
+              this.meta.updateTag({ property: 'article:modified_time', content: this.toIsoDate(modifiedDate) });
             } else {
-              this.meta.removeTag('property="og:image:height"');
-            }
-            if (noticia.meta?.imageType) {
-              this.meta.updateTag({ property: 'og:image:type', content: noticia.meta.imageType });
-            } else {
-              this.meta.removeTag('property="og:image:type"');
+              this.meta.removeTag('property="article:modified_time"');
             }
             this.meta.updateTag({ name: 'twitter:card', content: noticia.meta?.twitterCard || 'summary_large_image' });
             this.meta.updateTag({ name: 'twitter:title', content: socialTitle });
@@ -140,9 +177,6 @@ export class NoticiasIndividuales {
             // ── JSON-LD NewsArticle — en SSR Y en browser, sin duplicar ──
             // SSR: se serializa en el HTML → los bots lo ven.
             // Browser (navegación client-side): actualiza el script existente.
-            const publishedDate = (noticia as any).publishAt ?? noticia.createdAt;
-            const modifiedDate = noticia.contentUpdatedAt ?? noticia.updatedAt ?? publishedDate;
-            const authorName = noticia.authorName?.trim() || 'Redacción Mas Latino';
             const author = noticia.authorName?.trim()
               ? { '@type': 'Person', name: authorName }
               : {
@@ -156,7 +190,9 @@ export class NoticiasIndividuales {
               '@type': 'NewsArticle',
               headline: title,
               description: description,
-              image: [image],
+              // Aquí va la portada original, no la recortada del CDN: Google
+              // prefiere la resolución más alta disponible para NewsArticle.
+              image: [ensureAbsoluteHttpsUrl(rawImage)],
               datePublished: this.toIsoDate(publishedDate),
               dateModified: this.toIsoDate(modifiedDate),
               author,
@@ -278,16 +314,6 @@ export class NoticiasIndividuales {
     return !!x && typeof x === 'object' && 'name' in (x as any);
   }
 
-  private ensureAbsoluteHttpsUrl(url: string): string {
-    if (!url || url.trim() === '') {
-      return 'https://maslatino.com/assets/iconosnavbar/maslatinologo.png';
-    }
-    if (url.startsWith('https://')) return url;
-    if (url.startsWith('http://')) return url.replace('http://', 'https://');
-    // URL relativa — prepend dominio
-    return `https://maslatino.com${url.startsWith('/') ? '' : '/'}${url}`;
-  }
-
   private toIsoDate(value: string | Date | undefined): string {
     const date = value ? new Date(value) : new Date(0);
     return Number.isNaN(date.getTime()) ? new Date(0).toISOString() : date.toISOString();
@@ -337,11 +363,16 @@ export class NoticiasIndividuales {
   private clearArticleOnlyMetadata(): void {
     this.meta.removeTag('property="og:image"');
     this.meta.removeTag('property="og:image:secure_url"');
+    this.meta.removeTag('property="og:image:alt"');
     this.meta.removeTag('property="og:image:width"');
     this.meta.removeTag('property="og:image:height"');
     this.meta.removeTag('property="og:image:type"');
     this.meta.removeTag('property="og:url"');
     this.meta.removeTag('name="twitter:image"');
+    this.meta.removeTag('name="author"');
+    this.meta.removeTag('property="article:author"');
+    this.meta.removeTag('property="article:published_time"');
+    this.meta.removeTag('property="article:modified_time"');
 
     const canonical = this.document.querySelector('link[rel="canonical"]');
     if (canonical?.parentNode) {

@@ -1,0 +1,151 @@
+:host {
+  display: block;
+}
+
+/* ===== Variante compacta: junto a la firma de la nota ===== */
+.share-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 22px;
+  background: transparent;
+  color: #555;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.share-chip:hover {
+  background: rgba(244, 67, 54, 0.06);
+  border-color: rgba(244, 67, 54, 0.35);
+  color: #f44336;
+  transform: translateY(-1px);
+}
+
+.share-chip:focus-visible {
+  outline: 2px solid #f44336;
+  outline-offset: 2px;
+}
+
+.share-chip__icon {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+/* ===== Variante completa: barra al pie de la noticia ===== */
+.share-bar {
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.share-bar__title {
+  margin: 0 0 16px;
+  font-family: "Noir Pro", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  font-weight: 600;
+  color: #222;
+}
+
+.share-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: clamp(8px, 1.4vw, 10px) clamp(14px, 2vw, 18px);
+  border: 1px solid transparent;
+  border-radius: 22px;
+  background: #f1f1f1;
+  color: #222;
+  font-family: inherit;
+  font-size: clamp(0.85rem, 1.5vw, 0.95rem);
+  font-weight: 500;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease, background 0.15s ease;
+}
+
+.share-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.share-btn:focus-visible {
+  outline: 2px solid #222;
+  outline-offset: 2px;
+}
+
+.share-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  flex: 0 0 auto;
+}
+
+/* Colores de cada destino: los de marca, que es como se reconocen de un
+   vistazo sin necesidad de leer la etiqueta. */
+.share-btn--native {
+  background: #f44336;
+  color: #fff;
+}
+
+.share-btn--whatsapp {
+  background: #25d366;
+  color: #fff;
+}
+
+.share-btn--facebook {
+  background: #1877f2;
+  color: #fff;
+}
+
+.share-btn--x {
+  background: #000;
+  color: #fff;
+}
+
+.share-btn--copy {
+  background: #f1f1f1;
+  color: #222;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.share-bar__status {
+  display: block;
+  min-height: 1.2em;
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #2e7d32;
+}
+
+@media (max-width: 768px) {
+  .share-bar {
+    margin-top: 32px;
+    padding-top: 22px;
+  }
+
+  /* En móvil manda la hoja del sistema; los demás botones se reparten el
+     ancho para que no quede una fila rota a media pantalla. */
+  .share-btn {
+    flex: 1 1 calc(50% - 10px);
+    justify-content: center;
+  }
+
+  .share-btn--native {
+    flex-basis: 100%;
+  }
+}

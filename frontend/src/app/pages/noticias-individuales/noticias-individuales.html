@@ -58,6 +58,14 @@
             itemprop="dateModified">
             <!--(Actualizado: {{ noticia?.updatedAt | date: 'mediumDate' }})-->
           </span>
+
+          <app-share-button
+            class="noticia-meta__share"
+            variant="compacto"
+            [url]="'https://maslatino.com/noticia/' + (noticia?.slug || '')"
+            [title]="noticia?.title || ''"
+            [text]="noticia?.summary || ''"
+          ></app-share-button>
         </div>
 
         <p class="noticia-summary" itemprop="description">{{ noticia?.summary || 'Sin resumen' }}</p>
@@ -188,6 +196,15 @@
             </ng-container>
           </ng-container>
         </div>
+
+        <!-- Compartir al terminar de leer, que es cuando apetece. La URL es la
+             canónica, sin parámetros de campaña: WhatsApp cachea la preview
+             por URL exacta. -->
+        <app-share-button
+          [url]="'https://maslatino.com/noticia/' + (noticia?.slug || '')"
+          [title]="noticia?.title || ''"
+          [text]="noticia?.summary || ''"
+        ></app-share-button>
       </article>
 
                       <app-ads></app-ads>
