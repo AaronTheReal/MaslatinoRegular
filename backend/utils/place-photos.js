@@ -134,7 +134,10 @@ export async function servePlacePhoto(req, res) {
     res.set('Cache-Control', 'private, max-age=600');
     return res.redirect(302, photoUri);
   } catch (error) {
-    const status = error?.response?.status === 404 ? 404 : 502;
+    // Google responde 400 cuando el `photoName` caducó: es una foto que ya no
+    // existe, no una caída nuestra, así que no se reporta como 502.
+    const googleStatus = error?.response?.status;
+    const status = googleStatus === 400 || googleStatus === 404 ? 404 : 502;
     console.error('servePlacePhoto error:', error?.response?.data || error.message);
     return res.status(status).json({ message: 'No se pudo obtener la foto del lugar' });
   }

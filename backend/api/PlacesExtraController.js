@@ -16,7 +16,7 @@ const CATEGORY_MODELS = {
 class PlacesExtraController {
 
   // Lógica común para GET /turismo/:city, /hangout/:city y /fanzone/:city
-  // Si no hay datos en Mongo, automáticamente refresca desde Google Places.
+  // Si no hay datos en Mongo o ya caducaron, refresca desde Google Places.
   async getBestPlaces(category, req, res) {
     try {
       const { model, notFound } = CATEGORY_MODELS[category];
@@ -27,13 +27,18 @@ class PlacesExtraController {
         return res.status(400).json({ message: 'Falta el parámetro :city' });
       }
 
-      let data = await model.findOne({ city: cityLower });
+      const cached = await model.findOne({ city: cityLower });
 
-      // Auto-refresh si no existe o está vacío
-      if (!data || !data.places || data.places.length === 0) {
-        console.log(`ℹ️  [${category}] Sin datos para ${cityLower}, refrescando desde Google Places...`);
-        data = await GooglePlacesService.updateCityCategory(category, cityLower);
-      }
+      // Las fotos de Google caducan: un documento viejo trae fotos rotas.
+      const data = await GooglePlacesService.ensureFresh(
+        cached,
+        'places',
+        `${category}:${cityLower}`,
+        () => {
+          console.log(`ℹ️  [${category}] Datos ausentes o viejos para ${cityLower}, refrescando desde Google Places...`);
+          return GooglePlacesService.updateCityCategory(category, cityLower);
+        }
+      );
 
       if (!data || !data.places || data.places.length === 0) {
         return res.status(404).json({ message: `${notFound} ${city}.` });

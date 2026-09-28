@@ -41,7 +41,65 @@ const CATEGORY_CONFIG = {
   },
 };
 
+/**
+ * Antigüedad máxima de un documento de lugares antes de volver a pedirlo.
+ *
+ * Google avisa de que el `photoName` no se puede cachear porque caduca: pasado
+ * un tiempo, `/media` responde 400 "The photo resource in the request is
+ * invalid" y todas las tarjetas se quedan sin foto. Antes solo se refrescaba
+ * cuando la ciudad no tenía datos, así que un documento guardado una vez servía
+ * fotos rotas para siempre (Nueva York, guardada el 14-ago, ya no cargaba
+ * ninguna el 28-sep).
+ */
+const PLACES_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+// Refrescos en curso por `categoria:ciudad`. La página de una ciudad pide varias
+// secciones a la vez y varios visitantes pueden llegar juntos: sin esto, cada
+// petición sobre un documento viejo lanzaría su propia búsqueda de pago.
+const inFlightRefreshes = new Map();
+
 class GooglePlacesService {
+
+  /**
+   * `true` si el documento no existe, está vacío o es más viejo que
+   * `PLACES_MAX_AGE_MS`. `listField` es `restaurants` o `places` según el modelo.
+   */
+  static needsRefresh(doc, listField, now = Date.now()) {
+    if (!doc?.[listField]?.length) return true;
+
+    const updatedAt = new Date(doc.lastUpdated).getTime();
+    if (!Number.isFinite(updatedAt)) return true;
+
+    return now - updatedAt > PLACES_MAX_AGE_MS;
+  }
+
+  /**
+   * Devuelve `doc` si sigue vigente o el resultado de `refresh()` si no.
+   *
+   * Si Google falla y ya había datos, se sirven los viejos: mejor tarjetas sin
+   * foto que la sección entera en error. Si no había nada, el error se propaga.
+   */
+  static async ensureFresh(doc, listField, key, refresh) {
+    if (!GooglePlacesService.needsRefresh(doc, listField)) return doc;
+
+    let pending = inFlightRefreshes.get(key);
+    if (!pending) {
+      pending = Promise.resolve()
+        .then(refresh)
+        .finally(() => inFlightRefreshes.delete(key));
+      inFlightRefreshes.set(key, pending);
+    }
+
+    try {
+      return await pending;
+    } catch (error) {
+      if (doc?.[listField]?.length) {
+        console.error(`⚠️  No se pudo refrescar ${key}, se sirven los datos guardados:`, error.message);
+        return doc;
+      }
+      throw error;
+    }
+  }
 
   /**
    * Referencia de la foto tal y como la devuelve Google. Solo se guarda el

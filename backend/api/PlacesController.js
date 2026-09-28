@@ -21,7 +21,7 @@ const SUPPORTED_CITIES = [
 class PlacesController {
 
   // GET /restaurants/:city
-  // Si no hay datos en Mongo, automáticamente refresca desde Google Places.
+  // Si no hay datos en Mongo o ya caducaron, refresca desde Google Places.
   async apiGetBestRestaurants(req, res) {
     try {
       const { city } = req.params;
@@ -31,13 +31,18 @@ class PlacesController {
         return res.status(400).json({ message: 'Falta el parámetro :city' });
       }
 
-      let data = await BestRestaurants.findOne({ city: cityLower });
+      const cached = await BestRestaurants.findOne({ city: cityLower });
 
-      // Auto-refresh si no existe o está vacío
-      if (!data || !data.restaurants || data.restaurants.length === 0) {
-        console.log(`ℹ️  Sin datos para ${cityLower}, refrescando desde Google Places...`);
-        data = await GooglePlacesService.updateCity(cityLower);
-      }
+      // Las fotos de Google caducan: un documento viejo trae fotos rotas.
+      const data = await GooglePlacesService.ensureFresh(
+        cached,
+        'restaurants',
+        `restaurants:${cityLower}`,
+        () => {
+          console.log(`ℹ️  Datos ausentes o viejos para ${cityLower}, refrescando desde Google Places...`);
+          return GooglePlacesService.updateCity(cityLower);
+        }
+      );
 
       if (!data || !data.restaurants || data.restaurants.length === 0) {
         return res.status(404).json({

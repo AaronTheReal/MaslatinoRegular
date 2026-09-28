@@ -220,3 +220,52 @@ test('un documento con el formato de fotos anterior llega vacío al frontend', (
   assert.deepEqual(publico.photos, [], 'sin photoName no hay foto que servir');
   assert.equal(JSON.stringify(publico).includes('key='), false);
 });
+
+test('un documento con más de un día se vuelve a pedir a Google', () => {
+  // Los `photoName` de Google caducan: Nueva York, guardada el 14-ago, ya
+  // respondía 400 en todas sus fotos el 28-sep.
+  const ahora = Date.parse('2026-09-28T12:00:00Z');
+  const conLugares = (lastUpdated) => ({ lastUpdated, restaurants: [{ placeId: 'p1' }] });
+
+  assert.equal(GooglePlacesService.needsRefresh(null, 'restaurants', ahora), true);
+  assert.equal(GooglePlacesService.needsRefresh({ restaurants: [] }, 'restaurants', ahora), true);
+  assert.equal(
+    GooglePlacesService.needsRefresh(conLugares('2026-09-28T02:00:00Z'), 'restaurants', ahora),
+    false,
+    'lo de hoy se sirve tal cual'
+  );
+  assert.equal(
+    GooglePlacesService.needsRefresh(conLugares('2026-08-14T18:57:56Z'), 'restaurants', ahora),
+    true
+  );
+  assert.equal(GooglePlacesService.needsRefresh({ places: [{}] }, 'places', ahora), true);
+});
+
+test('si Google falla se sirven los datos viejos en vez de un error', async () => {
+  const viejo = { lastUpdated: '2026-06-25T16:03:52Z', restaurants: [{ placeId: 'p1' }] };
+  const falla = async () => { throw new Error('cuota agotada'); };
+
+  const servido = await GooglePlacesService.ensureFresh(viejo, 'restaurants', 'test:viejo', falla);
+  assert.equal(servido, viejo);
+
+  await assert.rejects(
+    GooglePlacesService.ensureFresh(null, 'restaurants', 'test:vacio', falla),
+    /cuota agotada/u,
+    'sin nada guardado no hay a qué volver'
+  );
+});
+
+test('peticiones simultáneas sobre un documento viejo comparten un solo refresco', async () => {
+  let llamadas = 0;
+  const nuevo = { lastUpdated: new Date(), restaurants: [{ placeId: 'p1' }] };
+  const refresh = async () => { llamadas += 1; return nuevo; };
+
+  const [a, b] = await Promise.all([
+    GooglePlacesService.ensureFresh(null, 'restaurants', 'test:simultaneo', refresh),
+    GooglePlacesService.ensureFresh(null, 'restaurants', 'test:simultaneo', refresh),
+  ]);
+
+  assert.equal(llamadas, 1);
+  assert.equal(a, nuevo);
+  assert.equal(b, nuevo);
+});
