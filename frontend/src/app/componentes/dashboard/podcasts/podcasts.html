@@ -47,9 +47,14 @@
 
             <div class="card-container">
               <div class="card-image-wrapper">
+                <!-- La portada se ve a 110–180 px (podcasts.css). Con srcset cada
+                     pantalla baja su tamaño: 400 px en un móvil normal en vez de
+                     500, y 500 en los de alta densidad, así que nunca se ve peor. -->
                 <img
                   class="card-image"
                   [src]="getCover(p) | cdnimg:500"
+                  [attr.srcset]="getCover(p) | cdnsrcset: [200, 400, 500]"
+                  sizes="180px"
                   [alt]="getTitle(p)"
                   loading="lazy"
                 />

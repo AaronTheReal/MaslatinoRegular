@@ -14,12 +14,17 @@
             [attr.aria-label]="'Ver qué pasa en ' + city.name"
           >
             <!-- Los originales pesan hasta 8.7 MB y aquí se ven a ~400 px:
-                 el Image CDN los sirve redimensionados y en WebP/AVIF. -->
+                 el Image CDN los sirve redimensionados y en WebP/AVIF.
+                 Esta sección es lo primero de la portada, así que las 3 primeras
+                 tarjetas NO van en lazy: con lazy, el navegador las pedía al
+                 final y la imagen principal tardaba 10 s en móvil (Lighthouse,
+                 02/10/2026). La primera, además, con prioridad alta. -->
             <img
               class="city-card__image"
               [src]="city.image | cdnimg:600"
               [alt]="'Vista de ' + city.name"
-              loading="lazy"
+              [attr.loading]="$index < 3 ? 'eager' : 'lazy'"
+              [attr.fetchpriority]="$index === 0 ? 'high' : null"
               decoding="async"
             />
             <span class="city-card__overlay" aria-hidden="true"></span>

@@ -20,6 +20,18 @@ export interface ArchivoItem {
   mes: number;
   nombre: string;
 }
+
+/** Lo único que lee una tarjeta de la portada (noticias-destacadas). */
+function aTarjeta(n: Noticia): Noticia {
+  return {
+    _id: n._id,
+    title: n.title,
+    slug: n.slug,
+    createdAt: n.createdAt,
+    press: n.press,
+    meta: { image: n.meta?.image },
+  } as Noticia;
+}
 // Define esta interfaz en tu service o en un models.ts
 export interface PaginatedNoticias {
   items: Noticia[];
@@ -163,6 +175,32 @@ export class NoticiasService {
     const observable = this.http
       .get<Noticia[]>(`${this.baseUrl}/noticias/recientes?limit=${limit}`)
       .pipe(map(list => list.filter(n => !n.press)), shareReplay(1));
+    if (isPlatformServer(this.platformId)) {
+      return observable.pipe(tap(data => this.ts.set(key, data)));
+    }
+    return observable;
+  }
+
+  /**
+   * Las notas recientes con solo lo que pintan las tarjetas de la portada.
+   *
+   * getNoticiasRecientes() devuelve cada nota completa, con todo su cuerpo, y
+   * en SSR eso viaja embebido en el HTML para hidratar: ~119 KB por 10 notas,
+   * y además dos veces (esta copia y la de la caché HTTP de hidratación). La
+   * portada solo pinta 5 tarjetas con título, imagen, fecha y slug. Aquí se
+   * recorta antes de guardarlo, y app.config deja /noticias/recientes fuera de
+   * la caché HTTP de hidratación porque este servicio ya guarda su copia.
+   */
+  getNoticiasRecientesTarjetas(limit = 10): Observable<Noticia[]> {
+    const key = makeStateKey<Noticia[]>('noticias-recientes-tarjetas-' + limit);
+    if (this.ts.hasKey(key)) {
+      const data = this.ts.get<Noticia[]>(key, []);
+      this.ts.remove(key);
+      return of(data);
+    }
+    const observable = this.http
+      .get<Noticia[]>(`${this.baseUrl}/noticias/recientes?limit=${limit}`)
+      .pipe(map(list => list.filter(n => !n.press).map(aTarjeta)), shareReplay(1));
     if (isPlatformServer(this.platformId)) {
       return observable.pipe(tap(data => this.ts.set(key, data)));
     }

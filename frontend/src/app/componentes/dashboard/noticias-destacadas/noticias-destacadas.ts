@@ -24,7 +24,9 @@ export class NoticiasDestacadas {
   // trackBy para evitar recrear el DOM de las tarjetas en cada render
   readonly trackBySlug = (_: number, n: Noticia) => n?.slug ?? _;
 
-  readonly noticias$: Observable<Noticia[]> = this.noticiasService.getNoticiasRecientes(10).pipe(
+  // Versión recortada: solo título, slug, imagen y fecha, que es lo que pintan
+  // estas tarjetas. Ver NoticiasService.getNoticiasRecientesTarjetas.
+  readonly noticias$: Observable<Noticia[]> = this.noticiasService.getNoticiasRecientesTarjetas(10).pipe(
     map(list => list.filter(n => !n.press).slice(0, 5)),
     tap(noticias => {
       // Inserta JSON-LD ItemList SOLO en SSR (se serializa en HTML y Google lo ve)

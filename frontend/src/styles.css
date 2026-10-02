@@ -1,21 +1,26 @@
-/* === 1) Registrar la familia "Noir Pro" (Regular 400, Medium 500, SemiBold 600) === */
+/* === 1) Registrar la familia "Noir Pro" (Light 300, Regular 400, Medium 500, SemiBold 600) ===
+   WOFF2 primero: es el formato que bajan todos los navegadores actuales. La
+   OTF queda detrás solo como respaldo. Mismas tablas: se ve idéntica. */
 @font-face {
   font-family: "Noir Pro";
-  src: url("/fonts/NoirPro-Regular.otf") format("opentype");
+  src: url("/fonts/NoirPro-Regular.woff2") format("woff2"),
+       url("/fonts/NoirPro-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Noir Pro";
-  src: url("/fonts/NoirPro-Medium.otf") format("opentype");
+  src: url("/fonts/NoirPro-Medium.woff2") format("woff2"),
+       url("/fonts/NoirPro-Medium.otf") format("opentype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Noir Pro";
-  src: url("/fonts/NoirPro-SemiBold.otf") format("opentype");
+  src: url("/fonts/NoirPro-SemiBold.woff2") format("woff2"),
+       url("/fonts/NoirPro-SemiBold.otf") format("opentype");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -23,7 +28,8 @@
 /* Ya tienes 400, 500, 600. Suma: */
 @font-face {
   font-family: "Noir Pro";
-  src: url("/fonts/NoirPro-Light.otf") format("opentype");
+  src: url("/fonts/NoirPro-Light.woff2") format("woff2"),
+       url("/fonts/NoirPro-Light.otf") format("opentype");
   font-weight: 300;
   font-style: normal;
   font-display: swap;
