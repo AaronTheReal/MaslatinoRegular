@@ -14,7 +14,7 @@
   controles lo manejan vía su API. La lógica de cola vive en el servicio.
   ============================================================================
 -->
-<ng-container *ngIf="audioPlayer.isOpen()">
+<ng-container *ngIf="audioPlayer.isOpen() && muxListo()">
   <div class="reproductor" [class.reproductor--min]="minimized()">
 
     <!-- 0) ACCIONES DE VENTANA: minimizar / expandir + cerrar -->
