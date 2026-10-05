@@ -1,7 +1,7 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, PLATFORM_ID, inject } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { PodcastService, PodcastPayload, EpisodePayload } from './../../../services/podcast-service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { CategoriaService, CategoriaPayload } from '../../../services/categorias-service';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
@@ -58,7 +58,14 @@ export class PanelPodcast implements OnInit {
     muxAssetId: new FormControl<string | null>('')
   });
 
-  constructor(private podcastService: PodcastService, private categoriasService: CategoriaService, private muxService: MuxService) {}
+  constructor(private podcastService: PodcastService, private categoriasService: CategoriaService, private muxService: MuxService) {
+    // La vista previa del episodio usa <mux-player>. Antes funcionaba porque el
+    // reproductor flotante cargaba @mux/mux-player en todas las páginas; ahora
+    // solo lo carga al abrirse, así que el panel lo importa por su cuenta.
+    if (isPlatformBrowser(inject(PLATFORM_ID))) {
+      import('@mux/mux-player');
+    }
+  }
 
   ngOnInit() {
     this.loadPodcasts();

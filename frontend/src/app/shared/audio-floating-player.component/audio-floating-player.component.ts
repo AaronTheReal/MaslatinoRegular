@@ -1,10 +1,12 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import {
   Component,
   CUSTOM_ELEMENTS_SCHEMA,
   HostListener,
+  PLATFORM_ID,
   inject,
-  afterNextRender,
+  effect,
+  untracked,
   signal,
   computed,
 } from '@angular/core';
@@ -45,11 +47,43 @@ export class AudioFloatingPlayerComponent {
     this.muted() ? 0 : Math.round(this.volume() * 100)
   );
 
+  // El reproductor se pinta solo cuando @mux/mux-player ya está cargado.
+  readonly muxListo = signal(false);
+
+  private readonly platformId = inject(PLATFORM_ID);
+
   constructor() {
-    // @mux/mux-player es browser-only — importar dinámico para no crashear SSR
-    afterNextRender(() => {
-      import('@mux/mux-player');
+    // Este componente vive en todas las páginas (app.html). Antes importaba
+    // @mux/mux-player tras el primer render, así que cada visita nueva
+    // descargaba ~275 KB comprimidos (1 MB de JavaScript) aunque nadie fuera a
+    // escuchar nada. Ahora se pide al abrir el reproductor.
+    effect(() => {
+      if (this.audioPlayer.isOpen()) untracked(() => this.cargarMux());
     });
+  }
+
+  private cargarMux(): void {
+    if (this.muxListo() || !isPlatformBrowser(this.platformId)) return;
+
+    // Lo normal es que ya esté cargado: la página del podcast, que es desde
+    // donde se abre este reproductor, lo importa al entrar. En ese caso se
+    // pinta en el mismo ciclo que antes, sin meter ninguna espera entre el
+    // toque y el arranque del audio (el navegador del celular solo deja sonar
+    // audio que arranca cerca de un toque).
+    if (this.muxYaCargado()) {
+      this.muxListo.set(true);
+      return;
+    }
+
+    this.importarMux().then(() => this.muxListo.set(true));
+  }
+
+  protected muxYaCargado(): boolean {
+    return !!customElements.get('mux-player');
+  }
+
+  protected importarMux(): Promise<unknown> {
+    return import('@mux/mux-player');
   }
 
   @HostListener('window:keydown', ['$event'])
