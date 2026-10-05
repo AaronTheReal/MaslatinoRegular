@@ -19,11 +19,12 @@
 # hay que esperar un año.
 /assets/*
   Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+# Las fuentes viven en /fonts/, no en /assets/: hasta el 04/10/2026 no las
+# cubria ninguna regla y cada visita volvia a preguntar por ellas.
+/fonts/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
 
-# Los sitemaps y robots.txt los relee Google a menudo; una hora basta.
-/sitemap.xml
-  Cache-Control: public, max-age=3600
-/news-sitemap.xml
-  Cache-Control: public, max-age=3600
+# robots.txt lo relee Google a menudo; una hora basta. Los sitemaps ya no
+# son archivos: los genera server.ts y llevan su propia cache.
 /robots.txt
   Cache-Control: public, max-age=3600

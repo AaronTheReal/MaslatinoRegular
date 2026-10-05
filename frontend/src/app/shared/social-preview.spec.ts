@@ -3,6 +3,7 @@ import {
   SOCIAL_DESCRIPTION_MAX,
   SOCIAL_IMAGE_HEIGHT,
   SOCIAL_IMAGE_WIDTH,
+  buildArticleImages,
   buildSocialDescription,
   buildSocialImageUrl,
   ensureAbsoluteHttpsUrl,
@@ -10,6 +11,44 @@ import {
 } from './social-preview';
 
 describe('social-preview', () => {
+  describe('buildArticleImages', () => {
+    const portada = 'https://d1w8u1yfnsws5m.cloudfront.net/uploads/2026/09/21/kraft.jpg';
+    const pixeles = (url: string) => {
+      const w = Number(new URL(url).searchParams.get('w'));
+      const h = Number(new URL(url).searchParams.get('h'));
+      return { w, h, total: w * h };
+    };
+
+    it('pone primero la portada original y detrás los tres recortes', () => {
+      const imagenes = buildArticleImages(portada);
+
+      expect(imagenes.length).toBe(4);
+      expect(imagenes[0]).toBe(portada);
+      expect(imagenes.slice(1).every((u) => u.startsWith('https://maslatino.com/.netlify/images?'))).toBeTrue();
+    });
+
+    it('da las proporciones 16:9, 4:3 y 1:1 que pide Google', () => {
+      const [, ancha, media, cuadrada] = buildArticleImages(portada).map((u, i) => (i ? pixeles(u) : null));
+
+      expect(ancha!.w / ancha!.h).toBeCloseTo(16 / 9, 2);
+      expect(media!.w / media!.h).toBeCloseTo(4 / 3, 2);
+      expect(cuadrada!.w / cuadrada!.h).toBe(1);
+    });
+
+    it('cada recorte llega a los 800.000 píxeles mínimos', () => {
+      const recortes = buildArticleImages(portada).slice(1).map(pixeles);
+
+      expect(recortes.every((r) => r.total >= 800_000)).toBeTrue();
+    });
+
+    it('sin portada usa el logo, también recortado', () => {
+      const imagenes = buildArticleImages('');
+
+      expect(imagenes[0]).toContain('maslatinologo.png');
+      expect(imagenes.slice(1).every((u) => u.includes(encodeURIComponent('maslatinologo.png')))).toBeTrue();
+    });
+  });
+
   describe('ensureAbsoluteHttpsUrl', () => {
     it('deja pasar una URL que ya es https', () => {
       const url = 'https://d1w8u1yfnsws5m.cloudfront.net/uploads/portada.jpg';

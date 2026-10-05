@@ -18,13 +18,15 @@
                  Esta sección es lo primero de la portada, así que las 3 primeras
                  tarjetas NO van en lazy: con lazy, el navegador las pedía al
                  final y la imagen principal tardaba 10 s en móvil (Lighthouse,
-                 02/10/2026). La primera, además, con prioridad alta. -->
+                 02/10/2026). Las dos primeras, además, con prioridad alta: en
+                 un móvil caben las dos en pantalla y la imagen principal que
+                 mide Google resultó ser la segunda (Miami). -->
             <img
               class="city-card__image"
               [src]="city.image | cdnimg:600"
               [alt]="'Vista de ' + city.name"
               [attr.loading]="$index < 3 ? 'eager' : 'lazy'"
-              [attr.fetchpriority]="$index === 0 ? 'high' : null"
+              [attr.fetchpriority]="$index < 2 ? 'high' : null"
               decoding="async"
             />
             <span class="city-card__overlay" aria-hidden="true"></span>

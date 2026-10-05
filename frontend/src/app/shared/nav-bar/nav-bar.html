@@ -14,11 +14,12 @@
 
   <!-- Botón hamburguesa accesible.
        Sin (keydown.enter): un <button> nativo ya dispara (click) con Enter y
-       el listener extra abría y cerraba el menú en la misma pulsación. -->
+       el listener extra abría y cerraba el menú en la misma pulsación.
+       Es un botón que despliega una navegación (aria-expanded + aria-controls),
+       no un menú de aplicación: por eso no lleva aria-haspopup. -->
   <button
     class="hamburger-btn"
     [attr.aria-label]="isMenuOpen ? 'Cerrar menú' : 'Abrir menú'"
-    aria-haspopup="true"
     [attr.aria-expanded]="isMenuOpen"
     aria-controls="nav-quick-menu"
     (click)="toggleMenu($event)"
@@ -31,32 +32,34 @@
   </button>
 </div>
 
-<!-- Panel dropdown (anclado a la derecha) -->
-<div
+<!-- Panel desplegable (anclado a la derecha).
+     Es la navegación del sitio: <nav> con listas de enlaces normales. Antes
+     llevaba role="menu"/"menuitem", que es para menús de aplicación y además
+     estaba mal anidado (Lighthouse, 04/10/2026). -->
+<nav
   id="nav-quick-menu"
   class="menu-panel"
   [class.open]="isMenuOpen"
-  role="menu"
-  aria-labelledby="nav-quick-menu"
+  aria-label="Menú del sitio"
   (click)="onPanelClick($event)"
   *ngIf="showFloatingActions && !hideFloatingActionsOnPodcastDetail"
 >
   <div class="menu-section">
     <div class="menu-title">Navegación</div>
     <ul class="menu-list">
-      <li role="menuitem">
+      <li>
         <a [routerLink]="['/nosotros-pagina']">Quienes somos</a>
       </li>
-      <li role="menuitem">
+      <li>
         <a [routerLink]="['/podcast-show']" >Podcasts</a>
       </li>
-      <li role="menuitem">
+      <li>
         <a [routerLink]="['/noticias-todas']" >Noticias</a>
       </li>
-      <li role="menuitem">
+      <li>
         <a [routerLink]="['/eventos-show']" >Eventos</a>
       </li>
-      <li role="menuitem">
+      <li>
         <a [routerLink]="['/cities']" >Ciudades</a>
       </li>
     </ul>
@@ -65,18 +68,18 @@
   <div class="menu-section">
     <div class="menu-title">Productos</div>
     <ul class="menu-list">
-      <li role="menuitem">
+      <li>
         <a href="https://maslatinonetwork.com">Más Latino Network</a>
       </li>
-      <li role="menuitem">
+      <li>
         <a href="https://www.youtube.com/@Mas.Latino" target="_blank" rel="noopener">Morning show</a>
       </li>
-      <li role="menuitem">
+      <li>
         <a [routerLink]="['/contactanos']" >Contáctanos</a>
       </li>
     </ul>
   </div>
-</div>
+</nav>
 
 <!-- Nav -->
 <nav class="navbar">

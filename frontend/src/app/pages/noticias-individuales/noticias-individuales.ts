@@ -23,9 +23,9 @@ import {
   SOCIAL_IMAGE_HEIGHT,
   SOCIAL_IMAGE_TYPE,
   SOCIAL_IMAGE_WIDTH,
+  buildArticleImages,
   buildSocialDescription,
   buildSocialImageUrl,
-  ensureAbsoluteHttpsUrl,
   truncate,
 } from '../../shared/social-preview';
 declare const twttr: any;
@@ -190,39 +190,54 @@ export class NoticiasIndividuales {
               '@type': 'NewsArticle',
               headline: title,
               description: description,
-              // Aquí va la portada original, no la recortada del CDN: Google
-              // prefiere la resolución más alta disponible para NewsArticle.
-              image: [ensureAbsoluteHttpsUrl(rawImage)],
+              // Portada original (la de más resolución) + recortes 16:9, 4:3 y
+              // 1:1, que es lo que Google pide para Historias destacadas y
+              // Discover. Ver buildArticleImages().
+              image: buildArticleImages(rawImage),
               datePublished: this.toIsoDate(publishedDate),
               dateModified: this.toIsoDate(modifiedDate),
               author,
+              // Mismo @id que la ficha de la organización de index.html, para
+              // que Google sepa que la editorial de cada nota es esa entidad.
               publisher: {
-                '@type': 'Organization',
-                name: 'Mas Latino',
+                '@type': 'NewsMediaOrganization',
+                '@id': 'https://maslatino.com/#organizacion',
+                name: 'Más Latino',
                 logo: {
                   '@type': 'ImageObject',
-                  url: 'https://maslatino.com/assets/iconosnavbar/maslatinologo.png'
+                  url: 'https://maslatino.com/assets/iconosnavbar/maslatinologo.png',
+                  width: 342,
+                  height: 159
                 }
               },
               mainEntityOfPage: { '@type': 'WebPage', '@id': url },
               keywords: noticia.tags?.join(', ') || '',
               articleSection: this.getCategoryNames(noticia.categories as Category[])
             };
+            this.setJsonLd('data-noticia', schema);
 
-            try {
-              const existingJsonLd = this.document.querySelector('script[type="application/ld+json"][data-noticia]');
-              if (existingJsonLd) {
-                this.renderer.setProperty(existingJsonLd, 'textContent', JSON.stringify(schema));
-              } else {
-                const script = this.renderer.createElement('script');
-                this.renderer.setAttribute(script, 'type', 'application/ld+json');
-                this.renderer.setAttribute(script, 'data-noticia', 'true');
-                this.renderer.setProperty(script, 'textContent', JSON.stringify(schema));
-                this.renderer.appendChild(this.document.head, script);
-              }
-            } catch (e) {
-              console.warn('Could not set JSON-LD schema:', e);
-            }
+            // ── Migas de pan: Inicio › Categoría › Nota ──────────────────
+            // Google las muestra en el resultado en lugar de la URL cruda.
+            // Si la nota no tiene categoría con slug, queda Inicio › Nota.
+            const categoria = (noticia.categories ?? [])
+              .find((c): c is Category => this.isCategory(c) && !!c.slug);
+            const migas = [
+              { name: 'Inicio', item: 'https://maslatino.com/' },
+              ...(categoria
+                ? [{ name: categoria.name, item: `https://maslatino.com/categoria/${encodeURIComponent(categoria.slug)}` }]
+                : []),
+              { name: title, item: url },
+            ];
+            this.setJsonLd('data-migas', {
+              '@context': 'https://schema.org',
+              '@type': 'BreadcrumbList',
+              itemListElement: migas.map((m, i) => ({
+                '@type': 'ListItem',
+                position: i + 1,
+                name: m.name,
+                item: m.item,
+              })),
+            });
 
             // Load Twitter widgets only in browser
             this.loadTwitterWidgetsIfNeeded(noticia);
@@ -379,11 +394,33 @@ export class NoticiasIndividuales {
       this.renderer.removeChild(canonical.parentNode, canonical);
     }
 
-    const existingJsonLd = this.document.querySelector(
-      'script[type="application/ld+json"][data-noticia]'
-    );
-    if (existingJsonLd?.parentNode) {
-      this.renderer.removeChild(existingJsonLd.parentNode, existingJsonLd);
+    for (const marca of ['data-noticia', 'data-migas']) {
+      const jsonLd = this.document.querySelector(`script[type="application/ld+json"][${marca}]`);
+      if (jsonLd?.parentNode) {
+        this.renderer.removeChild(jsonLd.parentNode, jsonLd);
+      }
+    }
+  }
+
+  /**
+   * Pone un bloque JSON-LD en el <head>, o actualiza el que ya hay con esa
+   * marca. Corre en SSR (queda en el HTML que leen los bots) y en el navegador
+   * (al navegar de una nota a otra no se duplica).
+   */
+  private setJsonLd(marca: 'data-noticia' | 'data-migas', datos: object): void {
+    try {
+      const existente = this.document.querySelector(`script[type="application/ld+json"][${marca}]`);
+      if (existente) {
+        this.renderer.setProperty(existente, 'textContent', JSON.stringify(datos));
+        return;
+      }
+      const script = this.renderer.createElement('script');
+      this.renderer.setAttribute(script, 'type', 'application/ld+json');
+      this.renderer.setAttribute(script, marca, 'true');
+      this.renderer.setProperty(script, 'textContent', JSON.stringify(datos));
+      this.renderer.appendChild(this.document.head, script);
+    } catch (e) {
+      console.warn('No se pudo poner el JSON-LD', marca, e);
     }
   }
 

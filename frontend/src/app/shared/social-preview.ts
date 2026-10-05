@@ -49,11 +49,31 @@ export function ensureAbsoluteHttpsUrl(url: string): string {
  * Es la misma receta que ya usaba la página de podcast.
  */
 export function buildSocialImageUrl(rawImage: string): string {
-  const absolute = ensureAbsoluteHttpsUrl(rawImage);
+  return recorteCdn(rawImage, SOCIAL_IMAGE_WIDTH, SOCIAL_IMAGE_HEIGHT);
+}
+
+/**
+ * Imágenes de la nota para los datos estructurados (NewsArticle).
+ *
+ * Google pide, para Historias destacadas y Discover, la imagen en tres
+ * proporciones —16:9, 4:3 y 1:1— de al menos 800.000 píxeles cada una. Va
+ * primero la portada original (la de mayor resolución) y detrás los tres
+ * recortes, que el CDN genera a 1200 px de ancho.
+ */
+export function buildArticleImages(rawImage: string): string[] {
+  return [
+    ensureAbsoluteHttpsUrl(rawImage),
+    recorteCdn(rawImage, 1200, 675),
+    recorteCdn(rawImage, 1200, 900),
+    recorteCdn(rawImage, 1200, 1200),
+  ];
+}
+
+function recorteCdn(rawImage: string, ancho: number, alto: number): string {
   const params = [
-    `url=${encodeURIComponent(absolute)}`,
-    `w=${SOCIAL_IMAGE_WIDTH}`,
-    `h=${SOCIAL_IMAGE_HEIGHT}`,
+    `url=${encodeURIComponent(ensureAbsoluteHttpsUrl(rawImage))}`,
+    `w=${ancho}`,
+    `h=${alto}`,
     'fit=cover',
     'fm=jpg',
     'q=80',

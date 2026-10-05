@@ -1,7 +1,56 @@
 import { AngularAppEngine, createRequestHandler } from '@angular/ssr'
 import { getContext } from '@netlify/angular-runtime/app-engine.js'
 
+import { DEFAULT_API_BASE_URL } from './app/services/api-base-url'
+import { buildNewsSitemapXml, buildSitemapXml } from './sitemaps'
+
 const angularAppEngine = new AngularAppEngine()
+
+// Sitemaps generados al pedirlos (ver sitemaps.ts). El de Google News se
+// refresca cada 10 min porque solo lista lo de las últimas 48 h; el general,
+// cada hora. Mientras se regenera, el CDN sigue sirviendo la copia anterior.
+const SITEMAP_CDN_CACHE = 'public, s-maxage=3600, stale-while-revalidate=86400, durable'
+const NEWS_SITEMAP_CDN_CACHE = 'public, s-maxage=600, stale-while-revalidate=3600, durable'
+const SITEMAP_TIMEOUT_MS = 10_000
+
+async function sitemapResponse(esNoticias: boolean): Promise<Response> {
+  const endpoint = esNoticias ? 'news-sitemap-data' : 'sitemap-data'
+  try {
+    const res = await fetch(`${DEFAULT_API_BASE_URL}/${endpoint}`, {
+      signal: AbortSignal.timeout(SITEMAP_TIMEOUT_MS),
+    })
+    if (!res.ok) throw new Error(`${endpoint} respondió ${res.status}`)
+
+    const datos = await res.json()
+    if (!Array.isArray(datos)) throw new Error(`${endpoint} no devolvió una lista`)
+
+    const xml = esNoticias
+      ? buildNewsSitemapXml(datos)
+      : buildSitemapXml(datos, new Date().toISOString().slice(0, 10))
+
+    return new Response(xml, {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=0, must-revalidate',
+        'Netlify-CDN-Cache-Control': esNoticias ? NEWS_SITEMAP_CDN_CACHE : SITEMAP_CDN_CACHE,
+      },
+    })
+  } catch (error) {
+    // Sin datos NO se sirve un sitemap vacío: Google lo leería como "ya no hay
+    // URLs". Un 503 con Retry-After le dice que vuelva más tarde, y no se
+    // cachea para que el siguiente intento ya salga bien.
+    console.error('[sitemap]', endpoint, error)
+    return new Response('Sitemap temporalmente no disponible', {
+      status: 503,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Retry-After': '300',
+        'Cache-Control': 'no-store',
+      },
+    })
+  }
+}
 
 // Paginas publicas cuyo HTML puede servirse desde el CDN de Netlify. La Edge
 // Function se despliega con cache: "manual", asi que el CDN respeta estas
@@ -86,6 +135,13 @@ function withCdnCache(response: Response, cdnCache: string | null): Response {
 }
 
 export async function netlifyAppEngineHandler(request: Request): Promise<Response> {
+  const url = new URL(request.url)
+
+  // Los sitemaps no pasan por Angular: son XML armado con datos del backend.
+  if (url.pathname === '/sitemap.xml' || url.pathname === '/news-sitemap.xml') {
+    return sitemapResponse(url.pathname === '/news-sitemap.xml')
+  }
+
   const context = getContext()
   const result = await angularAppEngine.handle(request, context)
   const isGet = request.method === 'GET'
@@ -97,7 +153,6 @@ export async function netlifyAppEngineHandler(request: Request): Promise<Respons
     )
   }
 
-  const url = new URL(request.url)
   if (mustNotBeIndexed(url.pathname)) {
     const headers = new Headers(result.headers)
     headers.set('X-Robots-Tag', 'noindex, nofollow, noarchive')
