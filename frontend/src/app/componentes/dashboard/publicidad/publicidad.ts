@@ -37,17 +37,23 @@ export interface Anuncio {
 // 256 colores: la foto sale granulada y las letras con puntitos alrededor. A
 // todo el ancho, en pantallas grandes, el navegador además lo estiraba. Se
 // sirven en su lugar dos WebP animados hechos a partir de él (mismos 3 cuadros
-// de 2 s): limpios de esos puntitos y, el grande, ampliado al doble. Pesan
-// menos que el GIF (65 y 136 KB contra 203). Receta, por si llega otro GIF:
+// de 2 s), uno al ancho original y otro al doble. Pesan menos que el GIF (84 y
+// 176 KB contra 203). Cómo se hizo cada cuadro, por si llega otro GIF:
 //   ffmpeg -i banner.gif -fps_mode passthrough cuadro-%d.png
-//   (por cuadro) -vf "format=rgb24,nlmeans=s=4:p=7:r=15,scale=3034:376:flags=lanczos,cas=0.25"
-//   (el de 1517 sin el scale y con cas=0.15)
-//   ffmpeg -framerate 0.5 -i cuadro-%d.png -c:v libwebp_anim -q:v 85 -compression_level 6 -preset picture -loop 0 banner.webp
-// En el cuadro 1, además, la foto no es la del GIF: es la misma foto sacada
-// del JPG de celular (sin los 256 colores), puesta en su caja con las mismas
-// esquinas redondeadas (radio 17 px). Está 1,685 veces más grande en el JPG:
-// la caja del banner (x 1093-1525, y 10-177) es la región x 258,4 / y 138,4
-// del JPG; se ubicó por coincidencia de plantilla (0,999).
+// - Cuadro 1 (titular + foto): limpio de tramado y ampliado,
+//     -vf "format=rgb24,nlmeans=s=4:p=7:r=15,scale=3034:376:flags=lanczos,cas=0.25"
+//   y con la foto sacada del JPG de celular, que es la misma sin los 256
+//   colores: está 1,685 veces más grande allí; la caja del banner (x 1093-1525,
+//   y 10-177, esquinas de radio 17 px) es la región x 258,4 / y 138,4 del JPG,
+//   ubicada por coincidencia de plantilla (0,999).
+// - Cuadros 2 y 3 (letras sobre azul marino): son 4 colores planos (fondo,
+//   blanco, naranja y dorado). Por cada píxel se calcula cuánto tiene de cada
+//   color sobre el fondo, ese alfa se amplía a 4x, se le endurece el borde con
+//   una sigmoide (centro 0,42, pendiente 11) y se reduce a 2x: mismas formas
+//   de letra que el GIF, con bordes nítidos. Los colores salen del centro de
+//   cada forma, así que coinciden con los del original.
+// - Codificación: ffmpeg -framerate 0.5 -i cuadro-%d.png -c:v libwebp_anim
+//   -q:v 90 -compression_level 6 -preset text -loop 0 banner.webp
 // El WebP no pasa por el CDN de imágenes, que podría quitarle la animación.
 // Si se cambia, se publica con otro nombre: /assets/ se cachea una semana.
 const ANUNCIOS: Anuncio[] = [
@@ -61,7 +67,7 @@ const ANUNCIOS: Anuncio[] = [
       src: 'assets/publicidad/Maura_healey_Mas_Latino_Banner_728x90px_Final_SPACompu.gif',
       w: 1517,
       h: 188,
-      webp: 'assets/publicidad/healey-banner-1517-v2.webp 1517w, assets/publicidad/healey-banner-3034-v2.webp 3034w',
+      webp: 'assets/publicidad/healey-banner-1517-v3.webp 1517w, assets/publicidad/healey-banner-3034-v3.webp 3034w',
     },
     celular: {
       src: 'assets/publicidad/MauraHealey_MasLatino_Post_1080x1080px_SPA_v1Celular.jpg',

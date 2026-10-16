@@ -62,8 +62,8 @@ describe('Publicidad', () => {
 
       // Detrás de la de celular: el <picture> usa la primera que encaja.
       expect(fuentes.indexOf(webp)).toBe(1);
-      expect(webp.getAttribute('srcset')).toContain('healey-banner-1517-v2.webp 1517w');
-      expect(webp.getAttribute('srcset')).toContain('healey-banner-3034-v2.webp 3034w');
+      expect(webp.getAttribute('srcset')).toContain('healey-banner-1517-v3.webp 1517w');
+      expect(webp.getAttribute('srcset')).toContain('healey-banner-3034-v3.webp 3034w');
       expect(webp.getAttribute('sizes')).toBe('100vw');
     });
 
