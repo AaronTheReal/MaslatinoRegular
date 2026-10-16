@@ -56,6 +56,17 @@ describe('Publicidad', () => {
       expect(img.alt).toContain('Maura Healey');
     });
 
+    it('en escritorio ofrece el WebP en dos anchos antes que el GIF', () => {
+      const fuentes = Array.from(el.querySelectorAll('picture source'));
+      const webp = fuentes.find((s) => s.getAttribute('type') === 'image/webp')!;
+
+      // Detrás de la de celular: el <picture> usa la primera que encaja.
+      expect(fuentes.indexOf(webp)).toBe(1);
+      expect(webp.getAttribute('srcset')).toContain('healey-banner-1517.webp 1517w');
+      expect(webp.getAttribute('srcset')).toContain('healey-banner-3034.webp 3034w');
+      expect(webp.getAttribute('sizes')).toBe('100vw');
+    });
+
     it('el enlace va marcado como pagado, abre aparte y lleva las utm', () => {
       const a = el.querySelector('.slide a') as HTMLAnchorElement;
       const url = new URL(a.href);

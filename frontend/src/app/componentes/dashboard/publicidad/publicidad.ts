@@ -7,6 +7,11 @@ interface ImagenAnuncio {
   src: string;
   w: number;
   h: number;
+  /**
+   * Versiones WebP para un srcset ("ruta 1517w, ruta 3034w"). Si están, el
+   * navegador usa la que le toca y `src` queda solo de respaldo.
+   */
+  webp?: string;
 }
 
 /**
@@ -27,8 +32,18 @@ export interface Anuncio {
 }
 
 // Campaña Maura Healey (gobernadora, elección del 3 de noviembre de 2026).
-// El GIF de escritorio es animado: se sirve tal cual, sin pasar por el CDN de
-// imágenes, para que no pierda la animación.
+//
+// Escritorio: el GIF de la agencia mide 1517 px y, como todo GIF, tiene solo
+// 256 colores: la foto sale granulada y las letras con puntitos alrededor. A
+// todo el ancho, en pantallas grandes, el navegador además lo estiraba. Se
+// sirven en su lugar dos WebP animados hechos a partir de él (mismos 3 cuadros
+// de 2 s): limpios de esos puntitos y, el grande, ampliado al doble. Pesan
+// menos que el GIF (67 y 133 KB contra 203). Receta, por si llega otro GIF:
+//   ffmpeg -i banner.gif -fps_mode passthrough cuadro-%d.png
+//   (por cuadro) -vf "format=rgb24,nlmeans=s=4:p=7:r=15,scale=3034:376:flags=lanczos,cas=0.25"
+//   (el de 1517 sin el scale y con cas=0.15)
+//   ffmpeg -framerate 0.5 -i cuadro-%d.png -c:v libwebp_anim -q:v 85 -compression_level 6 -preset picture -loop 0 banner.webp
+// El WebP no pasa por el CDN de imágenes, que podría quitarle la animación.
 const ANUNCIOS: Anuncio[] = [
   {
     id: 'healey-2026',
@@ -40,6 +55,7 @@ const ANUNCIOS: Anuncio[] = [
       src: 'assets/publicidad/Maura_healey_Mas_Latino_Banner_728x90px_Final_SPACompu.gif',
       w: 1517,
       h: 188,
+      webp: 'assets/publicidad/healey-banner-1517.webp 1517w, assets/publicidad/healey-banner-3034.webp 3034w',
     },
     celular: {
       src: 'assets/publicidad/MauraHealey_MasLatino_Post_1080x1080px_SPA_v1Celular.jpg',

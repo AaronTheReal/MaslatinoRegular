@@ -27,6 +27,16 @@
               [attr.width]="ad.celular.w"
               [attr.height]="ad.celular.h"
             >
+            <!-- Escritorio: WebP del ancho que pida la pantalla; el <img> de
+                 abajo solo lo usan navegadores sin WebP. -->
+            <source
+              *ngIf="ad.escritorio.webp"
+              type="image/webp"
+              [attr.srcset]="ad.escritorio.webp"
+              sizes="100vw"
+              [attr.width]="ad.escritorio.w"
+              [attr.height]="ad.escritorio.h"
+            >
             <img
               [src]="ad.escritorio.src"
               [alt]="ad.alt"
