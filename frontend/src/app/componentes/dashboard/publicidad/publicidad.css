@@ -8,12 +8,13 @@
   background: #000;
 }
 
-/* Escritorio: el banner es formato 728x90. A todo el ancho se estiraba
-   (borroso y altísimo), así que va a su medida y centrado. */
+/* Escritorio: el banner cubre todo el ancho de la pantalla, de borde a
+   borde, sin esquinas redondeadas ni sombra (a sangre se ven raras). La
+   altura sale sola de la proporción del GIF, sin recortar nada. */
 @media (min-width: 768px) {
   .publicidad-carousel {
-    max-width: 728px;
-    margin: 0 auto;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 

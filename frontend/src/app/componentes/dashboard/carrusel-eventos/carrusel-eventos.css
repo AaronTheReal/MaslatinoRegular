@@ -41,8 +41,14 @@
 }
 
 
+/* Ocultos: nunca se vieron en este carrusel. El envoltorio no tiene
+   position: relative, así que se posicionaban contra <body> y quedaban
+   flotando arriba de la portada, a la altura de la pantalla: blanqueaban los
+   bordes del anuncio y de las tarjetas de ciudad (16/10/2026). Si se quieren
+   de verdad aquí, poner position: relative al envoltorio y revisar su alto. */
 .fade-left,
 .fade-right {
+  display: none;
   position: absolute;
   top: 0;
   width: 80px;
