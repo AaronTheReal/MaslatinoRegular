@@ -1,11 +1,56 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, ElementRef, HostListener, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
-import { CdnImagePipe } from '../../../pipes/cdn-image.pipe';
+import { Component, ElementRef, Inject, OnDestroy, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
+import { CdnSrcsetPipe } from '../../../pipes/cdn-image.pipe';
+
+/** Una imagen del anuncio con sus medidas reales (evitan el salto al cargar). */
+interface ImagenAnuncio {
+  src: string;
+  w: number;
+  h: number;
+}
+
+/**
+ * Cada anuncio trae su pieza de escritorio y la de celular. Las dos van en un
+ * <picture>: el navegador baja solo la que corresponde al ancho de pantalla y
+ * el servidor ya puede pintarlo (antes se elegía con JavaScript, así que el
+ * anuncio aparecía después de cargar y empujaba hacia abajo lo de debajo).
+ */
+interface Anuncio {
+  alt: string;
+  link: string;
+  escritorio: ImagenAnuncio;
+  celular: ImagenAnuncio;
+}
+
+// Campaña Maura Healey (gobernadora, elección del 3 de noviembre de 2026).
+// El GIF de escritorio es animado: se sirve tal cual, sin pasar por el CDN de
+// imágenes, para que no pierda la animación.
+const ANUNCIOS: Anuncio[] = [
+  {
+    alt: 'Vote el 3 de noviembre por la gobernadora Maura Healey. Pagado por el Partido Demócrata de Massachusetts.',
+    link: 'https://www.maurahealey.com/',
+    escritorio: {
+      src: 'assets/publicidad/Maura_healey_Mas_Latino_Banner_728x90px_Final_SPACompu.gif',
+      w: 1517,
+      h: 188,
+    },
+    celular: {
+      src: 'assets/publicidad/MauraHealey_MasLatino_Post_1080x1080px_SPA_v1Celular.jpg',
+      w: 1080,
+      h: 1080,
+    },
+  },
+];
+
+// Campañas anteriores, fuera de rotación: Saravia Law (https://saravialaw.com/)
+// y Temporada Boricorridor (https://temporada.boricorridor.com/). Sus piezas de
+// escritorio siguen en assets/publicidad.jpg y assets/publicidad2.png; las de
+// celular se quitaron de assets/publicidad/ al subir la de Healey.
 
 @Component({
   selector: 'app-publicidad',
   standalone: true,
-  imports: [CommonModule, CdnImagePipe],
+  imports: [CommonModule, CdnSrcsetPipe],
   templateUrl: './publicidad.html',
   styleUrl: './publicidad.css'
 })
@@ -13,7 +58,7 @@ export class Publicidad implements OnInit, OnDestroy {
   @ViewChild('carousel') carousel!: ElementRef<HTMLDivElement>;
 
   currentIndex = 0;
-  ads: any[] = [];
+  readonly ads = ANUNCIOS;
   private intervalId: any;
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
@@ -24,20 +69,13 @@ export class Publicidad implements OnInit, OnDestroy {
   dragOffsetPercent = 0;
   transitionStyle = 'transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 
-  // === TUS IMÁGENES (sin tocar rutas; w/h = dimensiones reales para evitar layout shift) ===
-  private desktopAds = [
-    { image: 'assets/publicidad.jpg', alt: 'Publicidad 1', link: 'https://saravialaw.com/', w: 3033, h: 375 },
-    { image: 'assets/publicidad2.png', alt: 'Publicidad 2', link: 'https://temporada.boricorridor.com/', w: 3034, h: 375 }
-  ];
-
-  private mobileAds = [
-    { image: 'assets/publicidad/publicidad.jpg', alt: 'Publicidad Mobile 1', link: 'https://saravialaw.com/', w: 8000, h: 4500 },
-    { image: 'assets/publicidad/publicidad2.png', alt: 'Publicidad Mobile 2', link: 'https://temporada.boricorridor.com/', w: 8000, h: 4500 }
-  ];
+  /** Con un solo anuncio no hay carrusel: ni flechas, ni puntos, ni arrastre. */
+  get esCarrusel(): boolean {
+    return this.ads.length > 1;
+  }
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.loadAds();
     this.startAutoPlay();
   }
 
@@ -45,26 +83,9 @@ export class Publicidad implements OnInit, OnDestroy {
     this.stopAutoPlay();
   }
 
-  private loadAds(): void {
-    this.ads = (typeof window !== 'undefined' && window.innerWidth < 768) ? this.mobileAds : this.desktopAds;
-  }
-
-  @HostListener('window:resize')
-  onResize(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    const isMobileNow = window.innerWidth < 768;
-    const currentIsMobile = this.ads === this.mobileAds;
-
-    if (isMobileNow !== currentIsMobile) {
-      this.stopAutoPlay();
-      this.loadAds();
-      this.currentIndex = 0;
-      this.startAutoPlay();
-    }
-  }
-
   private startAutoPlay(): void {
     this.stopAutoPlay();
+    if (!this.esCarrusel) return;
     this.intervalId = setInterval(() => this.nextAd(), 5000);
   }
 
@@ -99,6 +120,7 @@ export class Publicidad implements OnInit, OnDestroy {
   }
 
   startDrag(e: MouseEvent | TouchEvent): void {
+    if (!this.esCarrusel) return;
     this.isDragging = true;
     this.startX = this.getClientX(e);
     this.dragOffsetPercent = 0;

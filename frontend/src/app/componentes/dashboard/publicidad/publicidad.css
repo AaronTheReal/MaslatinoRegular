@@ -8,6 +8,23 @@
   background: #000;
 }
 
+/* Escritorio: el banner es formato 728x90. A todo el ancho se estiraba
+   (borroso y altísimo), así que va a su medida y centrado. */
+@media (min-width: 768px) {
+  .publicidad-carousel {
+    max-width: 728px;
+    margin: 0 auto;
+  }
+}
+
+/* Celular: el mismo margen lateral que las tarjetas de ciudad de debajo. */
+@media (max-width: 767px) {
+  .publicidad-carousel {
+    width: auto;
+    margin: 0 16px;
+  }
+}
+
 .slider-wrapper {
   overflow: hidden;
 }

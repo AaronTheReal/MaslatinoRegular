@@ -14,32 +14,44 @@
          [style.transform]="getTransform()">
 
       <div class="slide" *ngFor="let ad of ads; let i = index">
-        <a [href]="ad.link" target="_blank" rel="noopener noreferrer">
-          <img
-            [src]="ad.image | cdnimg:1200"
-            [alt]="ad.alt"
-            [width]="ad.w"
-            [height]="ad.h"
-            [attr.loading]="i === 0 ? 'eager' : 'lazy'"
-            [attr.fetchpriority]="i === 0 ? 'high' : null"
-            decoding="async"
-          >
+        <!-- rel="sponsored": Google pide marcar así los enlaces pagados. -->
+        <a [href]="ad.link" target="_blank" rel="sponsored noopener noreferrer">
+          <picture>
+            <!-- Celular: la pieza cuadrada, por el CDN (~50 KB en vez de 460). -->
+            <source
+              media="(max-width: 767px)"
+              [attr.srcset]="(ad.celular.src | cdnsrcset: [640, 1080]) ?? ad.celular.src"
+              sizes="100vw"
+              [attr.width]="ad.celular.w"
+              [attr.height]="ad.celular.h"
+            >
+            <img
+              [src]="ad.escritorio.src"
+              [alt]="ad.alt"
+              [width]="ad.escritorio.w"
+              [height]="ad.escritorio.h"
+              [attr.loading]="i === 0 ? 'eager' : 'lazy'"
+              [attr.fetchpriority]="i === 0 ? 'high' : null"
+              decoding="async"
+            >
+          </picture>
         </a>
       </div>
     </div>
   </div>
 
-  <!-- Flechas laterales -->
-  <button class="nav-arrow left" (click)="prev($event)">‹</button>
-  <button class="nav-arrow right" (click)="next($event)">›</button>
+  <!-- Flechas e indicadores: solo si hay más de un anuncio -->
+  <ng-container *ngIf="esCarrusel">
+    <button class="nav-arrow left" (click)="prev($event)" aria-label="Anuncio anterior">‹</button>
+    <button class="nav-arrow right" (click)="next($event)" aria-label="Anuncio siguiente">›</button>
 
-  <!-- Indicadores (dots) -->
-  <div class="indicators">
-    <button 
-      *ngFor="let _ of ads; let i = index"
-      class="dot"
-      [class.active]="i === currentIndex"
-      (click)="goTo(i)">
-    </button>
-  </div>
+    <div class="indicators">
+      <button
+        *ngFor="let _ of ads; let i = index"
+        class="dot"
+        [class.active]="i === currentIndex"
+        (click)="goTo(i)">
+      </button>
+    </div>
+  </ng-container>
 </div>
