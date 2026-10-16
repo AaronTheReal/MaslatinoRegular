@@ -1,3 +1,5 @@
+<!-- Sin anuncios vigentes no se pinta nada, ni el espacio de arriba. -->
+<ng-container *ngIf="ads.length">
 <br>
 <div class="publicidad-carousel" #carousel
      (mousedown)="startDrag($event)"
@@ -15,7 +17,7 @@
 
       <div class="slide" *ngFor="let ad of ads; let i = index">
         <!-- rel="sponsored": Google pide marcar así los enlaces pagados. -->
-        <a [href]="ad.link" target="_blank" rel="sponsored noopener noreferrer">
+        <a [href]="ad.link" target="_blank" rel="sponsored noopener noreferrer" (click)="registrarClic(ad)">
           <picture>
             <!-- Celular: la pieza cuadrada, por el CDN (~50 KB en vez de 460). -->
             <source
@@ -55,3 +57,4 @@
     </div>
   </ng-container>
 </div>
+</ng-container>
