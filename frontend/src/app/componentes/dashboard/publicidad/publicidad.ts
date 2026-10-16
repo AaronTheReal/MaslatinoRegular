@@ -38,12 +38,18 @@ export interface Anuncio {
 // todo el ancho, en pantallas grandes, el navegador además lo estiraba. Se
 // sirven en su lugar dos WebP animados hechos a partir de él (mismos 3 cuadros
 // de 2 s): limpios de esos puntitos y, el grande, ampliado al doble. Pesan
-// menos que el GIF (67 y 133 KB contra 203). Receta, por si llega otro GIF:
+// menos que el GIF (65 y 136 KB contra 203). Receta, por si llega otro GIF:
 //   ffmpeg -i banner.gif -fps_mode passthrough cuadro-%d.png
 //   (por cuadro) -vf "format=rgb24,nlmeans=s=4:p=7:r=15,scale=3034:376:flags=lanczos,cas=0.25"
 //   (el de 1517 sin el scale y con cas=0.15)
 //   ffmpeg -framerate 0.5 -i cuadro-%d.png -c:v libwebp_anim -q:v 85 -compression_level 6 -preset picture -loop 0 banner.webp
+// En el cuadro 1, además, la foto no es la del GIF: es la misma foto sacada
+// del JPG de celular (sin los 256 colores), puesta en su caja con las mismas
+// esquinas redondeadas (radio 17 px). Está 1,685 veces más grande en el JPG:
+// la caja del banner (x 1093-1525, y 10-177) es la región x 258,4 / y 138,4
+// del JPG; se ubicó por coincidencia de plantilla (0,999).
 // El WebP no pasa por el CDN de imágenes, que podría quitarle la animación.
+// Si se cambia, se publica con otro nombre: /assets/ se cachea una semana.
 const ANUNCIOS: Anuncio[] = [
   {
     id: 'healey-2026',
@@ -55,7 +61,7 @@ const ANUNCIOS: Anuncio[] = [
       src: 'assets/publicidad/Maura_healey_Mas_Latino_Banner_728x90px_Final_SPACompu.gif',
       w: 1517,
       h: 188,
-      webp: 'assets/publicidad/healey-banner-1517.webp 1517w, assets/publicidad/healey-banner-3034.webp 3034w',
+      webp: 'assets/publicidad/healey-banner-1517-v2.webp 1517w, assets/publicidad/healey-banner-3034-v2.webp 3034w',
     },
     celular: {
       src: 'assets/publicidad/MauraHealey_MasLatino_Post_1080x1080px_SPA_v1Celular.jpg',
